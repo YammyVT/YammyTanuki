@@ -1123,6 +1123,8 @@
     }
 
     async function twitchLogin(ev){
+      // Note: In some environments (Telegram/Custom Tabs), the browser may navigate before
+      // the click event fires. We still do our best here.
       try{ ev?.preventDefault?.(); ev?.stopPropagation?.(); ev?.stopImmediatePropagation?.(); }catch(e){}
       clearOrderMsg();
 
@@ -1130,7 +1132,7 @@
       // Hard block OAuth here and show a "bridge" modal.
       if(isTelegramInApp()){
         const hint = document.getElementById('balanceHint');
-        if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается. Открой сайт в обычном браузере и войди там.';
+        if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается (ошибка 400). Нажми «Открыть в браузере» и войди там.';
         openTgInAppModal();
         return;
       }
@@ -1185,6 +1187,20 @@
       });
 
       window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+    }
+
+    // Telegram WebViews sometimes start navigation on pointerdown.
+    // Intercept as early as possible, in capture phase, and show our bridge modal.
+    function hardBlockTelegramLogin(e){
+      try{
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
+        e?.stopImmediatePropagation?.();
+      }catch(err){}
+      const hint = document.getElementById('balanceHint');
+      if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается (ошибка 400). Нажми «Открыть в браузере» и войди там.';
+      openTgInAppModal();
+      return false;
     }
 
     function twitchLogout(){
@@ -1368,25 +1384,17 @@
       // before our handler runs.
       const loginBtn = document.getElementById('twitchLoginBtn');
       if(loginBtn){
-        // If Telegram: hard block any navigation and show modal (some WebViews ignore preventDefault).
+        // If Telegram: hard block any navigation and show modal.
+        // Use capture + multiple event types to intercept before navigation starts.
         if(isTelegramInApp()){
           loginBtn.setAttribute('type','button');
-          // Neutralize any accidental default behavior
           loginBtn.onclick = null;
 
-          const showBridge = (e)=>{
-            try{ e?.preventDefault?.(); e?.stopPropagation?.(); e?.stopImmediatePropagation?.(); }catch(err){}
-            const hint = document.getElementById('balanceHint');
-            if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается. Нажми «Открыть в браузере» и войди там.';
-            openTgInAppModal();
-            return false;
-          };
-
-          // Capture multiple event types to avoid any navigation before we intercept.
-          loginBtn.addEventListener('click', showBridge, true);
-          loginBtn.addEventListener('pointerdown', showBridge, true);
-          loginBtn.addEventListener('touchstart', showBridge, {capture:true, passive:false});
-          loginBtn.addEventListener('touchend', showBridge, {capture:true, passive:false});
+          loginBtn.addEventListener('pointerdown', hardBlockTelegramLogin, true);
+          loginBtn.addEventListener('mousedown', hardBlockTelegramLogin, true);
+          loginBtn.addEventListener('touchstart', hardBlockTelegramLogin, {capture:true, passive:false});
+          loginBtn.addEventListener('touchend', hardBlockTelegramLogin, {capture:true, passive:false});
+          loginBtn.addEventListener('click', hardBlockTelegramLogin, true);
         }else{
           loginBtn.addEventListener('click', (e)=> twitchLogin(e), true);
         }
