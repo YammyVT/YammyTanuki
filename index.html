@@ -205,12 +205,8 @@
     }
     .yammy-check:checked::after{ opacity: 1; }
 
-    .tgwarn{
-      display:none;
-    }
-    .tg .tgwarn{
-      display:block;
-    }
+    .tgwarn{ display:none; }
+    .tg .tgwarn{ display:block; }
   </style>
 </head>
 <body class="compact">
@@ -323,7 +319,6 @@
                       </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <!-- Important: type=button so Telegram can't treat as navigation -->
                       <button id="twitchLoginBtn" type="button" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Войти через Twitch</button>
                       <button id="twitchLogoutBtn" type="button" class="btn rounded-xl px-3 py-2 text-xs font-semibold hidden">Выйти</button>
                     </div>
@@ -769,7 +764,7 @@
       return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
     }
 
-    // ----- Balance API -----
+    // ----- Balance + Spend API -----
     const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
     const SPEND_ENABLED = true;
     const SPEND_TOKEN = 'yammy_spend_v1';
@@ -824,7 +819,7 @@
       if(!needle) return { found:false, reason:'empty' };
 
       const rows = await fetchBalances();
-      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник'];
+      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник','login','Login'];
       const pointsKeys = ['Итоговые баллы','итоговые баллы','Баллы','баллы','Points','points'];
 
       for(const r of rows){
@@ -840,10 +835,13 @@
       return { found:false, reason:'notfound' };
     }
 
-    // ----- Simple auth storage (not actual OAuth here) -----
-    // NOTE: Twitch OAuth is intentionally not included in this fallback build.
-    // We keep the UI and show a bridge modal in Telegram.
-    const AUTH_STORAGE_KEY = 'yammy_twitch_auth_min_v1';
+    // ----- Twitch OAuth (PKCE) + session -----
+    const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
+    const TWITCH_REDIRECT_URI = window.location.origin + window.location.pathname; // must match GitHub Pages URL
+    const TWITCH_SCOPES = []; // none needed for helix/users
+
+    const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v2';
+    const PKCE_KEY = 'yammy_twitch_pkce_v2';
 
     function setAuth(obj){
       const remember = $('#rememberNick');
@@ -869,6 +867,141 @@
     function clearAuth(){
       try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
       try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
+    }
+
+    function setPkce(obj){
+      try{ sessionStorage.setItem(PKCE_KEY, JSON.stringify(obj || {})); }catch(e){}
+    }
+    function getPkce(){
+      try{ return JSON.parse(sessionStorage.getItem(PKCE_KEY) || '{}'); }catch(e){ return {}; }
+    }
+    function clearPkce(){
+      try{ sessionStorage.removeItem(PKCE_KEY); }catch(e){}
+    }
+
+    function base64UrlEncode(uint8){
+      let s = '';
+      uint8.forEach(b => s += String.fromCharCode(b));
+      return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    }
+
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', enc);
+      return new Uint8Array(hash);
+    }
+
+    function randomString(len=32){
+      const a = new Uint8Array(len);
+      crypto.getRandomValues(a);
+      return base64UrlEncode(a);
+    }
+
+    async function twitchLogin(){
+      if(isTelegramUA()){
+        openTgModal();
+        return;
+      }
+      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
+        setOrderMsg({ type:'warn', title:'Twitch вход недоступен', text:'Этот браузер не поддерживает безопасную авторизацию. Открой в Chrome/Safari.' });
+        return;
+      }
+
+      clearPkce();
+
+      const state = 'v2_' + randomString(18);
+      const verifier = randomString(64);
+      const challenge = base64UrlEncode(await sha256(verifier));
+
+      setPkce({ state, verifier, at: Date.now(), redirect: TWITCH_REDIRECT_URI });
+
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: TWITCH_CLIENT_ID,
+        redirect_uri: TWITCH_REDIRECT_URI,
+        scope: TWITCH_SCOPES.join(' '),
+        state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
+      });
+
+      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+    }
+
+    async function twitchTokenExchange(code){
+      const st = getPkce();
+      if(!st?.verifier || !st?.redirect) throw new Error('PKCE state lost');
+
+      const params = new URLSearchParams({
+        client_id: TWITCH_CLIENT_ID,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: st.redirect,
+        code_verifier: st.verifier
+      });
+
+      const res = await fetch('https://id.twitch.tv/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+
+      const txt = await res.text();
+      let json = null;
+      try{ json = JSON.parse(txt); }catch(e){}
+      if(!res.ok){
+        const msg = json?.message || json?.error_description || txt.slice(0,120) || 'token exchange failed';
+        throw new Error('Token exchange failed: ' + msg);
+      }
+      return json;
+    }
+
+    async function twitchGetUser(accessToken){
+      const res = await fetch('https://api.twitch.tv/helix/users', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Client-ID': TWITCH_CLIENT_ID
+        }
+      });
+      if(!res.ok) throw new Error('Failed to fetch user profile');
+      const json = await res.json();
+      const u = json?.data?.[0];
+      if(!u?.login) throw new Error('No login in profile');
+      return { login: u.login, display_name: u.display_name || u.login };
+    }
+
+    function cleanOAuthUrl(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('code');
+      url.searchParams.delete('scope');
+      url.searchParams.delete('state');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+
+    async function handleOAuthCallback(){
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      if(!code) return;
+
+      try{
+        const st = getPkce();
+        if(!st?.state || st.state !== state) throw new Error('State mismatch');
+
+        $('#nickStatus') && ($('#nickStatus').textContent = 'Вхожу через Twitch…');
+        const token = await twitchTokenExchange(code);
+        const user = await twitchGetUser(token.access_token);
+
+        setAuth({ login: user.login, display_name: user.display_name, at: Date.now() });
+        setNickUIAuthed(user.login);
+        await refreshBalanceForAuthed();
+      }catch(e){
+        const msg = (e && (e.message || String(e))) || 'unknown';
+        $('#nickStatus') && ($('#nickStatus').textContent = `Не удалось войти через Twitch. ${msg}`);
+      }finally{
+        clearPkce();
+        cleanOAuthUrl();
+      }
     }
 
     function getKnownNick(){
@@ -912,6 +1045,18 @@
       }
     }
 
+    function twitchLogout(){
+      clearAuth();
+      setNickUIAuthed('');
+      refreshBalanceForAuthed();
+    }
+
+    function clearSavedAuth(){
+      clearAuth();
+      setNickUIAuthed('');
+      refreshBalanceForAuthed();
+    }
+
     function updateOrderGateUI(){
       const authed = !!getKnownNick();
       const intro = $('#orderIntro');
@@ -940,30 +1085,6 @@
       document.body.style.overflow = '';
     }
 
-    // ----- Fake login for this build -----
-    // Since Twitch OAuth was unstable in Telegram, this build intentionally blocks OAuth in Telegram.
-    // In real browser, you should integrate OAuth again.
-    function twitchLogin(){
-      if(isTelegramUA()){
-        openTgModal();
-        return;
-      }
-      // Placeholder message for now
-      setOrderMsg({ type:'warn', title:'Twitch вход временно выключен', text:'Эта сборка отключает OAuth. Скажи — и я верну OAuth для браузеров вне Telegram.' });
-    }
-
-    function twitchLogout(){
-      clearAuth();
-      setNickUIAuthed('');
-      refreshBalanceForAuthed();
-    }
-
-    function clearSavedAuth(){
-      clearAuth();
-      setNickUIAuthed('');
-      refreshBalanceForAuthed();
-    }
-
     // ----- Place order -----
     function parsePickedPrice(str){
       const s = String(str || '');
@@ -981,7 +1102,8 @@
         setOrderMsg({
           type:'warn',
           title:'Нужно авторизоваться на Twitch',
-          text:'Чтобы оформить заказ, сначала войди через Twitch.'
+          text:'Чтобы оформить заказ, сначала войди через Twitch.',
+          actions:[{ label:'Войти', onClick: twitchLogin }]
         });
         return;
       }
@@ -1153,9 +1275,8 @@
         if(ok) toast($('#tgToast'));
       });
 
-      // Balance/login wiring
+      // Twitch login buttons
       $('#twitchLoginBtn')?.addEventListener('click', (e)=>{
-        // Hard stop in Telegram: button is present but does not navigate
         if(isTelegramUA()){
           try{ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }catch(err){}
           openTgModal();
@@ -1163,30 +1284,10 @@
         }
         twitchLogin();
       });
-
-      // Also block early events in Telegram just in case
-      const loginBtn = $('#twitchLoginBtn');
-      if(loginBtn && isTelegramUA()){
-        const block = (e)=>{ try{ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }catch(err){} openTgModal(); return false; };
-        loginBtn.addEventListener('pointerdown', block, true);
-        loginBtn.addEventListener('touchstart', block, {capture:true, passive:false});
-        loginBtn.addEventListener('touchend', block, {capture:true, passive:false});
-        loginBtn.addEventListener('click', block, true);
-      }
-
       $('#twitchLogoutBtn')?.addEventListener('click', twitchLogout);
       $('#clearNick')?.addEventListener('click', clearSavedAuth);
 
-      // Restore saved auth (if any)
-      const auth = getAuth();
-      if(auth?.login){
-        setNickUIAuthed(auth.login);
-        setTimeout(()=> refreshBalanceForAuthed(), 200);
-      }else{
-        setNickUIAuthed('');
-        refreshBalanceForAuthed();
-      }
-
+      // Remember toggle moves auth between storages
       $('#rememberNick')?.addEventListener('change', (e)=>{
         const a = getAuth();
         if(!a?.login) return;
@@ -1199,9 +1300,22 @@
         }
       });
 
-      updateOrderGateUI();
-
       $('#toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+
+      // OAuth callback handling
+      handleOAuthCallback();
+
+      // Restore auth
+      const auth = getAuth();
+      if(auth?.login){
+        setNickUIAuthed(auth.login);
+        setTimeout(()=> refreshBalanceForAuthed(), 150);
+      }else{
+        setNickUIAuthed('');
+        refreshBalanceForAuthed();
+      }
+
+      updateOrderGateUI();
     }
 
     if(document.readyState === 'loading'){
