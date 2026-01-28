@@ -861,7 +861,8 @@
 
     async function twitchLogin(){
       clearOrderMsg();
-      // always reset pkce so user can retry
+
+      // Always reset PKCE so user can retry even after a failed/partial attempt
       clearPkceState();
 
       if(!isTwitchSupported()){
@@ -869,7 +870,7 @@
         return;
       }
 
-      const state = randomString(24);
+      const state = `v1_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
       setPkceState({ state, verifier, at: Date.now() });
@@ -884,7 +885,9 @@
         code_challenge_method: 'S256'
       });
 
-      window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+      // Force navigation (some browsers ignore same-href assignments)
+      const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+      window.location.assign(authUrl);
     }
 
     async function twitchExchangeCode(code){
@@ -997,6 +1000,19 @@
       const state = url.searchParams.get('state');
       if(!code) return;
 
+      // If we have a code but lost PKCE state (very common in in-app browsers / after refresh)
+      const st0 = getPkceState();
+      if(!st0?.state || !st0?.verifier){
+        clearPkceState();
+        cleanUrlAfterOAuth();
+        setNickUIAuthed('');
+        const hint = document.getElementById('balanceHint');
+        const out = document.getElementById('balanceResult');
+        if(out) out.textContent = '—';
+        if(hint) hint.textContent = 'Не удалось завершить вход (браузер сбросил сессию). Нажми «Войти через Twitch» ещё раз.';
+        return;
+      }
+
       try{
         const st = getPkceState();
         if(!st?.state || st.state !== state) throw new Error('Bad state');
@@ -1024,7 +1040,6 @@
         clearAuth();
         setNickUIAuthed('');
 
-        // Show a user-friendly message in balance block too
         const hint = document.getElementById('balanceHint');
         const out = document.getElementById('balanceResult');
         if(out) out.textContent = '—';
@@ -1189,9 +1204,8 @@
         }
       });
 
-      // If we returned from Twitch OAuth and couldn't complete (missing PKCE state),
-      // allow trying again by ensuring no stale pkce state is left.
-      clearPkceState();
+      // Do NOT clear PKCE state here. It is cleared in handleTwitchOAuthCallback() finally.
+      // Clearing it here can break the callback if scripts run before it finishes.
 
       // Ensure correct order gate state on first load
       updateOrderGateUI();
