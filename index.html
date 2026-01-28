@@ -946,23 +946,37 @@
       clearPkceState();
       try{ cleanUrlAfterOAuth(); }catch(e){}
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
-      // If PKCE is not supported (or if token endpoint is blocked), implicit is more compatible.
-      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
-      // Prefer implicit on known-problematic UAs (Yandex, in-app), to avoid token exchange fetch
-      const ua = (navigator.userAgent || '').toLowerCase();
-      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
-      // Detect mobile devices - they have issues with PKCE flow and app redirects
-      const isMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(ua);
-      // Use Implicit flow for mobile or problematic browsers
-      if(!canPkce || looksBlocked || isMobileDevice){
+      
+      // Detect mobile device
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      // Always use Implicit flow on mobile devices for better compatibility
+      // PKCE often fails on mobile due to app switching and URL parameter loss
+      if(isMobile){
         const state = `v0_${randomString(18)}`;
         const params = new URLSearchParams({
           response_type: 'token',
           client_id: TWITCH_CLIENT_ID,
           redirect_uri: redirectUri,
           scope: TWITCH_SCOPES.join(' '),
-          state,
-          force_verify: 'true'
+          state
+        });
+        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        return;
+      }
+      
+      // On desktop, try PKCE first, fall back to Implicit if needed
+      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
+      if(!canPkce || looksBlocked){
+        const state = `v0_${randomString(18)}`;
+        const params = new URLSearchParams({
+          response_type: 'token',
+          client_id: TWITCH_CLIENT_ID,
+          redirect_uri: redirectUri,
+          scope: TWITCH_SCOPES.join(' '),
+          state
         });
         window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
         return;
@@ -978,8 +992,7 @@
         scope: TWITCH_SCOPES.join(' '),
         state,
         code_challenge: challenge,
-        code_challenge_method: 'S256',
-        force_verify: 'true'
+        code_challenge_method: 'S256'
       });
       window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
     }
