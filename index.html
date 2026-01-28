@@ -947,43 +947,16 @@
       try{ cleanUrlAfterOAuth(); }catch(e){}
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       
-      // Detect mobile devices - они всегда используют Implicit flow
-      const ua = (navigator.userAgent || '').toLowerCase();
-      const isMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(ua);
-      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
-      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
-      
-      // Для мобильных ВСЕГДА используем Implicit flow (response_type=token)
-      // Это предотвращает проблемы с приложением Twitch и PKCE
-      if(isMobileDevice || !canPkce || looksBlocked){
-        const state = `mobile_${randomString(18)}`;
-        const params = new URLSearchParams({
-          response_type: 'token',
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          scope: TWITCH_SCOPES.join(' '),
-          state
-        });
-        // Используем прямой редирект без force_verify для мобильных
-        window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-        return;
-      }
-      
-      // Для десктопа используем PKCE
-      const state = `pkce_${randomString(24)}`;
-      const verifier = randomString(64);
-      const challenge = base64UrlEncode(await sha256(verifier));
-      setPkceState({ state, verifier, at: Date.now() });
+      // Always use Implicit flow - it's more reliable across devices
+      const state = `v0_${randomString(18)}`;
       const params = new URLSearchParams({
-        response_type: 'code',
+        response_type: 'token',
         client_id: TWITCH_CLIENT_ID,
         redirect_uri: redirectUri,
         scope: TWITCH_SCOPES.join(' '),
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256'
+        state
       });
-      window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
     }
     function twitchLogout(){
       clearAuth();
