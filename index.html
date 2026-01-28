@@ -828,6 +828,7 @@
     // ----- Twitch OAuth (PKCE primary + Implicit fallback) -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
     const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
+    // Minimal scopes. Helix user endpoint works without extra scopes for basic identity.
     const TWITCH_SCOPES = [];
 
     const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v2';
@@ -1098,9 +1099,12 @@
 
     function isLikelyInAppBrowser(){
       const ua = (navigator.userAgent || '').toLowerCase();
-      // Telegram in-app (Android/iOS) can be very inconsistent with OAuth redirects.
-      // Include common markers.
       return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('telegrambot') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
+    }
+
+    function isTelegramInApp(){
+      const ua = (navigator.userAgent || '').toLowerCase();
+      return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('telegrambot');
     }
 
     function openTgInAppModal(){
@@ -1121,11 +1125,19 @@
       try{ ev?.preventDefault?.(); ev?.stopPropagation?.(); }catch(e){}
       clearOrderMsg();
 
-      // If opened inside Telegram in-app: Twitch OAuth often breaks (400 / missing params / no redirect).
-      // HARD STOP: do not attempt OAuth here; show a modal to open in external browser.
+      // Telegram login is unreliable even when it opens a Chrome Custom Tab.
+      // We block OAuth here and show a "bridge" modal that forces opening the site in full Chrome.
+      if(isTelegramInApp()){
+        const hint = document.getElementById('balanceHint');
+        if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается. Открой сайт в обычном браузере и войди там.';
+        openTgInAppModal();
+        return;
+      }
+
+      // Other in-app browsers are also problematic.
       if(isLikelyInAppBrowser()){
         const hint = document.getElementById('balanceHint');
-        if(hint) hint.textContent = 'Встроенный браузер Telegram ломает вход через Twitch. Открой сайт в обычном браузере (Chrome/Safari) и войди там.';
+        if(hint) hint.textContent = 'Встроенный браузер приложения ломает вход через Twitch. Открой сайт в обычном браузере (Chrome/Safari) и войди там.';
         openTgInAppModal();
         return;
       }
@@ -1300,8 +1312,18 @@
       document.querySelector('#tgInAppModal .absolute')?.addEventListener('click', closeTgInAppModal);
       document.getElementById('openInBrowser')?.addEventListener('click', ()=>{
         const url = window.location.href;
-        // Telegram hint: try to trigger native "Open in browser" by using a new-tab open.
-        // If it fails, fall back to same-tab navigation.
+        // Android: try to force full Chrome (not a Custom Tab inside Telegram)
+        // by using intent://. If it fails, fall back to normal open.
+        const isAndroid = /android/i.test(navigator.userAgent || '');
+        if(isAndroid){
+          const clean = url.replace(/^https?:\/\//i,'');
+          const intentUrl = `intent://${clean}#Intent;scheme=https;package=com.android.chrome;end`;
+          try{
+            window.location.href = intentUrl;
+            return;
+          }catch(e){}
+        }
+        // Fallbacks
         try{
           const w = window.open(url, '_blank', 'noopener,noreferrer');
           if(!w) window.location.href = url;
