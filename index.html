@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Магазинчик Ями — оформление заказов</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';" />
+  <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    :root{
+      --glass: rgba(255,255,255,.12);
+      --glass2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.22);
+      --shadow: 0 18px 56px rgba(10, 20, 80, .18);
+      --shadow2: 0 12px 34px rgba(10, 20, 80, .14);
+      --text: rgba(255,255,255,.90);
+      --muted: rgba(255,255,255,.72);
+      --gold1: #f6e7a6;
+      --gold2: #e7bf2b;
+      --gold3: #c9961d;
+    }
+
+    html,body{height:100%;}
+    body{
+      overflow-x:hidden;
+      /* Softer, less saturated background + darker veil for readable text */
+      background:
+        radial-gradient(900px 600px at 18% 14%, rgba(255,255,255,.10), transparent 62%),
+        radial-gradient(800px 520px at 82% 22%, rgba(255,255,255,.08), transparent 60%),
+        linear-gradient(135deg, #f2b6da 0%, #9ad0f0 52%, #cbbcff 100%);
+      color: var(--text);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    /* Dark veil to increase contrast everywhere */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      /* slightly stronger veil for readability */
+      background: linear-gradient(180deg, rgba(6,10,28,.56), rgba(6,10,28,.40));
+      z-index:0;
+      pointer-events:none;
+    }
+
+    /* Global scale down */
+    .compact h1{ font-size: clamp(1.55rem, 3.6vw, 2.6rem) !important; }
+    .compact h2{ font-size: clamp(1.25rem, 2.6vw, 1.85rem) !important; }
+    .compact h3{ font-size: 1.05rem !important; }
+
+    /* Subtle noise */
+    .noise{
+      pointer-events:none;
+      position:fixed; inset:0;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="2" stitchTiles="stitch"/></filter><rect width="200" height="200" filter="url(%23n)" opacity="0.14"/></svg>');
+      mix-blend-mode: soft-light;
+      opacity:.14;
+      z-index: 2;
+    }
+
+    /* Stars layer */
+    #stars{ position:fixed; inset:0; z-index:1; pointer-events:none; }
+    .star{
+      position:absolute;
+      width: 10px; height: 10px;
+      opacity: .0;
+      filter: drop-shadow(0 0 6px rgba(231,191,43,.22));
+      transform: translate3d(0,0,0) rotate(0deg);
+      animation: starFall linear infinite;
+    }
+
+    .star::before{
+      content:"";
+      position:absolute; inset:0;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,255,255,0) 52%),
+                  conic-gradient(from 0deg, var(--gold1), var(--gold2), var(--gold3), var(--gold2), var(--gold1));
+      clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+      border-radius: 2px;
+    }
+
+    @keyframes starFall{
+      0%{ transform: translate3d(var(--x,0), -15vh, 0) rotate(0deg) scale(var(--s,1)); opacity:0; }
+      10%{opacity: var(--o,.85);}
+      90%{opacity: var(--o,.85);}
+      100%{ transform: translate3d(calc(var(--x,0) + var(--drift,0px)), 115vh, 0) rotate(260deg) scale(var(--s,1)); opacity:0; }
+    }
+
+    /* Clouds */
+    #clouds{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+    .cloud{
+      position:absolute;
+      width: clamp(140px, 22vw, 300px);
+      height: clamp(52px, 9vw, 110px);
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 999px;
+      filter: blur(.25px);
+      box-shadow: 0 14px 40px rgba(10,20,80,.06);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: .55;
+      animation: cloudMove linear infinite;
+    }
+    .cloud:before, .cloud:after{
+      content:"";
+      position:absolute;
+      background: rgba(255,255,255,.23);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .cloud:before{ width: 60%; height: 85%; left: 8%; top: -35%; }
+    .cloud:after{ width: 55%; height: 75%; right: 10%; top: -25%; }
+
+    @keyframes cloudMove{
+      from{ transform: translate3d(-120%, 0, 0); }
+      to{ transform: translate3d(120vw, 0, 0); }
+    }
+
+    /* Glass cards */
+    .glass{
+      background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .glow{
+      position: relative;
+      isolation:isolate;
+    }
+    .glow:before{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      border-radius: 1.25rem;
+      background: conic-gradient(from 200deg, rgba(255,255,255,.0), rgba(255,255,255,.22), rgba(255,255,255,.0), rgba(255,255,255,.16), rgba(255,255,255,.0));
+      filter: blur(12px);
+      opacity: .40;
+      z-index:-1;
+      animation: halo 10s linear infinite;
+    }
+    @keyframes halo{ to{ transform: rotate(360deg); } }
+
+    .floaty{ animation: floaty 6s ease-in-out infinite; }
+    @keyframes floaty{
+      0%,100%{ transform: translateY(0px); }
+      50%{ transform: translateY(-10px); }
+    }
+
+    .btn{
+      background: linear-gradient(135deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
+      border: 1px solid rgba(255,255,255,.25);
+      box-shadow: 0 12px 30px rgba(10,20,80,.18);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .btn:hover{ transform: translateY(-2px); box-shadow: 0 18px 44px rgba(10,20,80,.22); }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+
+    /* Mobile-friendly sticky calculator */
+    .stickyCalc{ position: sticky; top: 1rem; }
+
+    /* Smooth entry */
+    .reveal{ opacity:0; transform: translateY(14px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.in{ opacity:1; transform: translateY(0); }
+
+    /* In-app browsers fallback: ensure content is visible even if JS observers fail */
+    .no-io .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+
+    /* Mobile/in-app hard fallback: never hide content */
+    @media (max-width: 1024px){
+      .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
+    }
+
+    /* Reduce motion */
+    @media (prefers-reduced-motion: reduce){
+      .star, .cloud, .floaty, .glow:before{ animation: none !important; }
+      .reveal{ transition:none; }
+    }
+
+    /* Performance: on small screens keep effects minimal + more compact layout */
+    @media (max-width: 640px){
+      .noise{ display:none !important; }
+      #stars{ display:none !important; }
+      #clouds{ display:none !important; }
+
+      /* Disable expensive blurs/halos on mobile */
+      .glow:before{ display:none !important; }
+      .glass{ backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+      .btn{ backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+
+      /* Slightly stronger veil to keep text readable when effects are off */
+      body::before{ background: linear-gradient(180deg, rgba(6,10,28,.62), rgba(6,10,28,.48)) !important; }
+
+      /* Make the page feel less "long" on mobile */
+      #rules, #goods, #order{ padding-top: 1rem !important; padding-bottom: 1rem !important; }
+      .glass{ box-shadow: none !important; }
+    }
+
+    /* Also minimize effects for users who prefer reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      #stars, #clouds, .noise{ display:none !important; }
+      .glow:before{ display:none !important; }
+      .glass, .btn{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+    }
+
+    /* Custom checkbox (stable in Telegram/Safari in-app browsers) */
+    .yammy-check{
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.38);
+      background: rgba(0,0,0,.20);
+      display: inline-grid;
+      place-content: center;
+      cursor: pointer;
+      flex: 0 0 18px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .yammy-check:focus{ outline: none; box-shadow: 0 0 0 3px rgba(255,255,255,.18); }
+    .yammy-check::after{
+      content: "";
+      width: 9px;
+      height: 5px;
+      border-left: 2px solid rgba(255,255,255,.92);
+      border-bottom: 2px solid rgba(255,255,255,.92);
+      transform: rotate(-45deg);
+      opacity: 0;
+      margin-top: -1px;
+    }
+    .yammy-check:checked::after{ opacity: 1; }
+  </style>
+</head>
+<body class="compact">
+  <div id="clouds" aria-hidden="true"></div>
+  <div id="stars" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <header class="relative z-10">
+    <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-6 sm:pt-10 pb-3">
+      <div class="glass glow rounded-3xl p-5 sm:p-8">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+          <div>
+            <div class="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-white/10 border border-white/20">
+              <span class="text-sm text-white/90">✨ Добро пожаловать</span>
+              <span class="text-xs text-white/70">магазинчик Ями</span>
+            </div>
+            <h1 class="mt-4 text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+              Заказывай контент за баллы —
+              <span class="block text-white/90">быстро, красиво и удобно</span>
+            </h1>
+            <p class="mt-4 text-base sm:text-lg text-white/80 max-w-2xl">
+              Баллы начисляются за клипы. Ниже — правила, мини‑калькулятор и витрина товаров.
+              С телефона всё выглядит так же классно.
+            </p>
+            <div class="mt-6 flex flex-wrap gap-3">
+              <a href="#rules" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">📜 Правила + калькулятор</a>
+              <a href="#goods" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">🛍️ Товары</a>
+              <a href="#order" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">✉️ Как оформить заказ</a>
+            </div>
+          </div>
+
+          <div class="floaty">
+            <div class="glass rounded-3xl p-5 sm:p-6 border border-white/20 shadow-[0_16px_54px_rgba(10,20,80,.16)]">
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="text-sm text-white/80">Подсказка</div>
+                  <div class="mt-1 text-base font-bold">Собери заказ внизу</div>
+                </div>
+
+                <div class="shrink-0 hidden">
+                  <div class="rounded-2xl bg-white/8 border border-white/14 px-3 py-2 min-w-[130px]">
+                    <div class="text-[11px] text-white/70">Сейчас онлайн</div>
+                    <div class="mt-1 flex items-baseline gap-2">
+                      <div id="onlineCount" class="text-xl font-extrabold tracking-tight">—</div>
+                      <div class="text-xs text-white/70">чел.</div>
+                    </div>
+                    <div id="onlineHint" class="mt-1 text-[11px] text-white/60 hidden">Оффлайн‑режим</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-2 text-xs text-white/75">Калькулятор — в разделе «Правила» (кнопка 🧮). Ничего не копируем — просто считаем.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10">
+    <section id="rules" class="mx-auto max-w-6xl px-4 sm:px-6 py-5 sm:py-8">
+      <div class="grid grid-cols-1 gap-5">
+        <div class="reveal">
+          <div class="glass glow rounded-3xl p-5 sm:p-7">
+            <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+              <div class="min-w-0">
+                <h2 class="text-2xl sm:text-3xl font-extrabold">📜 ПРАВИЛА НАЧИСЛЕНИЯ БАЛЛОВ</h2>
+                <div class="mt-3 space-y-2 text-white/85 leading-relaxed text-sm sm:text-base">
+                  <p><span class="font-semibold">1️⃣ За каждый клип</span> → <span class="font-bold">+50</span> 🪙.</p>
+                  <p><span class="font-semibold">2️⃣ Если клипов больше одного</span> → к каждому следующему добавляем <span class="font-bold">+3%</span> от суммы предыдущего клипа.</p>
+                  <div class="mt-3 rounded-2xl bg-black/12 border border-white/12 p-4">
+                    <div class="font-semibold">Примеры:</div>
+                    <ul class="mt-2 list-disc pl-5 space-y-1 text-white/85">
+                      <li>1 клип = 50 🪙</li>
+                      <li>2 клипа = 50 + (50 × 1,03) = 103 🪙</li>
+                      <li>3 клипа = 50 + 51,5 + 52,5 = 154 🪙</li>
+                    </ul>
+                  </div>
+                  <p class="mt-2"><span class="font-semibold">⚠️ Важно:</span> если клип не о чем — баллы не начисляются!</p>
+                  <p><span class="font-semibold">💡 Совет:</span> чем больше клипов в стриме — тем выгоднее!</p>
+                  <p class="text-white/70 text-xs sm:text-sm">Совет: сначала проверь баланс по нику справа — так удобнее ✨</p>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                  <button id="openCalc" class="btn rounded-2xl px-4 py-2.5 text-sm font-semibold">🧮 Калькулятор</button>
+                  <p class="text-xs text-white/70">Откроется сверху — быстро посчитать баллы.</p>
+                </div>
+              </div>
+
+              <div class="shrink-0 w-full lg:max-w-sm">
+                <div class="rounded-2xl bg-white/8 border border-white/14 px-4 py-4">
+                  <div class="flex items-start justify-between gap-3">
+                    <div>
+                      <div class="text-sm font-bold text-white/90">🔎 Проверка баланса</div>
+                      <div id="nickStatus" class="mt-1 text-[11px] text-white/65">Ник не указан — введи ниже или войди через Twitch.</div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <button id="twitchLoginBtn" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Войти через Twitch</button>
+                      <button id="changeNick" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Сменить</button>
+                    </div>
+                  </div>
+
+                  <div class="mt-4">
+                    <label class="text-sm text-white/80" for="twitchNick">Ник Twitch</label>
+                    <div class="mt-2 flex items-center gap-2">
+                      <input id="twitchNick" type="text" class="w-full rounded-xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: YammyTanuki" />
+                      <button id="findBalance" class="btn rounded-xl px-4 py-2 text-sm font-semibold">Найти</button>
+                    </div>
+                    <p class="mt-2 text-[12px] text-white/70">Подсказка: ник ищется без учёта регистра (YammyTanuki = yammytanuki).</p>
+                    <div class="mt-3 flex items-center gap-2">
+                      <label class="inline-flex items-center gap-2 text-xs text-white/75 select-none">
+                        <input id="rememberNick" type="checkbox" checked class="yammy-check" />
+                        <span>Запомнить ник на этом устройстве</span>
+                      </label>
+                      <button id="clearNick" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Очистить</button>
+                    </div>
+                  </div>
+
+                  <div class="mt-3 rounded-2xl bg-black/12 border border-white/12 p-4">
+                    <div class="text-xs text-white/70">Результат:</div>
+                    <div id="balanceResult" class="mt-1 text-base font-extrabold">—</div>
+                    <p id="balanceHint" class="mt-2 text-xs text-white/70">Данные подтягиваются из Google Таблицы.</p>
+                  </div>
+
+                  <div class="mt-4 rounded-xl bg-black/14 border border-white/12 px-3 py-3">
+                    <div class="text-[11px] text-white/70">Либо вы можете проверить на Twitch командой</div>
+                    <div class="mt-2 flex items-center gap-2">
+                      <code class="px-2 py-1 rounded-lg bg-black/18 border border-white/12 text-sm">!Баланс</code>
+                      <button id="copyBalance" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Копировать</button>
+                    </div>
+                    <p id="copyToast" class="mt-2 text-xs text-white/70 hidden">Скопировано ✅</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Calculator modal -->
+    <div id="calcModal" class="fixed inset-0 z-50 hidden">
+      <div class="absolute inset-0 bg-black/45 backdrop-blur-sm"></div>
+      <div class="relative mx-auto max-w-md px-4 sm:px-6 pt-20 sm:pt-28">
+        <div class="glass glow rounded-3xl p-5 sm:p-6">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-extrabold">🧮 Калькулятор баллов</h3>
+              <div class="text-xs text-white/70">+3% каждый следующий клип</div>
+            </div>
+            <button id="closeCalc" class="btn rounded-xl px-3 py-2 text-sm font-semibold">✕</button>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 gap-3">
+            <label class="text-sm text-white/80">Сколько клипов?</label>
+            <div class="flex items-center gap-2">
+              <button id="clipsMinus" class="btn rounded-xl px-3 py-2 text-sm font-bold">−</button>
+              <input id="clips" type="number" min="0" value="1" class="w-full rounded-xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none focus:border-white/40" />
+              <button id="clipsPlus" class="btn rounded-xl px-3 py-2 text-sm font-bold">+</button>
+            </div>
+
+            <div class="mt-1 rounded-2xl bg-black/12 border border-white/12 p-4">
+              <div class="text-sm text-white/75">Итого баллов:</div>
+              <div class="mt-1 text-2xl font-extrabold tracking-tight"><span id="total">50</span> <span class="text-lg">🪙</span></div>
+              <div class="mt-2 text-xs text-white/70">Считаем: 50, потом каждый следующий = предыдущий × 1.03</div>
+            </div>
+
+            <div class="flex gap-2">
+              <button id="calcApply" class="btn rounded-2xl px-4 py-3 text-sm font-semibold grow">Готово</button>
+              <button id="calcCopyInside" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Копировать</button>
+            </div>
+            <p id="calcToastInside" class="text-xs text-white/70 hidden">Скопировано ✅</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="goods" class="mx-auto max-w-6xl px-4 sm:px-6 py-5 sm:py-8">
+      <div class="reveal">
+        <div class="glass glow rounded-3xl p-5 sm:p-7">
+          <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold">📜 Товары</h2>
+              <p class="mt-2 text-white/80">Нажми «Выбрать» — и перейдём к оформлению.</p>
+            </div>
+            <div class="text-sm text-white/75 hidden sm:block">
+              Совет: сначала проверь баллы, потом выбери награду.
+            </div>
+          </div>
+
+          <div id="goodsGrid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="order" class="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-12">
+      <div class="reveal">
+        <div class="glass glow rounded-3xl p-6 sm:p-8">
+          <div class="flex flex-col lg:flex-row gap-6 lg:items-start lg:justify-between">
+            <div class="max-w-2xl">
+              <h2 class="text-2xl sm:text-3xl font-extrabold">✉️ Как оформить заказ?</h2>
+              <p class="mt-3 text-white/85 leading-relaxed">
+                Напишите мне в ЛС в Telegram — одним кликом из этого сайта.
+              </p>
+
+
+              <p class="mt-4 text-white/80">
+                Выбери награду в разделе «Товары». Добавь комментарий (если нужно) и нажми «Заказать».
+                Telegram откроется автоматически с готовым текстом.
+              </p>
+            </div>
+
+            <div class="w-full lg:max-w-sm">
+              <div class="glass rounded-3xl p-5 border border-white/20">
+                <div class="text-sm text-white/75">Выбрано:</div>
+                <div id="picked" class="mt-2 text-lg font-extrabold">Пока ничего</div>
+
+                <!-- Inline status (instead of browser alerts/prompts) -->
+                <div id="orderMsg" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm">
+                  <div id="orderMsgTitle" class="font-bold"></div>
+                  <div id="orderMsgText" class="mt-1 text-white/80 text-xs"></div>
+
+                  <!-- Inline nick input (shown only when needed) -->
+                  <div id="orderNickWrap" class="mt-3 hidden">
+                    <label class="text-xs text-white/75" for="orderNick">Ник Twitch (для заказа)</label>
+                    <div class="mt-2 flex items-center gap-2">
+                      <input id="orderNick" type="text" class="w-full rounded-xl bg-black/20 border border-white/20 px-3 py-2 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: YammyTanuki" />
+                      <button id="orderNickSave" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Сохранить</button>
+                    </div>
+                    <p class="mt-2 text-[11px] text-white/65">Ник сохранится на этом устройстве (если включено «Запомнить ник»).</p>
+                  </div>
+
+                  <div id="orderMsgActions" class="mt-3 hidden flex flex-wrap gap-2"></div>
+                </div>
+
+                <div class="mt-3">
+                  <label class="text-sm text-white/80">Доп. комментарий (опционально)</label>
+                  <textarea id="comment" rows="3" class="mt-2 w-full rounded-2xl bg-black/20 border border-white/20 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: жанр/настроение/какая именно игра..."></textarea>
+                </div>
+                <button id="placeOrder" class="btn mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">Заказать</button>
+                <p id="orderToast" class="mt-3 text-xs text-white/70 hidden">Открываю Telegram…</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 text-xs text-white/65">
+            Примечание: этот сайт — удобная витрина. Оплата/подтверждение — по твоим правилам в чате.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mx-auto max-w-6xl px-4 sm:px-6 pb-10">
+      <div class="glass rounded-3xl p-5 sm:p-6 border border-white/20 text-white/75">
+        <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+          <div>
+            <div class="font-bold text-white/90">✨ Магазинчик Ями</div>
+            <div class="text-xs">С Любовью ❤️</div>
+          </div>
+          <button id="toTop" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Наверх ↑</button>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    // Telegram/Instagram in-app browsers sometimes break IntersectionObserver.
+    // If that happens, we force all reveal blocks visible.
+    // Also: if we are inside an in-app browser (Telegram/Instagram), be safe and disable heavy effects too.
+    try{
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const inApp = ua.includes('telegram') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
+      if(inApp) document.documentElement.classList.add('no-io');
+      if(!('IntersectionObserver' in window)) document.documentElement.classList.add('no-io');
+    }catch(e){ document.documentElement.classList.add('no-io'); }
+
+    // In-app browsers: do NOT remove DOM nodes (can cause layout issues).
+    // We already disable effects via CSS and by not starting generators.
+    // Keep this block empty intentionally.
+
+    // ----- Helpers -----
+    const $ = (sel, root=document) => root.querySelector(sel);
+    const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+    async function copyText(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch(e){
+        // Fallback
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        try{ document.execCommand('copy'); return true; }
+        catch(err){ return false; }
+        finally{ document.body.removeChild(ta); }
+      }
+    }
+
+    function toast(el){
+      if(!el) return;
+      el.classList.remove('hidden');
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .25s ease';
+      requestAnimationFrame(()=> el.style.opacity = '1');
+      clearTimeout(el._t);
+      el._t = setTimeout(()=>{
+        el.style.opacity = '0';
+        setTimeout(()=> el.classList.add('hidden'), 260);
+      }, 1300);
+    }
+
+    function roundNice(n){
+      // Show integer if close, else one decimal with comma
+      const r = Math.round(n);
+      if (Math.abs(n - r) < 1e-9) return String(r);
+      const one = Math.round(n * 10) / 10;
+      return String(one).replace('.', ',');
+    }
+
+    // ----- Calculator (init safely after DOM ready) -----
+    function calcTotal(clips){
+      clips = Math.max(0, Math.floor(Number(clips) || 0));
+      let total = 0;
+      let prev = 50;
+      for(let i=1;i<=clips;i++){
+        if(i===1){ total += 50; prev = 50; }
+        else{
+          prev = prev * 1.03;
+          total += prev;
+        }
+      }
+      return total;
+    }
+
+    function updateCalc(){
+      const clipsEl = $('#clips');
+      const totalEl = $('#total');
+      if(!clipsEl || !totalEl) return;
+      let c = Math.max(0, Math.floor(Number(clipsEl.value || 0)));
+      clipsEl.value = c;
+      totalEl.textContent = roundNice(calcTotal(c));
+    }
+
+    function openCalc(){
+      const m = $('#calcModal');
+      if(!m) return;
+      m.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      updateCalc();
+      setTimeout(()=> $('#clips')?.focus(), 50);
+    }
+
+    function closeCalc(){
+      const m = $('#calcModal');
+      if(!m) return;
+      m.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    function initCalculator(){
+      $('#clipsMinus')?.addEventListener('click', ()=>{ const i = $('#clips'); if(!i) return; i.value = Math.max(0, (Number(i.value)||0) - 1); updateCalc(); });
+      $('#clipsPlus')?.addEventListener('click', ()=>{ const i = $('#clips'); if(!i) return; i.value = (Number(i.value)||0) + 1; updateCalc(); });
+      $('#clips')?.addEventListener('input', updateCalc);
+
+      $('#openCalc')?.addEventListener('click', openCalc);
+      $('#closeCalc')?.addEventListener('click', closeCalc);
+      $('#calcApply')?.addEventListener('click', closeCalc);
+
+      // close on overlay/backdrop click
+      $('#calcModal')?.addEventListener('click', (e)=>{
+        const modal = $('#calcModal');
+        if(e.target === modal) closeCalc();
+      });
+      $('#calcModal .absolute')?.addEventListener('click', closeCalc);
+
+      document.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && !$('#calcModal')?.classList.contains('hidden')) closeCalc();
+      });
+
+      $('#calcCopyInside')?.addEventListener('click', async ()=>{
+        const c = Number($('#clips')?.value)||0;
+        const t = $('#total')?.textContent || '';
+        const ok = await copyText(`Клипов: ${c}. Итого баллов: ${t} 🪙`);
+        if(ok) toast($('#calcToastInside'));
+      });
+
+      updateCalc();
+    }
+
+    // ----- Copy buttons -----
+    function initCopyButtons(){
+      $('#copyBalance')?.addEventListener('click', async ()=>{
+        const ok = await copyText('!Баланс');
+        if(ok) toast($('#copyToast'));
+      });
+    }
+
+    // ----- Goods data (easy to edit) -----
+    // Добавлять новые товары удобно здесь: копируй объект и меняй поля.
+    // options: массив вариантов внутри карточки.
+    const PRODUCTS = [
+      {
+        title: '🥨 Закуски (Мемы)',
+        badge: 'юмор',
+        note: 'Лёгкий контент для настроения ✨',
+        options: [
+          { label: '20 мемов', price: 200 },
+          { label: '45 мемов', price: 400 },
+        ]
+      },
+      {
+        title: '🍿 Основное блюдо (Кино и Аниме)',
+        badge: 'до 2 часов',
+        note: 'Если зайдёт — смотрим фулл.',
+        options: [
+          { label: 'Фильм / Мультфильм', price: 750 },
+          { label: 'Аниме / Сериал / Телешоу', price: 750 },
+        ]
+      },
+      {
+        title: '🌶️ На десерт (18+)',
+        badge: '18+',
+        note: 'На твой/мой выбор.',
+        options: [
+          { label: 'Хентай аниме / Порно‑игры на Boosty', price: 1000 },
+        ]
+      },
+      {
+        title: '🎮 Геймерская зона',
+        badge: '2 часа',
+        note: '❗ Для MMO — только бесплатные игры. ⚠️ Если игра не «зашла» — стоп через 2 часа.',
+        options: [
+          { label: 'Играю в ТВОЮ игру', price: 1500 },
+        ]
+      },
+      {
+        title: '👑 Ультимативный заказ',
+        badge: 'марафон',
+        note: 'Для самых мощных заказов ✨',
+        options: [
+          { label: '12 часов стрима', price: 5000 },
+        ]
+      },
+      {
+        title: '🖌️ Рисунки',
+        badge: 'арт',
+        note: 'Небольшие рисунки по твоей идее ✨',
+        options: [
+          { label: 'Заказать всратыша', price: 3000 },
+        ]
+      },
+      {
+        title: '🎁 Свой вариант',
+        badge: 'предложение',
+        note: 'Главное — чтобы было интересно и по правилам ✨',
+        options: [
+          { label: 'Хочу обсудить индивидуальный заказ', price: null },
+        ]
+      },
+    ];
+
+    // Safety: if anything earlier fails in in-app browsers, still try to render goods.
+    window.addEventListener('error', ()=>{
+      try{ renderGoods(); wireGoodsButtons(); }catch(e){}
+    });
+
+    function formatCoins(price){
+      return (price === null || price === undefined) ? '—' : `${price} 🪙`;
+    }
+
+    function orderTextFrom(title, opt){
+      const p = (opt.price === null || opt.price === undefined) ? '' : ` (${opt.price} 🪙)`;
+      return `${title} — ${opt.label}${p}`;
+    }
+
+    function renderGoods(){
+      const grid = document.getElementById('goodsGrid');
+      if(!grid) return;
+      grid.innerHTML = '';
+
+      const small = window.matchMedia('(max-width: 640px)').matches;
+
+      for(const product of PRODUCTS){
+        const card = document.createElement('article');
+        card.className = 'group glass rounded-3xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1';
+        card.classList.add(small ? 'p-4' : 'p-5');
+
+        const head = document.createElement('div');
+        head.className = 'flex items-center justify-between gap-3';
+        const titleClass = small ? 'text-lg' : 'text-xl';
+        head.innerHTML = `
+          <h3 class="${titleClass} font-extrabold">${product.title}</h3>
+          <span class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/15">${product.badge || ''}</span>
+        `;
+
+        const list = document.createElement('ul');
+        list.className = 'mt-3 space-y-2 text-white/85';
+        list.innerHTML = product.options.map(opt => `
+          <li class="flex items-center justify-between">
+            <span>${opt.label}</span>
+            <span class="font-bold">${formatCoins(opt.price)}</span>
+          </li>
+        `).join('');
+
+        const actions = document.createElement('div');
+        actions.className = 'mt-4 flex flex-wrap gap-2';
+
+        product.options.forEach((opt, idx)=>{
+          const b = document.createElement('button');
+          b.className = 'btn rounded-2xl px-4 py-2 text-sm font-semibold';
+          if(idx === 0) b.classList.add('grow');
+          const label = (opt.price === null || opt.price === undefined) ? 'Выбрать' : `Выбрать ${opt.price}`;
+          b.textContent = label;
+          b.setAttribute('data-order', orderTextFrom(product.title, opt));
+          actions.appendChild(b);
+        });
+
+        const note = document.createElement('p');
+        note.className = 'mt-3 text-xs text-white/70';
+        note.textContent = product.note || '';
+
+        card.appendChild(head);
+        card.appendChild(list);
+        card.appendChild(actions);
+        card.appendChild(note);
+        grid.appendChild(card);
+      }
+    }
+
+    // Render goods after DOM is fully ready (some in-app browsers can execute scripts oddly)
+    function initGoods(){
+      try{
+        renderGoods();
+        wireGoodsButtons();
+      }catch(e){
+        console.warn('Goods init failed', e);
+      }
+    }
+
+    // Extra safety for Telegram/iOS: ensure goods render after first paint.
+    function ensureGoods(){
+      try{
+        const grid = document.getElementById('goodsGrid');
+        if(grid && grid.children.length === 0){
+          renderGoods();
+          wireGoodsButtons();
+        }
+      }catch(e){}
+    }
+
+    // ----- Goods selection -----
+    let picked = '';
+    function wireGoodsButtons(){
+      $$('#goodsGrid [data-order]').forEach(btn => {
+        btn.addEventListener('click', ()=>{
+          picked = btn.getAttribute('data-order') || '';
+          const pickedEl = $('#picked');
+          if(pickedEl) pickedEl.textContent = picked || 'Пока ничего';
+          document.querySelector('#order')?.scrollIntoView?.({behavior:'smooth', block:'start'});
+        });
+      });
+    }
+
+    function initCriticalUI(){
+      // Calculator + goods must be initialized even in Telegram in-app
+      initCalculator();
+      initGoods();
+      // one more time after first paint (some in-app browsers execute scripts oddly)
+      requestAnimationFrame(()=> setTimeout(ensureGoods, 0));
+      setTimeout(ensureGoods, 350);
+    }
+
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', initCriticalUI, {once:true});
+    }else{
+      initCriticalUI();
+    }
+
+    // ----- Inline order messages (no alert/confirm/prompt) -----
+    function setOrderMsg({type='info', title='', text='', actions=[]}={}){
+      const box = document.getElementById('orderMsg');
+      const t = document.getElementById('orderMsgTitle');
+      const tx = document.getElementById('orderMsgText');
+      const act = document.getElementById('orderMsgActions');
+      if(!box || !t || !tx || !act) return;
+
+      const styles = {
+        info:  { cls:'bg-white/8 border-white/18', title:'text-white/95' },
+        warn:  { cls:'bg-amber-500/10 border-amber-200/25', title:'text-amber-100' },
+        error: { cls:'bg-rose-500/10 border-rose-200/25', title:'text-rose-100' },
+        ok:    { cls:'bg-emerald-500/10 border-emerald-200/25', title:'text-emerald-100' },
+      };
+      const s = styles[type] || styles.info;
+
+      box.className = `mt-3 rounded-2xl border px-4 py-3 text-sm ${s.cls}`;
+      t.className = `font-bold ${s.title}`;
+      t.textContent = title;
+      tx.textContent = text;
+
+      act.innerHTML = '';
+      if(actions && actions.length){
+        act.classList.remove('hidden');
+        for(const a of actions){
+          const b = document.createElement('button');
+          b.className = 'btn rounded-xl px-3 py-2 text-xs font-semibold';
+          b.textContent = a.label;
+          b.addEventListener('click', a.onClick);
+          act.appendChild(b);
+        }
+      }else{
+        act.classList.add('hidden');
+      }
+
+      box.classList.remove('hidden');
+      // scroll a bit into view on mobile
+      box.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+
+    function showOrderNickInput(show){
+      const wrap = document.getElementById('orderNickWrap');
+      const inp = document.getElementById('orderNick');
+      if(!wrap) return;
+      if(show){
+        wrap.classList.remove('hidden');
+        // prefill from saved nick if any
+        const known = getKnownNick();
+        if(inp && !inp.value) inp.value = known || '';
+      }else{
+        wrap.classList.add('hidden');
+      }
+    }
+
+    function clearOrderMsg(){
+      const box = document.getElementById('orderMsg');
+      if(box) box.classList.add('hidden');
+      const act = document.getElementById('orderMsgActions');
+      if(act) act.classList.add('hidden');
+      showOrderNickInput(false);
+    }
+
+    // ----- Place order (optionally spend points, then open Telegram) -----
+    // Вернули обычное открытие Telegram (без предварительной вкладки about:blank)
+    document.getElementById('placeOrder')?.addEventListener('click', async ()=>{
+      clearOrderMsg();
+
+      const btn = document.getElementById('placeOrder');
+      const toastEl = document.getElementById('orderToast');
+
+      if(!picked){
+        setOrderMsg({
+          type:'warn',
+          title:'Выбери товар',
+          text:'Сначала выбери награду в разделе «Товары», и она появится здесь.',
+        });
+        return;
+      }
+
+      // Need nick: allow entering it right here
+      let nick = getKnownNick();
+      if(!nick){
+        setOrderMsg({
+          type:'warn',
+          title:'Нужен ник Twitch',
+          text:'Укажи свой ник — так будет понятно, кто заказал (и можно проверить/списать баллы).',
+        });
+        showOrderNickInput(true);
+        setTimeout(()=>{ const i = document.getElementById('orderNick'); i?.focus(); i?.select(); }, 50);
+        return;
+      }
+
+      // Try to spend points (simple mode)
+      const spend = parsePickedPrice(picked);
+      if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
+        if(btn){ btn.disabled = true; btn.classList.add('opacity-60'); }
+        if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
+
+        try{
+          const res = await spendPoints({ nick, amount: spend, item: picked, comment: ($('#comment').value||'').trim() });
+          if(res.ok){
+            if(nick) await onFindBalance({auto:true});
+          }else if(res.reason === 'insufficient'){
+            setOrderMsg({
+              type:'error',
+              title:'Недостаточно баллов 😢',
+              text:`Для этого заказа нужно ${spend} 🪙. Накопи ещё баллов и возвращайся!`,
+            });
+            return;
+          }else if(res.reason === 'notfound'){
+            setOrderMsg({
+              type:'error',
+              title:'Ник не найден',
+              text:'Не нашёл твой ник в таблице. Проверь написание (без пробелов) и попробуй снова.',
+              actions: [{
+                label:'Проверить ник',
+                onClick: ()=>{
+                  document.querySelector('#rules')?.scrollIntoView({behavior:'smooth', block:'start'});
+                  setTimeout(()=>{ const i = document.getElementById('twitchNick'); i?.focus(); i?.select(); }, 350);
+                }
+              }]
+            });
+            return;
+          }else{
+            // Soft-fail: allow proceeding without spending
+            setOrderMsg({
+              type:'warn',
+              title:'Не удалось списать баллы',
+              text:'Сейчас таблица не ответила. Можно всё равно открыть Telegram — Ями проверит и спишет вручную.',
+              actions: [{ label:'Всё равно заказать', onClick: ()=>{ openTg(); } }]
+            });
+            return;
+          }
+        }catch(e){
+          setOrderMsg({
+            type:'warn',
+            title:'Ошибка связи',
+            text:'Не удалось связаться с таблицей. Можно всё равно открыть Telegram — Ями проверит и спишет вручную.',
+            actions: [{ label:'Всё равно заказать', onClick: ()=>{ openTg(); } }]
+          });
+          return;
+        }finally{
+          if(btn){ btn.disabled = false; btn.classList.remove('opacity-60'); }
+        }
+      }
+
+      // If no spend required or spend succeeded
+      openTg();
+
+      function openTg(){
+        const url = getTgUrl();
+        if(!url){
+          setOrderMsg({ type:'error', title:'Ошибка', text:'Не удалось сформировать ссылку Telegram.' });
+          return;
+        }
+
+        if(toastEl){ toastEl.textContent = 'Открываю Telegram…'; }
+        toast(toastEl);
+
+        let w = null;
+        try{ w = window.open(url, '_blank', 'noopener,noreferrer'); }catch(e){}
+        if(!w){
+          setOrderMsg({
+            type:'warn',
+            title:'Браузер заблокировал открытие',
+            text:'Нажми кнопку ниже, чтобы открыть Telegram (или разреши всплывающие окна для этого сайта).',
+            actions: [{ label:'Открыть Telegram', onClick: ()=> window.open(url, '_blank', 'noopener,noreferrer') }]
+          });
+        }
+      }
+    });
+
+    function parsePickedPrice(str){
+      // Extract first number that looks like price in coins
+      const s = String(str || '');
+      const m = s.match(/\b(\d{2,7})\b\s*🪙?/);
+      if(!m) return NaN;
+      return Number(m[1]);
+    }
+
+    $('#toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+
+    // ----- Telegram deep link -----
+    function normalizeTgTarget(raw){
+      const v = String(raw || '').trim();
+      if(!v) return '';
+      // Accept: @user, user, https://t.me/user, t.me/user
+      let s = v;
+      s = s.replace(/^https?:\/\//i,'');
+      s = s.replace(/^t\.me\//i,'');
+      s = s.replace(/^telegram\.me\//i,'');
+      s = s.replace(/^@/,'');
+      // remove query/hash
+      s = s.split('?')[0].split('#')[0].trim();
+      // basic sanitization
+      s = s.replace(/[^a-zA-Z0-9_]/g,'');
+      return s;
+    }
+
+    function getKnownNick(){
+      const inp = document.getElementById('twitchNick');
+      const v = (inp?.value || localStorage.getItem(NICK_STORAGE_KEY) || '').trim();
+      return v;
+    }
+
+    function buildOrderText(){
+      const cmt = ($('#comment').value || '').trim();
+      const item = picked || '[награда]';
+      const nick = getKnownNick();
+
+      const parts = [];
+      parts.push(`Ями, беру ${item}`);
+      parts.push(`Ник Twitch: ${nick || '[укажи ник]'}`);
+      if(cmt) parts.push(`Комментарий: ${cmt}`);
+
+      return parts.join('\n');
+    }
+
+    // ----- Telegram target (built-in) -----
+    const TG_TARGET_DEFAULT = 'https://t.me/YammyTanuki';
+
+    // ----- Twitch OAuth (PKCE) -----
+    // Нужно: создать приложение в Twitch Developer Console и вставить Client ID ниже.
+    // Redirect URL должен быть: https://yammytanuki.netlify.app/
+    const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq'; // Twitch Client ID
+    const TWITCH_REDIRECT_URI = 'https://yammytanuki.netlify.app/';
+    // Для безопасного получения ника в SPA проще всего использовать OIDC userinfo.
+    // Для этого нужен scope `openid`.
+    const TWITCH_SCOPES = ['openid'];
+
+    function base64UrlEncode(uint8){
+      let s = '';
+      uint8.forEach(b => s += String.fromCharCode(b));
+      return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    }
+
+    async function sha256(text){
+      // crypto.subtle might be unavailable in some in-app browsers.
+      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
+        throw new Error('crypto.subtle unavailable');
+      }
+      const enc = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', enc);
+      return new Uint8Array(hash);
+    }
+
+    function randomString(len=64){
+      // In some in-app browsers crypto.getRandomValues can be restricted.
+      // Fallback to Math.random (enough for state/PKCE here).
+      try{
+        const a = new Uint8Array(len);
+        crypto.getRandomValues(a);
+        return base64UrlEncode(a);
+      }catch(e){
+        let s = '';
+        for(let i=0;i<len;i++) s += String.fromCharCode(Math.floor(Math.random()*256));
+        return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+    }
+
+    const TWITCH_OAUTH_KEY = 'yammy_twitch_oauth_pkce_v1';
+
+    function getAuthState(){
+      try{ return JSON.parse(sessionStorage.getItem(TWITCH_OAUTH_KEY) || '{}'); }
+      catch(e){ return {}; }
+    }
+
+    function setAuthState(obj){
+      sessionStorage.setItem(TWITCH_OAUTH_KEY, JSON.stringify(obj || {}));
+    }
+
+    function clearAuthState(){
+      sessionStorage.removeItem(TWITCH_OAUTH_KEY);
+    }
+
+    async function twitchLogin(){
+      if(!TWITCH_CLIENT_ID){
+        setOrderMsg({ type:'warn', title:'Twitch вход не настроен', text:'Добавь Client ID в код сайта (TWITCH_CLIENT_ID).' });
+        return;
+      }
+
+      // Some in-app browsers don't support crypto.subtle -> PKCE breaks.
+      // In that case we show a friendly message instead of crashing the whole page.
+      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
+        setOrderMsg({
+          type:'warn',
+          title:'Twitch вход недоступен в этом браузере',
+          text:'Открой сайт в обычном браузере (Chrome/Safari) или зайди с ПК, чтобы войти через Twitch.'
+        });
+        return;
+      }
+
+      const state = randomString(24);
+      const verifier = randomString(64);
+      let challenge = '';
+      try{
+        challenge = base64UrlEncode(await sha256(verifier));
+      }catch(e){
+        setOrderMsg({
+          type:'warn',
+          title:'Не удалось запустить Twitch вход',
+          text:'Этот браузер ограничивает криптографию. Открой сайт в Chrome/Safari или с ПК.'
+        });
+        return;
+      }
+
+      setAuthState({ state, verifier, at: Date.now() });
+
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: TWITCH_CLIENT_ID,
+        redirect_uri: TWITCH_REDIRECT_URI,
+        scope: TWITCH_SCOPES.join(' '),
+        state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
+      });
+
+      window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+    }
+
+    async function twitchExchangeCode(code){
+      const st = getAuthState();
+      if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
+
+      const params = new URLSearchParams({
+        client_id: TWITCH_CLIENT_ID,
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: TWITCH_REDIRECT_URI,
+        code_verifier: st.verifier
+      });
+
+      const res = await fetch('https://id.twitch.tv/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+      if(!res.ok) throw new Error('Token exchange failed');
+      return await res.json();
+    }
+
+    // Получаем профиль через OIDC userinfo (работает со scope openid)
+    async function twitchGetUser(accessToken){
+      const res = await fetch('https://id.twitch.tv/oauth2/userinfo', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+      if(!res.ok) throw new Error('Failed to fetch userinfo');
+      const json = await res.json();
+      // userinfo обычно содержит preferred_username
+      // также может быть `sub`, `picture`, etc.
+      const login = json?.preferred_username || json?.login || json?.nickname || '';
+      return login ? { login, display_name: login } : null;
+    }
+
+    function cleanUrlAfterOAuth(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('code');
+      url.searchParams.delete('scope');
+      url.searchParams.delete('state');
+      window.history.replaceState({}, document.title, url.toString());
+    }
+
+    async function handleTwitchOAuthCallback(){
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      if(!code) return;
+
+      // If PKCE is not supported here, don't break the page.
+      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
+        setOrderMsg({
+          type:'warn',
+          title:'Twitch вход недоступен в этом браузере',
+          text:'Похоже, этот браузер не поддерживает безопасную авторизацию. Открой сайт в обычном браузере (Chrome/Safari) и войди ещё раз.'
+        });
+        clearAuthState();
+        cleanUrlAfterOAuth();
+        return;
+      }
+
+      const st = getAuthState();
+      if(!st || !st.state || st.state !== state){
+        clearAuthState();
+        setOrderMsg({ type:'error', title:'Ошибка входа Twitch', text:'Неверный state. Попробуй войти ещё раз.' });
+        cleanUrlAfterOAuth();
+        return;
+      }
+
+      try{
+        setOrderMsg({ type:'info', title:'Вход через Twitch…', text:'Секунду, получаю ваш ник.' });
+        const token = await twitchExchangeCode(code);
+        const user = await twitchGetUser(token.access_token);
+        if(user?.login){
+          applyNickEverywhere(user.login);
+          setTimeout(()=> onFindBalance({auto:true}), 150);
+          setOrderMsg({ type:'ok', title:'Готово!', text:`Вы вошли как ${user.display_name || user.login}.` });
+        }else{
+          setOrderMsg({ type:'warn', title:'Не удалось получить ник', text:'Попробуй ещё раз.' });
+        }
+      }catch(e){
+        const msg = (e && (e.message || String(e))) || 'unknown';
+        setOrderMsg({ type:'error', title:'Ошибка входа Twitch', text:`Не удалось завершить авторизацию. Попробуй позже. (${msg})` });
+      }finally{
+        clearAuthState();
+        cleanUrlAfterOAuth();
+      }
+    }
+
+    function getTgUrl(){
+      const user = normalizeTgTarget(TG_TARGET_DEFAULT);
+      if(!user) return '';
+      const text = buildOrderText();
+      return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
+    }
+
+    // ----- Balance lookup + spending (Google Sheets via Apps Script) -----
+    // URL веб‑приложения Apps Script (Deploy → Web app):
+    const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
+
+    // Включает списание баллов при заказе (опционально, простая защита). Для простоты — фиксированный токен.
+    // ВАЖНО: так как токен лежит на сайте, это не "железная" защита, но отсекает случайные запросы.
+    const SPEND_ENABLED = true;
+    const SPEND_TOKEN = 'yammy_spend_v1';
+
+    function normNick(s){
+      return String(s ?? '').trim().toLowerCase();
+    }
+
+    function parsePoints(v){
+      if(v === null || v === undefined) return NaN;
+      if(typeof v === 'number') return v;
+      const s = String(v).trim().replace(',', '.');
+      const n = Number(s);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    async function fetchBalances(){
+      if(!BALANCE_API_URL) throw new Error('BALANCE_API_URL is empty');
+      const res = await fetch(BALANCE_API_URL, { cache: 'no-store' });
+      if(!res.ok) throw new Error('API request failed');
+      const json = await res.json();
+      if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
+      return json.data;
+    }
+
+    async function spendPoints({nick, amount, item, comment}={}){
+      const cleanNick = String(nick || '').trim();
+      const a = Number(amount);
+      if(!cleanNick) return { ok:false, reason:'nonick' };
+      if(!Number.isFinite(a) || a <= 0) return { ok:false, reason:'badamount' };
+      if(!BALANCE_API_URL) return { ok:false, reason:'nourl' };
+
+      const payload = {
+        action: 'spend',
+        token: SPEND_TOKEN,
+        nick: cleanNick,
+        amount: a,
+        item: String(item || '').slice(0, 200),
+        comment: String(comment || '').slice(0, 500),
+        at: Date.now(),
+      };
+
+      const res = await fetch(BALANCE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      // Apps Script sometimes returns 302/HTML on error; try to parse safely
+      const txt = await res.text();
+      try{
+        const json = JSON.parse(txt);
+        return json;
+      }catch(e){
+        return { ok:false, reason:'badjson', raw: txt.slice(0, 200) };
+      }
+    }
+
+    async function findBalanceByNick(nick){
+      const needle = normNick(nick);
+      if(!needle) return { found:false, reason:'empty' };
+
+      const rows = await fetchBalances();
+      // Ожидаем заголовки ровно как в таблице: "Никнейм" и "Итоговые баллы"
+      // Но на всякий случай пробуем несколько вариантов ключей.
+      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник'];
+      const pointsKeys = ['Итоговые баллы','итоговые баллы','Баллы','баллы','Points','points'];
+
+      for(const r of rows){
+        const nickVal = nickKeys.map(k=>r[k]).find(v=>v!==undefined);
+        const rowNick = normNick(nickVal);
+        if(!rowNick) continue;
+        if(rowNick === needle){
+          const ptsVal = pointsKeys.map(k=>r[k]).find(v=>v!==undefined);
+          const pts = parsePoints(ptsVal);
+          return { found:true, nick: nickVal ?? nick, points: ptsVal, pointsNum: pts };
+        }
+      }
+      return { found:false, reason:'notfound' };
+    }
+
+    const NICK_STORAGE_KEY = 'yammy_shop_twitch_nick_v1';
+
+    function setNickUI(nick){
+      const status = document.getElementById('nickStatus');
+      const inp = document.getElementById('twitchNick');
+      const btn = document.getElementById('findBalance');
+      const remember = document.getElementById('rememberNick');
+
+      const clean = String(nick || '').trim();
+      if(inp) inp.value = clean;
+
+      if(status){
+        status.textContent = clean ? `Текущий ник: ${clean}` : 'Ник не указан — введи ниже.';
+      }
+
+      if(btn){
+        btn.textContent = clean ? 'Обновить' : 'Найти';
+      }
+
+      if(remember && !clean){
+        // keep checkbox as-is, no forced change
+      }
+    }
+
+    function saveNickIfAllowed(nick){
+      const remember = document.getElementById('rememberNick');
+      const clean = String(nick || '').trim();
+      if(!clean) return;
+      if(remember?.checked){
+        localStorage.setItem(NICK_STORAGE_KEY, clean);
+      }
+    }
+
+    function applyNickEverywhere(nick){
+      const clean = String(nick || '').trim();
+      if(!clean) return;
+      setNickUI(clean);
+      saveNickIfAllowed(clean);
+      // also update inline order nick field if present
+      const o = document.getElementById('orderNick');
+      if(o) o.value = clean;
+    }
+
+    function clearSavedNick(){
+      localStorage.removeItem(NICK_STORAGE_KEY);
+      setNickUI('');
+      const out = document.getElementById('balanceResult');
+      const hint = document.getElementById('balanceHint');
+      if(out) out.textContent = '—';
+      if(hint) hint.textContent = 'Данные подтягиваются из Google Таблицы.';
+    }
+
+    async function onFindBalance({auto=false} = {}){
+      const inp = document.getElementById('twitchNick');
+      const out = document.getElementById('balanceResult');
+      const hint = document.getElementById('balanceHint');
+      const btn = document.getElementById('findBalance');
+
+      if(!inp || !out || !hint || !btn) return;
+
+      const nick = (inp.value || '').trim();
+      setNickUI(nick);
+
+      if(!nick){
+        if(!auto) out.textContent = 'Введи ник Twitch выше.';
+        return;
+      }
+
+      if(!BALANCE_API_URL){
+        out.textContent = 'Баланс пока не подключён.';
+        hint.textContent = 'Нужно вставить URL Apps Script в переменную BALANCE_API_URL (внизу файла).';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.classList.add('opacity-60');
+      out.textContent = auto ? 'Загружаю…' : 'Ищу…';
+      try{
+        const res = await findBalanceByNick(nick);
+        if(res.found){
+          const pts = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : res.points;
+          out.textContent = `${String(res.nick).trim()} — ${pts} 🪙`;
+          hint.textContent = 'Если баллы не совпадают — проверь ник и обновление таблицы.';
+          saveNickIfAllowed(String(res.nick).trim() || nick);
+          setNickUI(String(res.nick).trim() || nick);
+        }else{
+          out.textContent = 'Не найдено 😢';
+          hint.textContent = 'Проверь написание ника (без пробелов).';
+          // всё равно можем сохранить введённый ник, если человек так хочет
+          saveNickIfAllowed(nick);
+          setNickUI(nick);
+        }
+      }catch(e){
+        out.textContent = 'Ошибка загрузки.';
+        hint.textContent = 'Проверь ссылку Apps Script и доступ (Deploy → Web app → доступ: "Все").';
+      }finally{
+        btn.disabled = false;
+        btn.classList.remove('opacity-60');
+      }
+    }
+
+    function initBalanceUI(){
+      document.getElementById('findBalance')?.addEventListener('click', ()=> onFindBalance({auto:false}));
+      document.getElementById('twitchLoginBtn')?.addEventListener('click', twitchLogin);
+      // If we returned from Twitch OAuth with ?code=..., handle it
+      handleTwitchOAuthCallback();
+      document.getElementById('twitchNick')?.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter') onFindBalance({auto:false});
+      });
+
+      // Автоподстановка ника при заходе (и тихая подгрузка баланса без блокировки рендера)
+      const saved = (localStorage.getItem(NICK_STORAGE_KEY) || '').trim();
+      const remember = document.getElementById('rememberNick');
+      if(saved){
+        if(remember) remember.checked = true;
+        setNickUI(saved);
+        setTimeout(()=> onFindBalance({auto:true}), 250);
+      }else{
+        setNickUI('');
+      }
+
+      document.getElementById('clearNick')?.addEventListener('click', clearSavedNick);
+      document.getElementById('changeNick')?.addEventListener('click', ()=>{
+        const inp = document.getElementById('twitchNick');
+        inp?.focus();
+        inp?.select();
+      });
+
+      document.getElementById('twitchNick')?.addEventListener('input', (e)=>{
+        const v = (e.target.value || '').trim();
+        setNickUI(v);
+      });
+
+      document.getElementById('rememberNick')?.addEventListener('change', (e)=>{
+        const rememberNow = e.target.checked;
+        const nick = (document.getElementById('twitchNick')?.value || '').trim();
+        if(rememberNow && nick) localStorage.setItem(NICK_STORAGE_KEY, nick);
+        if(!rememberNow) localStorage.removeItem(NICK_STORAGE_KEY);
+      });
+
+      initCopyButtons();
+    }
+
+    // Inline nick in order block
+    document.getElementById('orderNickSave')?.addEventListener('click', async ()=>{
+      const v = (document.getElementById('orderNick')?.value || '').trim();
+      if(!v){
+        setOrderMsg({ type:'warn', title:'Ник пустой', text:'Введи ник Twitch, чтобы продолжить.' });
+        showOrderNickInput(true);
+        return;
+      }
+      applyNickEverywhere(v);
+      showOrderNickInput(false);
+      // show confirmation
+      setOrderMsg({ type:'ok', title:'Ник сохранён', text:`Текущий ник: ${v}. Теперь можно нажимать «Заказать».` });
+      // optionally refresh balance in the right block
+      onFindBalance({auto:true});
+    });
+
+    document.getElementById('orderNick')?.addEventListener('keydown', (e)=>{
+      if(e.key === 'Enter') document.getElementById('orderNickSave')?.click();
+    });
+
+
+    // ----- Reveal on scroll -----
+    // Telegram in-app browsers can be buggy; we prefer showing content rather than hiding it.
+    // On mobile/tablet we force all reveal blocks visible via CSS (see @media rule).
+    // Here we only use IntersectionObserver on desktop for a nice effect.
+    try{
+      const force = document.documentElement.classList.contains('no-io');
+      const isSmallOrTablet = window.matchMedia('(max-width: 1024px)').matches;
+      if(!force && !isSmallOrTablet && 'IntersectionObserver' in window){
+        const io = new IntersectionObserver((entries)=>{
+          for(const e of entries){
+            if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+          }
+        }, {threshold: 0.12});
+        $$('.reveal').forEach(el => io.observe(el));
+      }else{
+        $$('.reveal').forEach(el => el.classList.add('in'));
+      }
+    }catch(err){
+      $$('.reveal').forEach(el => el.classList.add('in'));
+    }
+
+    // ----- Decorative effects (disabled on mobile/in-app for performance) -----
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const inApp = document.documentElement.classList.contains('no-io');
+
+    // Only run clouds/stars on desktop browsers and when motion is allowed.
+    // In-app browsers (Telegram) and mobiles often lag — keep it OFF there.
+    if(!isMobile && !reduced && !inApp){
+      // ----- Decorative: clouds -----
+      const cloudsRoot = document.getElementById('clouds');
+      function addCloud({top, duration, delay, scale, opacity}){
+        const c = document.createElement('div');
+        c.className = 'cloud';
+        c.style.top = top + 'vh';
+        c.style.animationDuration = duration + 's';
+        c.style.animationDelay = (-delay) + 's';
+        c.style.transform = `translate3d(-120%,0,0) scale(${scale})`;
+        c.style.opacity = opacity;
+        cloudsRoot.appendChild(c);
+      }
+
+      const cloudCount = 5; // slightly less for performance
+      for(let i=0;i<cloudCount;i++){
+        addCloud({
+          top: 6 + Math.random()*40,
+          duration: 52 + Math.random()*60,
+          delay: Math.random()*80,
+          scale: 0.7 + Math.random()*0.9,
+          opacity: 0.34 + Math.random()*0.34
+        });
+      }
+
+      // ----- Decorative: stars -----
+      const starsRoot = document.getElementById('stars');
+      function addStar(){
+        const s = document.createElement('div');
+        s.className = 'star';
+        const left = Math.random()*100;
+        const drift = (Math.random()*2 - 1) * 70; // px
+        const scale = 0.6 + Math.random()*1.2;
+        const opacity = 0.18 + Math.random()*0.48;
+        const dur = 8 + Math.random()*13;
+        const delay = Math.random()*dur;
+
+        s.style.left = left + 'vw';
+        s.style.setProperty('--x', '0px');
+        s.style.setProperty('--drift', drift + 'px');
+        s.style.setProperty('--s', scale);
+        s.style.setProperty('--o', opacity);
+        s.style.animationDuration = dur + 's';
+        s.style.animationDelay = (-delay) + 's';
+        s.style.top = '-12vh';
+        const sz = (8 + Math.random()*10);
+        s.style.width = sz + 'px';
+        s.style.height = sz + 'px';
+        starsRoot.appendChild(s);
+
+        setTimeout(()=>{ s.remove(); }, (dur+2)*1000);
+      }
+
+      // Lower amount to reduce DOM work
+      const initial = Math.min(55, Math.max(35, Math.floor(window.innerWidth/22)));
+      for(let i=0;i<initial;i++) addStar();
+
+      const intervalMs = 950;
+      setInterval(()=>{
+        const perTick = 2;
+        for(let i=0;i<perTick;i++) addStar();
+      }, intervalMs);
+    }
+
+    // Improve accessibility: avoid focus outlines getting lost
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Tab') document.documentElement.classList.add('kb');
+    }, {once:true});
+
+    // ----- Init remaining UI safely after DOM is ready -----
+    function initAllAfterDom(){
+      try{ initBalanceUI(); }catch(e){ console.warn('Balance init failed', e); }
+    }
+
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', initAllAfterDom, {once:true});
+    }else{
+      initAllAfterDom();
+    }
+  </script>
+</body>
+</html>
