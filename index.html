@@ -1104,7 +1104,8 @@
 
     function isTelegramInApp(){
       const ua = (navigator.userAgent || '').toLowerCase();
-      return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('telegrambot');
+      // Telegram Android/iOS WebView variants
+      return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('telegrambot') || ua.includes('org.telegram.messenger') || ua.includes('org.telegram.messenger.web');
     }
 
     function openTgInAppModal(){
@@ -1122,11 +1123,11 @@
     }
 
     async function twitchLogin(ev){
-      try{ ev?.preventDefault?.(); ev?.stopPropagation?.(); }catch(e){}
+      try{ ev?.preventDefault?.(); ev?.stopPropagation?.(); ev?.stopImmediatePropagation?.(); }catch(e){}
       clearOrderMsg();
 
       // Telegram login is unreliable even when it opens a Chrome Custom Tab.
-      // We block OAuth here and show a "bridge" modal that forces opening the site in full Chrome.
+      // Hard block OAuth here and show a "bridge" modal.
       if(isTelegramInApp()){
         const hint = document.getElementById('balanceHint');
         if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается. Открой сайт в обычном браузере и войди там.';
@@ -1312,9 +1313,22 @@
       document.querySelector('#tgInAppModal .absolute')?.addEventListener('click', closeTgInAppModal);
       document.getElementById('openInBrowser')?.addEventListener('click', ()=>{
         const url = window.location.href;
-        // Android: try to force full Chrome (not a Custom Tab inside Telegram)
-        // by using intent://. If it fails, fall back to normal open.
+        const ua = (navigator.userAgent || '').toLowerCase();
         const isAndroid = /android/i.test(navigator.userAgent || '');
+        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+
+        // iOS: best effort — open a new tab, user can choose Safari.
+        if(isIOS){
+          try{
+            const w = window.open(url, '_blank', 'noopener,noreferrer');
+            if(!w) window.location.href = url;
+          }catch(e){
+            try{ window.location.href = url; }catch(err){}
+          }
+          return;
+        }
+
+        // Android: try to force full Chrome (not Telegram Custom Tab)
         if(isAndroid){
           const clean = url.replace(/^https?:\/\//i,'');
           const intentUrl = `intent://${clean}#Intent;scheme=https;package=com.android.chrome;end`;
@@ -1323,6 +1337,7 @@
             return;
           }catch(e){}
         }
+
         // Fallbacks
         try{
           const w = window.open(url, '_blank', 'noopener,noreferrer');
@@ -1351,7 +1366,31 @@
       // wire buttons
       // Always intercept click (capture phase), so Telegram in-app can't sneak a navigation
       // before our handler runs.
-      document.getElementById('twitchLoginBtn')?.addEventListener('click', (e)=> twitchLogin(e), true);
+      const loginBtn = document.getElementById('twitchLoginBtn');
+      if(loginBtn){
+        // If Telegram: hard block any navigation and show modal (some WebViews ignore preventDefault).
+        if(isTelegramInApp()){
+          loginBtn.setAttribute('type','button');
+          // Neutralize any accidental default behavior
+          loginBtn.onclick = null;
+
+          const showBridge = (e)=>{
+            try{ e?.preventDefault?.(); e?.stopPropagation?.(); e?.stopImmediatePropagation?.(); }catch(err){}
+            const hint = document.getElementById('balanceHint');
+            if(hint) hint.textContent = 'Открыто из Telegram. Вход Twitch здесь часто ломается. Нажми «Открыть в браузере» и войди там.';
+            openTgInAppModal();
+            return false;
+          };
+
+          // Capture multiple event types to avoid any navigation before we intercept.
+          loginBtn.addEventListener('click', showBridge, true);
+          loginBtn.addEventListener('pointerdown', showBridge, true);
+          loginBtn.addEventListener('touchstart', showBridge, {capture:true, passive:false});
+          loginBtn.addEventListener('touchend', showBridge, {capture:true, passive:false});
+        }else{
+          loginBtn.addEventListener('click', (e)=> twitchLogin(e), true);
+        }
+      }
       document.getElementById('twitchLogoutBtn')?.addEventListener('click', twitchLogout);
       document.getElementById('clearNick')?.addEventListener('click', clearSavedAuth);
 
