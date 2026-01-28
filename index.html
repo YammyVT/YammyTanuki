@@ -947,30 +947,16 @@
       try{ cleanUrlAfterOAuth(); }catch(e){}
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       
-      // Detect mobile device
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      
-      // Always use Implicit flow on mobile devices for better compatibility
-      // PKCE often fails on mobile due to app switching and URL parameter loss
-      if(isMobile){
-        const state = `v0_${randomString(18)}`;
-        const params = new URLSearchParams({
-          response_type: 'token',
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          scope: TWITCH_SCOPES.join(' '),
-          state
-        });
-        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
-        return;
-      }
-      
-      // On desktop, try PKCE first, fall back to Implicit if needed
-      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+      // Detect mobile devices - они всегда используют Implicit flow
       const ua = (navigator.userAgent || '').toLowerCase();
+      const isMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(ua);
       const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
-      if(!canPkce || looksBlocked){
-        const state = `v0_${randomString(18)}`;
+      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+      
+      // Для мобильных ВСЕГДА используем Implicit flow (response_type=token)
+      // Это предотвращает проблемы с приложением Twitch и PKCE
+      if(isMobileDevice || !canPkce || looksBlocked){
+        const state = `mobile_${randomString(18)}`;
         const params = new URLSearchParams({
           response_type: 'token',
           client_id: TWITCH_CLIENT_ID,
@@ -978,10 +964,13 @@
           scope: TWITCH_SCOPES.join(' '),
           state
         });
-        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        // Используем прямой редирект без force_verify для мобильных
+        window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
         return;
       }
-      const state = `v1_${randomString(24)}`;
+      
+      // Для десктопа используем PKCE
+      const state = `pkce_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
       setPkceState({ state, verifier, at: Date.now() });
@@ -994,7 +983,7 @@
         code_challenge: challenge,
         code_challenge_method: 'S256'
       });
-      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+      window.location.href = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
     }
     function twitchLogout(){
       clearAuth();
