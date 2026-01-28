@@ -403,11 +403,9 @@
       if(inApp) document.documentElement.classList.add('no-io');
       if(!('IntersectionObserver' in window)) document.documentElement.classList.add('no-io');
     }catch(e){ document.documentElement.classList.add('no-io'); }
-
     // ----- Helpers -----
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
     async function copyText(text){
       try{ await navigator.clipboard.writeText(text); return true; }
       catch(e){
@@ -422,7 +420,6 @@
         finally{ document.body.removeChild(ta); }
       }
     }
-
     function toast(el){
       if(!el) return;
       el.classList.remove('hidden');
@@ -435,14 +432,12 @@
         setTimeout(()=> el.classList.add('hidden'), 260);
       }, 1300);
     }
-
     function roundNice(n){
       const r = Math.round(n);
       if (Math.abs(n - r) < 1e-9) return String(r);
       const one = Math.round(n * 10) / 10;
       return String(one).replace('.', ',');
     }
-
     // ----- Calculator -----
     function calcTotal(clips){
       clips = Math.max(0, Math.floor(Number(clips) || 0));
@@ -454,7 +449,6 @@
       }
       return total;
     }
-
     function updateCalc(){
       const clipsEl = $('#clips');
       const totalEl = $('#total');
@@ -463,7 +457,6 @@
       clipsEl.value = c;
       totalEl.textContent = roundNice(calcTotal(c));
     }
-
     function openCalc(){
       const m = $('#calcModal');
       if(!m) return;
@@ -472,14 +465,12 @@
       updateCalc();
       setTimeout(()=> $('#clips')?.focus(), 50);
     }
-
     function closeCalc(){
       const m = $('#calcModal');
       if(!m) return;
       m.classList.add('hidden');
       document.body.style.overflow = '';
     }
-
     function initCalculator(){
       $('#clipsMinus')?.addEventListener('click', ()=>{ const i = $('#clips'); if(!i) return; i.value = Math.max(0, (Number(i.value)||0) - 1); updateCalc(); });
       $('#clipsPlus')?.addEventListener('click', ()=>{ const i = $('#clips'); if(!i) return; i.value = (Number(i.value)||0) + 1; updateCalc(); });
@@ -499,14 +490,12 @@
       });
       updateCalc();
     }
-
     function initCopyButtons(){
       $('#copyBalance')?.addEventListener('click', async ()=>{
         const ok = await copyText('!Баланс');
         if(ok) toast($('#copyToast'));
       });
     }
-
     // ----- Products -----
     const PRODUCTS = [
       { title: '🥨 Закуски (Мемы)', badge: 'юмор', note: 'Лёгкий контент для настроения ✨', options: [ { label: '20 мемов', price: 200 }, { label: '45 мемов', price: 400 } ] },
@@ -517,16 +506,13 @@
       { title: '🖌️ Рисунки', badge: 'арт', note: 'Небольшие рисунки по твоей идее ✨', options: [ { label: 'Заказать всратыша', price: 3000 } ] },
       { title: '🎁 Свой вариант', badge: 'предложение', note: 'Главное — чтобы было интересно и по правилам ✨', options: [ { label: 'Хочу обсудить индивидуальный заказ', price: null } ] },
     ];
-
     function formatCoins(price){
       return (price === null || price === undefined) ? '—' : `${price} 🪙`;
     }
-
     function orderTextFrom(title, opt){
       const p = (opt.price === null || opt.price === undefined) ? '' : ` (${opt.price} 🪙)`;
       return `${title} — ${opt.label}${p}`;
     }
-
     function renderGoods(){
       const grid = document.getElementById('goodsGrid');
       if(!grid) return;
@@ -536,7 +522,6 @@
         const card = document.createElement('article');
         card.className = 'group glass rounded-3xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1';
         card.classList.add(small ? 'p-4' : 'p-5');
-
         const head = document.createElement('div');
         head.className = 'flex items-center justify-between gap-3';
         const titleClass = small ? 'text-lg' : 'text-xl';
@@ -544,7 +529,6 @@
           <h3 class="${titleClass} font-extrabold">${product.title}</h3>
           <span class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/15">${product.badge || ''}</span>
         `;
-
         const list = document.createElement('ul');
         list.className = 'mt-3 space-y-2 text-white/85';
         list.innerHTML = product.options.map(opt => `
@@ -553,10 +537,8 @@
             <span class="font-bold">${formatCoins(opt.price)}</span>
           </li>
         `).join('');
-
         const actions = document.createElement('div');
         actions.className = 'mt-4 flex flex-wrap gap-2';
-
         product.options.forEach((opt, idx)=>{
           const b = document.createElement('button');
           b.className = 'btn rounded-2xl px-4 py-2 text-sm font-semibold';
@@ -566,11 +548,9 @@
           b.setAttribute('data-order', orderTextFrom(product.title, opt));
           actions.appendChild(b);
         });
-
         const note = document.createElement('p');
         note.className = 'mt-3 text-xs text-white/70';
         note.textContent = product.note || '';
-
         card.appendChild(head);
         card.appendChild(list);
         card.appendChild(actions);
@@ -578,7 +558,6 @@
         grid.appendChild(card);
       }
     }
-
     let picked = '';
     function wireGoodsButtons(){
       $$('#goodsGrid [data-order]').forEach(btn => {
@@ -590,12 +569,10 @@
         });
       });
     }
-
     function initGoods(){
       try{ renderGoods(); wireGoodsButtons(); }
       catch(e){ console.warn('Goods init failed', e); }
     }
-
     // ----- Order inline messages -----
     function setOrderMsg({type='info', title='', text='', actions=[]}={}){
       const box = document.getElementById('orderMsg');
@@ -630,17 +607,14 @@
       box.classList.remove('hidden');
       box.scrollIntoView({behavior:'smooth', block:'nearest'});
     }
-
     function clearOrderMsg(){
       const box = document.getElementById('orderMsg');
       if(box) box.classList.add('hidden');
       const act = document.getElementById('orderMsgActions');
       if(act) act.classList.add('hidden');
     }
-
     // ----- Telegram -----
     const TG_TARGET_DEFAULT = 'https://t.me/YammyTanuki';
-
     function normalizeTgTarget(raw){
       const v = String(raw || '').trim();
       if(!v) return '';
@@ -653,7 +627,6 @@
       s = s.replace(/[^a-zA-Z0-9_]/g,'');
       return s;
     }
-
     function buildOrderText(){
       const cmt = ($('#comment').value || '').trim();
       const item = picked || '[награда]';
@@ -664,21 +637,17 @@
       if(cmt) parts.push(`Комментарий: ${cmt}`);
       return parts.join('\n');
     }
-
     function getTgUrl(){
       const user = normalizeTgTarget(TG_TARGET_DEFAULT);
       if(!user) return '';
       const text = buildOrderText();
       return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
     }
-
     // ----- Google Sheets API (Apps Script) -----
     const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
     const SPEND_ENABLED = true;
     const SPEND_TOKEN = 'yammy_spend_v1';
-
     function normNick(s){ return String(s ?? '').trim().toLowerCase(); }
-
     function parsePoints(v){
       if(v === null || v === undefined) return NaN;
       if(typeof v === 'number') return v;
@@ -686,7 +655,6 @@
       const n = Number(s);
       return Number.isFinite(n) ? n : NaN;
     }
-
     async function fetchBalances(){
       const res = await fetch(BALANCE_API_URL, { cache: 'no-store' });
       if(!res.ok) throw new Error('API request failed');
@@ -694,7 +662,6 @@
       if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
       return json.data;
     }
-
     async function spendPoints({nick, amount, item, comment}={}){
       const cleanNick = String(nick || '').trim();
       const a = Number(amount);
@@ -718,7 +685,6 @@
       try{ return JSON.parse(txt); }
       catch(e){ return { ok:false, reason:'badjson', raw: txt.slice(0,200) }; }
     }
-
     async function findBalanceByNick(nick){
       const needle = normNick(nick);
       if(!needle) return { found:false, reason:'empty' };
@@ -737,19 +703,15 @@
       }
       return { found:false, reason:'notfound' };
     }
-
     // ----- Twitch OAuth (PKCE primary + Implicit fallback) -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
     const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
     const TWITCH_SCOPES = [];
-
     const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v2';
     const PKCE_STORAGE_KEY = 'yammy_twitch_pkce_v2';
-
     function setPkceState(obj){ sessionStorage.setItem(PKCE_STORAGE_KEY, JSON.stringify(obj||{})); }
     function getPkceState(){ try{ return JSON.parse(sessionStorage.getItem(PKCE_STORAGE_KEY) || '{}'); }catch(e){ return {}; } }
     function clearPkceState(){ sessionStorage.removeItem(PKCE_STORAGE_KEY); }
-
     function setAuth(obj){
       const remember = document.getElementById('rememberNick');
       const data = obj || {};
@@ -765,23 +727,19 @@
         try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data)); }catch(err){}
       }
     }
-
     function getAuth(){
       try{ const s = sessionStorage.getItem(AUTH_STORAGE_KEY); if(s) return JSON.parse(s); }catch(e){}
       try{ return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}'); }catch(e){ return {}; }
     }
-
     function clearAuth(){
       try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
       try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
     }
-
     function base64UrlEncode(uint8){
       let s = '';
       uint8.forEach(b => s += String.fromCharCode(b));
       return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     }
-
     function randomString(len=64){
       try{
         const a = new Uint8Array(len);
@@ -793,20 +751,17 @@
         return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
     }
-
     async function sha256(text){
       const enc = new TextEncoder().encode(text);
       const hash = await crypto.subtle.digest('SHA-256', enc);
       return new Uint8Array(hash);
     }
-
     function withTimeout(promise, ms=12000){
       return new Promise((resolve, reject)=>{
         const t = setTimeout(()=> reject(new Error('Timeout')), ms);
         promise.then(v=>{ clearTimeout(t); resolve(v); }, e=>{ clearTimeout(t); reject(e); });
       });
     }
-
     function cleanUrlAfterOAuth(){
       const url = new URL(window.location.href);
       url.searchParams.delete('code');
@@ -814,7 +769,6 @@
       url.searchParams.delete('state');
       window.history.replaceState({}, document.title, url.toString());
     }
-
     async function twitchExchangeCode(code){
       const st = getPkceState();
       if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
@@ -860,7 +814,6 @@
       }
       throw new Error(`Token exchange failed: ${desc} (${dbg})`);
     }
-
     async function twitchGetUserHelix(accessToken){
       const res = await withTimeout(fetch('https://api.twitch.tv/helix/users', {
         headers: {
@@ -880,7 +833,6 @@
       const display = String(u?.display_name || login).trim();
       return login ? { login, display_name: display } : null;
     }
-
     function handleImplicitTokenFromHash(){
       const h = String(window.location.hash || '');
       if(!h || !h.includes('access_token=')) return null;
@@ -891,22 +843,18 @@
       try{ history.replaceState({}, document.title, window.location.pathname + window.location.search); }catch(e){}
       return { access_token: token, state };
     }
-
     function setNickUIAuthed(login){
       const status = document.getElementById('nickStatus');
       const nickLine = document.getElementById('nickLine');
       if(nickLine) nickLine.textContent = login ? login : '—';
       if(status) status.textContent = login ? 'Вы вошли через Twitch.' : 'Нужно войти через Twitch, чтобы увидеть баланс.';
       document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !login);
-      document.getElementById('twitchLoginBtn')?.classList.toggle('hidden', !!login);
       try{ updateOrderGateUI(); }catch(e){}
     }
-
     function getKnownNick(){
       const a = getAuth();
       return String(a?.login || '').trim();
     }
-
     async function refreshBalanceForAuthed(){
       const out = document.getElementById('balanceResult');
       const hint = document.getElementById('balanceHint');
@@ -940,8 +888,8 @@
         if(hint) hint.textContent = 'Проверь доступ Apps Script (Deploy → Web app → доступ: "Все").';
       }
     }
-
     async function handleTwitchOAuthCallback(){
+      // Implicit token flow
       const implicit = handleImplicitTokenFromHash();
       if(implicit?.access_token){
         try{
@@ -958,12 +906,11 @@
         }
         return;
       }
-
+      // PKCE code flow
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
       if(!code) return;
-
       const st0 = getPkceState();
       if(!st0?.state || !st0?.verifier){
         clearPkceState();
@@ -974,7 +921,6 @@
         if(hint) hint.textContent = 'Не удалось завершить вход. Нажми «Войти через Twitch» ещё раз.';
         return;
       }
-
       try{
         const st = getPkceState();
         if(st.state !== state) throw new Error('Bad state');
@@ -994,128 +940,45 @@
         cleanUrlAfterOAuth();
       }
     }
-
-    function isTelegramInApp(){
-      try{
-        const ua = (navigator.userAgent || '').toLowerCase();
-        return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('org.telegram');
-      }catch(e){ return false; }
-    }
-
-    // Telegram bridge modal (only for mobile in-app Telegram)
-    function ensureTgModal(){
-      if(document.getElementById('tgModal')) return;
-      const wrap = document.createElement('div');
-      wrap.id = 'tgModal';
-      wrap.className = 'fixed inset-0 z-[60] hidden';
-      wrap.innerHTML = `
-        <div class="absolute inset-0 bg-black/55 backdrop-blur-sm"></div>
-        <div class="relative mx-auto max-w-md px-4 sm:px-6 pt-24">
-          <div class="glass glow rounded-3xl p-5 sm:p-6">
-            <div class="flex items-start justify-between gap-3">
-              <div>
-                <div class="text-lg font-extrabold">🔐 Вход через Twitch</div>
-                <div class="mt-1 text-xs text-white/70">В Telegram на телефоне авторизация часто ломается (ошибка 400). Надёжнее открыть сайт в браузере.</div>
-              </div>
-              <button id="tgModalClose" class="btn rounded-xl px-3 py-2 text-sm font-semibold">✕</button>
-            </div>
-            <div class="mt-4 grid grid-cols-1 gap-2">
-              <button id="tgOpenBrowser" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Открыть сайт в браузере</button>
-              <button id="tgCopyLink" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Скопировать ссылку</button>
-            </div>
-            <p class="mt-3 text-[11px] text-white/65">После входа в браузере вернись сюда — сайт запомнит авторизацию (если включено «Запомнить вход»).</p>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(wrap);
-
-      const close = ()=>{ wrap.classList.add('hidden'); document.body.style.overflow = ''; };
-      wrap.querySelector('.absolute')?.addEventListener('click', close);
-      wrap.querySelector('#tgModalClose')?.addEventListener('click', close);
-      wrap.querySelector('#tgCopyLink')?.addEventListener('click', async ()=>{
-        const ok = await copyText(window.location.href);
-        if(ok) toast(document.getElementById('copyToast'));
-      });
-      wrap.querySelector('#tgOpenBrowser')?.addEventListener('click', ()=>{
-        // Try to force open in a real browser. On Android, intent will open Chrome.
-        const url = window.location.href;
-        const isAndroid = /android/i.test(navigator.userAgent || '');
-        if(isAndroid){
-          const clean = url.replace(/^https?:\/\//i, '');
-          window.location.href = `intent://${clean}#Intent;scheme=https;package=com.android.chrome;end`;
-          return;
-        }
-        // iOS/others: just open new tab; user can choose "Open in Safari".
-        window.open(url, '_blank', 'noopener,noreferrer');
-      });
-    }
-
-    function openTgModal(){
-      ensureTgModal();
-      const m = document.getElementById('tgModal');
-      if(!m) return;
-      m.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-
     async function twitchLogin(){
       clearOrderMsg();
-
-      // Telegram in-app on mobile is known to break Twitch OAuth (400 missing response type / bad redirects).
-      // We don't even try there — show a clean bridge.
-      const isMobile = window.matchMedia('(max-width: 640px)').matches;
-      if(isMobile && isTelegramInApp()){
-        openTgModal();
-        return;
-      }
-
       clearPkceState();
       try{ cleanUrlAfterOAuth(); }catch(e){}
-
+      
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
+      
+      // Detect mobile/tablet to force Implicit flow (more reliable on mobile devices for this error)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isSmall = window.innerWidth < 850;
+      
       const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
-      const ua = (navigator.userAgent || '').toLowerCase();
-      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('instagram');
-
-      // On most mobile browsers PKCE works, but if crypto is missing or browser looks restrictive, use implicit.
-      if(!canPkce || looksBlocked){
+      
+      // Force Implicit Flow on mobile or if PKCE not supported
+      if(isMobile || isSmall || !canPkce){
         const state = `v0_${randomString(18)}`;
-        const params = new URLSearchParams({
-          response_type: 'token',
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          scope: TWITCH_SCOPES.join(' '),
-          state
-        });
-        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        const scopes = TWITCH_SCOPES.join(' ');
+        // Manually construct URL to ensure response_type is first and correct
+        const url = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
+        window.location.assign(url);
         return;
       }
-
+      
+      // PKCE Flow (Desktop)
       const state = `v1_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
-
       setPkceState({ state, verifier, at: Date.now() });
-
-      const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: TWITCH_CLIENT_ID,
-        redirect_uri: redirectUri,
-        scope: TWITCH_SCOPES.join(' '),
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256'
-      });
-
-      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+      
+      const scopes = TWITCH_SCOPES.join(' ');
+      const url = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}&code_challenge=${challenge}&code_challenge_method=S256`;
+      
+      window.location.assign(url);
     }
-
     function twitchLogout(){
       clearAuth();
       setNickUIAuthed('');
       refreshBalanceForAuthed();
     }
-
     function clearSavedAuth(){
       clearAuth();
       setNickUIAuthed('');
@@ -1126,7 +989,6 @@
       if(out) out.textContent = '—';
       if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
     }
-
     // ----- Order gate -----
     function updateOrderGateUI(){
       const authed = !!getKnownNick();
@@ -1141,7 +1003,6 @@
       if(help) help.classList.toggle('hidden', !authed);
       if(card) card.classList.toggle('hidden', !authed);
     }
-
     // ----- Place order -----
     function parsePickedPrice(str){
       const s = String(str || '');
@@ -1149,12 +1010,10 @@
       if(!m) return NaN;
       return Number(m[1]);
     }
-
     document.getElementById('placeOrder')?.addEventListener('click', async ()=>{
       clearOrderMsg();
       const toastEl = document.getElementById('orderToast');
       const nick = getKnownNick();
-
       if(!nick){
         setOrderMsg({
           type:'warn',
@@ -1164,12 +1023,10 @@
         });
         return;
       }
-
       if(!picked){
         setOrderMsg({ type:'warn', title:'Выбери товар', text:'Сначала выбери награду в разделе «Товары».' });
         return;
       }
-
       const spend = parsePickedPrice(picked);
       if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
         if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
@@ -1202,9 +1059,7 @@
           return;
         }
       }
-
       openTg();
-
       function openTg(){
         const url = getTgUrl();
         if(!url){
@@ -1225,26 +1080,16 @@
         }
       }
     });
-
     // ----- Init balance block (OAuth only) -----
     function initBalanceUI(){
       initCopyButtons();
+      // handle callback first
       handleTwitchOAuthCallback();
-
-      // Telegram on mobile: intercept early so the webview can't start OAuth navigation.
-      const loginBtn = document.getElementById('twitchLoginBtn');
-      if(loginBtn){
-        const isMobile = window.matchMedia('(max-width: 640px)').matches;
-        if(isMobile && isTelegramInApp()){
-          const stop = (e)=>{ try{ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation?.(); }catch(err){} openTgModal(); };
-          ['touchstart','pointerdown','mousedown','click'].forEach(ev=> loginBtn.addEventListener(ev, stop, {capture:true}));
-        }
-        loginBtn.addEventListener('click', twitchLogin);
-      }
-
+      // wire buttons
+      document.getElementById('twitchLoginBtn')?.addEventListener('click', twitchLogin);
       document.getElementById('twitchLogoutBtn')?.addEventListener('click', twitchLogout);
       document.getElementById('clearNick')?.addEventListener('click', clearSavedAuth);
-
+      // restore auth if exists
       const auth = getAuth();
       const remember = document.getElementById('rememberNick');
       if(auth?.login){
@@ -1257,7 +1102,6 @@
         setNickUIAuthed('');
         refreshBalanceForAuthed();
       }
-
       remember?.addEventListener('change', (e)=>{
         const a = getAuth();
         if(!a?.login) return;
@@ -1269,10 +1113,8 @@
           try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
         }
       });
-
       updateOrderGateUI();
     }
-
     // ----- Reveal -----
     try{
       const force = document.documentElement.classList.contains('no-io');
@@ -1290,16 +1132,13 @@
     }catch(err){
       $$('.reveal').forEach(el => el.classList.add('in'));
     }
-
     // ----- Decorative effects (desktop only) -----
     const isMobile = window.matchMedia('(max-width: 640px)').matches;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const inApp = document.documentElement.classList.contains('no-io');
-
     if(!isMobile && !reduced && !inApp){
       const cloudsRoot = document.getElementById('clouds');
       const starsRoot = document.getElementById('stars');
-
       if(cloudsRoot){
         function addCloud({top, duration, delay, scale, opacity}){
           const c = document.createElement('div');
@@ -1322,7 +1161,6 @@
           });
         }
       }
-
       if(starsRoot){
         function addStar(){
           const s = document.createElement('div');
@@ -1352,18 +1190,14 @@
         setInterval(()=>{ for(let i=0;i<2;i++) addStar(); }, 950);
       }
     }
-
     document.getElementById('toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
-
     function initCriticalUI(){
       initCalculator();
       initGoods();
     }
-
     function initAllAfterDom(){
       initBalanceUI();
     }
-
     if(document.readyState === 'loading'){
       document.addEventListener('DOMContentLoaded', ()=>{ initCriticalUI(); initAllAfterDom(); }, {once:true});
     }else{
