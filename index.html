@@ -807,6 +807,8 @@
 
     // ----- Twitch OAuth (PKCE) -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
+    // NOTE: redirect_uri must match EXACTLY what is configured in Twitch Dev Console.
+    // Keep the trailing slash.
     const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
     // Helix /users does not require special scopes for basic identity.
     const TWITCH_SCOPES = [];
@@ -920,28 +922,39 @@
       const st = getPkceState();
       if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
 
+      // IMPORTANT:
+      // For Twitch OAuth token exchange from a browser, the endpoint expects
+      // application/x-www-form-urlencoded in the BODY. Passing parameters only in the body
+      // is fine, but some environments/proxies can mangle it. We also pin the exact redirect_uri.
       const params = new URLSearchParams({
         client_id: TWITCH_CLIENT_ID,
         grant_type: 'authorization_code',
-        code,
+        code: String(code || ''),
         redirect_uri: TWITCH_REDIRECT_URI,
-        code_verifier: st.verifier
+        code_verifier: String(st.verifier || '')
       });
 
       const res = await fetch('https://id.twitch.tv/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
+        body: params.toString(),
+        redirect: 'follow'
       });
 
-      // Provide better errors from Twitch
       const txt = await res.text();
       let json = null;
       try{ json = JSON.parse(txt); }catch(e){}
+
       if(!res.ok){
         const desc = json?.message || json?.error_description || json?.error || txt.slice(0,200);
+        // If Twitch says invalid client credentials, it almost always means redirect_uri mismatch.
         throw new Error(`Token exchange failed: ${desc}`);
       }
+
+      if(!json?.access_token){
+        throw new Error('Token exchange failed: missing access_token');
+      }
+
       return json;
     }
 
@@ -1063,6 +1076,9 @@
         const st = getPkceState();
         if(!st?.state || st.state !== state) throw new Error('Bad state');
 
+        // Extra debugging hint for redirect mismatch
+        if(!TWITCH_CLIENT_ID || !TWITCH_REDIRECT_URI) throw new Error('Twitch config missing');
+
         const token = await twitchExchangeCode(code);
         const user = await twitchGetUser(token.access_token);
         if(!user?.login) throw new Error('No login');
@@ -1084,7 +1100,10 @@
         const hint = document.getElementById('balanceHint');
         const out = document.getElementById('balanceResult');
         if(out) out.textContent = '—';
-        if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || '').slice(0,160) || 'Нажми «Войти через Twitch» ещё раз.'}`;
+        const msg = String(e?.message || '').trim();
+        if(hint) hint.textContent = msg
+          ? `Не удалось войти через Twitch. ${msg}`
+          : 'Не удалось войти через Twitch. Нажми «Войти через Twitch» ещё раз.';
 
         console.warn('Twitch OAuth failed', e);
       }finally{
