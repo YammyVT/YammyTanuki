@@ -808,7 +808,8 @@
     // ----- Twitch OAuth (PKCE) -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
     const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
-    const TWITCH_SCOPES = ['openid'];
+    // Helix /users does not require special scopes for basic identity.
+    const TWITCH_SCOPES = [];
 
     const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v1'; // store token + login if user wants
     const PKCE_STORAGE_KEY = 'yammy_twitch_pkce_v1';
@@ -932,19 +933,38 @@
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: params.toString()
       });
-      if(!res.ok) throw new Error('Token exchange failed');
-      return await res.json();
+
+      // Provide better errors from Twitch
+      const txt = await res.text();
+      let json = null;
+      try{ json = JSON.parse(txt); }catch(e){}
+      if(!res.ok){
+        const desc = json?.message || json?.error_description || json?.error || txt.slice(0,200);
+        throw new Error(`Token exchange failed: ${desc}`);
+      }
+      return json;
     }
 
     async function twitchGetUser(accessToken){
-      const res = await fetch('https://id.twitch.tv/oauth2/userinfo', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
+      // Prefer Helix: it is the most reliable way to get login and works for user tokens.
+      // It requires Client-ID header.
+      const res = await fetch('https://api.twitch.tv/helix/users', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Client-ID': TWITCH_CLIENT_ID
+        }
       });
-      if(!res.ok) throw new Error('Failed to fetch userinfo');
-      const json = await res.json();
-      // Twitch OIDC returns preferred_username
-      const login = String(json?.preferred_username || json?.login || json?.nickname || '').trim();
-      return login ? { login, display_name: login } : null;
+      const txt = await res.text();
+      let json = null;
+      try{ json = JSON.parse(txt); }catch(e){}
+      if(!res.ok){
+        const desc = json?.message || json?.error || txt.slice(0,200);
+        throw new Error(`Failed to fetch user: ${desc}`);
+      }
+      const u = json?.data?.[0];
+      const login = String(u?.login || '').trim();
+      const display = String(u?.display_name || login).trim();
+      return login ? { login, display_name: display } : null;
     }
 
     function cleanUrlAfterOAuth(){
@@ -1064,7 +1084,7 @@
         const hint = document.getElementById('balanceHint');
         const out = document.getElementById('balanceResult');
         if(out) out.textContent = '—';
-        if(hint) hint.textContent = 'Не удалось войти через Twitch. Нажми «Войти через Twitch» ещё раз.';
+        if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || '').slice(0,160) || 'Нажми «Войти через Twitch» ещё раз.'}`;
 
         console.warn('Twitch OAuth failed', e);
       }finally{
