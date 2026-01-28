@@ -893,6 +893,18 @@
       // Also clear previous code/state from URL just in case
       try{ cleanUrlAfterOAuth(); }catch(e){}
 
+      // If we are embedded in a preview/iframe, Twitch login can be blocked.
+      try{
+        if(window.self !== window.top){
+          setOrderMsg({
+            type:'warn',
+            title:'Открой в браузере',
+            text:'Twitch вход часто не работает в превью/встроенном окне. Открой сайт в отдельной вкладке браузера и попробуй снова.'
+          });
+          return;
+        }
+      }catch(e){}
+
       if(!isTwitchSupported()){
         setOrderMsg({type:'warn', title:'Twitch вход недоступен', text:'Этот браузер ограничивает безопасную авторизацию. Открой сайт в обычном Chrome/Safari.'});
         return;
@@ -924,11 +936,9 @@
       const st = getPkceState();
       if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
 
-      // IMPORTANT:
-      // For Twitch OAuth token exchange from a browser, the endpoint expects
-      // application/x-www-form-urlencoded in the BODY. Passing parameters only in the body
-      // is fine, but some environments/proxies can mangle it. We also pin the exact redirect_uri.
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
+      const dbg = `client_id=${TWITCH_CLIENT_ID} redirect_uri=${redirectUri}`;
+
       const params = new URLSearchParams({
         client_id: TWITCH_CLIENT_ID,
         grant_type: 'authorization_code',
@@ -937,28 +947,39 @@
         code_verifier: String(st.verifier || '')
       });
 
-      const res = await fetch('https://id.twitch.tv/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-      });
+      // Some networks block id.twitch.tv. Try both endpoints.
+      const endpoints = [
+        'https://id.twitch.tv/oauth2/token',
+        'https://api.twitch.tv/oauth2/token'
+      ];
 
-      const txt = await res.text();
-      let json = null;
-      try{ json = JSON.parse(txt); }catch(e){}
+      let lastTxt = '';
+      let lastJson = null;
+      let lastStatus = 0;
 
-      if(!res.ok){
-        const desc = json?.message || json?.error_description || json?.error || txt.slice(0,200);
-        // Add debug context (safe, does not include secrets)
-        const dbg = `client_id=${TWITCH_CLIENT_ID} redirect_uri=${String(TWITCH_REDIRECT_URI||'').trim()}`;
-        throw new Error(`Token exchange failed: ${desc} (${dbg})`);
+      for(const ep of endpoints){
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+          redirect: 'follow'
+        });
+
+        lastStatus = res.status;
+        lastTxt = await res.text();
+        lastJson = null;
+        try{ lastJson = JSON.parse(lastTxt); }catch(e){}
+
+        if(res.ok && lastJson?.access_token){
+          return lastJson;
+        }
       }
 
-      if(!json?.access_token){
-        throw new Error('Token exchange failed: missing access_token');
+      const desc = lastJson?.message || lastJson?.error_description || lastJson?.error || lastTxt.slice(0,200) || `HTTP ${lastStatus}`;
+      if(String(desc).toLowerCase().includes('invalid client credentials')){
+        throw new Error(`Token exchange failed: Invalid client credentials. Проверь в Twitch Dev Console, что OAuth Redirect URL ровно: ${redirectUri} (со слэшем в конце) и что вход выполняется НЕ в превью/iframe. (${dbg})`);
       }
-
-      return json;
+      throw new Error(`Token exchange failed: ${desc} (${dbg})`);
     }
 
     async function twitchGetUser(accessToken){
