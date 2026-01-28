@@ -847,13 +847,35 @@
     function clearPkceState(){ sessionStorage.removeItem(PKCE_STORAGE_KEY); }
 
     function setAuth(obj){
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(obj||{}));
+      const remember = document.getElementById('rememberNick');
+      const data = obj || {};
+      try{
+        if(remember && remember.checked === false){
+          // session-only
+          sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        }else{
+          // persistent
+          localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
+          sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        }
+      }catch(e){
+        // fallback to localStorage
+        try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data)); }catch(err){}
+      }
     }
     function getAuth(){
+      try{
+        const s = sessionStorage.getItem(AUTH_STORAGE_KEY);
+        if(s) return JSON.parse(s);
+      }catch(e){}
       try{ return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}'); }
       catch(e){ return {}; }
     }
-    function clearAuth(){ localStorage.removeItem(AUTH_STORAGE_KEY); }
+    function clearAuth(){
+      try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
+      try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
+    }
 
     function isTwitchSupported(){
       return !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
@@ -864,6 +886,9 @@
 
       // Always reset PKCE so user can retry even after a failed/partial attempt
       clearPkceState();
+
+      // Also clear previous code/state from URL just in case
+      try{ cleanUrlAfterOAuth(); }catch(e){}
 
       if(!isTwitchSupported()){
         setOrderMsg({type:'warn', title:'Twitch вход недоступен', text:'Этот браузер ограничивает безопасную авторизацию. Открой сайт в обычном Chrome/Safari.'});
@@ -1000,7 +1025,7 @@
       const state = url.searchParams.get('state');
       if(!code) return;
 
-      // If we have a code but lost PKCE state (very common in in-app browsers / after refresh)
+      // If we have a code but lost PKCE state (common after hard reload)
       const st0 = getPkceState();
       if(!st0?.state || !st0?.verifier){
         clearPkceState();
@@ -1009,7 +1034,8 @@
         const hint = document.getElementById('balanceHint');
         const out = document.getElementById('balanceResult');
         if(out) out.textContent = '—';
-        if(hint) hint.textContent = 'Не удалось завершить вход (браузер сбросил сессию). Нажми «Войти через Twitch» ещё раз.';
+        if(hint) hint.textContent = 'Не удалось завершить вход. Нажми «Войти через Twitch» ещё раз (не обновляй страницу во время входа).';
+        // ensure login button remains usable
         return;
       }
 
@@ -1021,18 +1047,13 @@
         const user = await twitchGetUser(token.access_token);
         if(!user?.login) throw new Error('No login');
 
-        // Remember only if user agreed
-        if(document.getElementById('rememberNick')?.checked){
-          setAuth({
-            login: user.login,
-            access_token: token.access_token,
-            expires_in: token.expires_in,
-            obtained_at: Date.now()
-          });
-        }else{
-          // keep in memory only (no localStorage)
-          setAuth({ login: user.login, access_token: token.access_token, expires_in: token.expires_in, obtained_at: Date.now(), ephemeral:true });
-        }
+        // Save auth (persistent if "remember" is checked, otherwise session-only)
+        setAuth({
+          login: user.login,
+          access_token: token.access_token,
+          expires_in: token.expires_in,
+          obtained_at: Date.now()
+        });
 
         setNickUIAuthed(user.login);
         await refreshBalanceForAuthed();
@@ -1187,20 +1208,30 @@
       const auth = getAuth();
       const remember = document.getElementById('rememberNick');
       if(auth?.login){
-        if(remember) remember.checked = true;
+        // If auth exists in either session or local storage, reflect it in UI
+        if(remember){
+          // checked only if persisted in localStorage
+          remember.checked = !!localStorage.getItem(AUTH_STORAGE_KEY);
+        }
         setNickUIAuthed(auth.login);
-        // try to refresh balance (token might expire, but we only need login for table)
         setTimeout(()=> refreshBalanceForAuthed(), 250);
       }else{
         setNickUIAuthed('');
         refreshBalanceForAuthed();
       }
 
-      // remember checkbox behavior: if user turns it off, clear saved auth
+      // remember checkbox behavior: if user turns it off, move auth to session-only (or clear)
       remember?.addEventListener('change', (e)=>{
-        if(!e.target.checked){
-          // clear saved auth
-          clearSavedAuth();
+        const a = getAuth();
+        if(!a?.login) return;
+        if(e.target.checked){
+          // move to persistent
+          try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
+          try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
+        }else{
+          // move to session-only
+          try{ sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
+          try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
         }
       });
 
