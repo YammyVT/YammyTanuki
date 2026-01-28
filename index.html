@@ -837,7 +837,8 @@
 
     // ----- Twitch OAuth (PKCE) + session -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
-    const TWITCH_REDIRECT_URI = window.location.origin + window.location.pathname; // must match GitHub Pages URL
+    // IMPORTANT: must match exactly the OAuth Redirect URL in Twitch Dev Console
+    const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
     const TWITCH_SCOPES = []; // none needed for helix/users
 
     const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v2';
@@ -900,6 +901,15 @@
     async function twitchLogin(){
       if(isTelegramUA()){
         openTgModal();
+        return;
+      }
+
+      // If the page is opened without trailing slash, OAuth redirect will mismatch.
+      // Force canonical URL (with /) before starting login.
+      if(!window.location.pathname.endsWith('/')){
+        const u = new URL(window.location.href);
+        u.pathname = u.pathname + '/';
+        window.location.replace(u.toString());
         return;
       }
       if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
