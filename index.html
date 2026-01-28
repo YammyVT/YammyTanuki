@@ -133,10 +133,7 @@
     @keyframes halo{ to{ transform: rotate(360deg); } }
 
     .floaty{ animation: floaty 6s ease-in-out infinite; }
-    @keyframes floaty{
-      0%,100%{ transform: translateY(0px); }
-      50%{ transform: translateY(-10px); }
-    }
+    @keyframes floaty{ 0%,100%{ transform: translateY(0px); } 50%{ transform: translateY(-10px); } }
 
     .btn{
       background: linear-gradient(135deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
@@ -148,6 +145,8 @@
     }
     .btn:hover{ transform: translateY(-2px); box-shadow: 0 18px 44px rgba(10,20,80,.22); }
     .btn:active{ transform: translateY(0px) scale(.99); }
+
+    .stickyCalc{ position: sticky; top: 1rem; }
 
     .reveal{ opacity:0; transform: translateY(14px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.in{ opacity:1; transform: translateY(0); }
@@ -275,7 +274,7 @@
                   </div>
                   <p class="mt-2"><span class="font-semibold">⚠️ Важно:</span> если клип не о чем — баллы не начисляются!</p>
                   <p><span class="font-semibold">💡 Совет:</span> чем больше клипов в стриме — тем выгоднее!</p>
-                  <p class="text-white/70 text-xs sm:text-sm">Совет: войди через Twitch справа — так баланс подтянется автоматически ✨</p>
+                  <p class="text-white/70 text-xs sm:text-sm">Совет: сначала войди через Twitch справа — так баланс подтянется автоматически ✨</p>
                 </div>
 
                 <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -378,9 +377,7 @@
               <h2 class="text-2xl sm:text-3xl font-extrabold">📜 Товары</h2>
               <p class="mt-2 text-white/80">Нажми «Выбрать» — и перейдём к оформлению.</p>
             </div>
-            <div class="text-sm text-white/75 hidden sm:block">
-              Совет: сначала проверь баллы, потом выбери награду.
-            </div>
+            <div class="text-sm text-white/75 hidden sm:block">Совет: сначала проверь баллы, потом выбери награду.</div>
           </div>
 
           <div id="goodsGrid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -394,9 +391,7 @@
           <div class="flex flex-col lg:flex-row gap-6 lg:items-start lg:justify-between">
             <div class="max-w-2xl">
               <h2 class="text-2xl sm:text-3xl font-extrabold">✉️ Как оформить заказ?</h2>
-              <p id="orderIntro" class="mt-3 text-white/85 leading-relaxed">
-                Для начала авторизуйтесь на твич.
-              </p>
+              <p id="orderIntro" class="mt-3 text-white/85 leading-relaxed">Для начала авторизуйтесь на твич.</p>
               <p id="orderHelp" class="mt-4 text-white/80 hidden">
                 Выбери награду в разделе «Товары». Добавь комментарий (если нужно) и нажми «Заказать».
                 Telegram откроется автоматически с готовым текстом.
@@ -411,7 +406,6 @@
                 <div id="orderMsg" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm">
                   <div id="orderMsgTitle" class="font-bold"></div>
                   <div id="orderMsgText" class="mt-1 text-white/80 text-xs"></div>
-
                   <div id="orderMsgActions" class="mt-3 hidden flex flex-wrap gap-2"></div>
                 </div>
 
@@ -425,9 +419,7 @@
             </div>
           </div>
 
-          <div class="mt-6 text-xs text-white/65">
-            Примечание: этот сайт — удобная витрина. Оплата/подтверждение — по твоим правилам в чате.
-          </div>
+          <div class="mt-6 text-xs text-white/65">Примечание: этот сайт — удобная витрина. Оплата/подтверждение — по твоим правилам в чате.</div>
         </div>
       </div>
     </section>
@@ -459,10 +451,8 @@
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
     async function copyText(text){
-      try{
-        await navigator.clipboard.writeText(text);
-        return true;
-      } catch(e){
+      try{ await navigator.clipboard.writeText(text); return true; }
+      catch(e){
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed';
@@ -805,40 +795,13 @@
       return { found:false, reason:'notfound' };
     }
 
-    // ----- Twitch OAuth -----
-    // Primary: Authorization Code + PKCE.
-    // Fallback (when token endpoint is blocked by browser/network): Implicit flow (token in URL hash).
+    // ----- Twitch OAuth (PKCE primary + Implicit fallback) -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
-    // Must match EXACTLY the Redirect URL in Twitch Dev Console (including trailing slash)
     const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
-    const TWITCH_SCOPES = []; // basic identity
+    const TWITCH_SCOPES = [];
 
-    const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v1';
-    const PKCE_STORAGE_KEY = 'yammy_twitch_pkce_v1';
-
-    function base64UrlEncode(uint8){
-      let s = '';
-      uint8.forEach(b => s += String.fromCharCode(b));
-      return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-    }
-
-    function randomString(len=64){
-      try{
-        const a = new Uint8Array(len);
-        crypto.getRandomValues(a);
-        return base64UrlEncode(a);
-      }catch(e){
-        let s='';
-        for(let i=0;i<len;i++) s += String.fromCharCode(Math.floor(Math.random()*256));
-        return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-      }
-    }
-
-    async function sha256(text){
-      const enc = new TextEncoder().encode(text);
-      const hash = await crypto.subtle.digest('SHA-256', enc);
-      return new Uint8Array(hash);
-    }
+    const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v2';
+    const PKCE_STORAGE_KEY = 'yammy_twitch_pkce_v2';
 
     function setPkceState(obj){ sessionStorage.setItem(PKCE_STORAGE_KEY, JSON.stringify(obj||{})); }
     function getPkceState(){ try{ return JSON.parse(sessionStorage.getItem(PKCE_STORAGE_KEY) || '{}'); }catch(e){ return {}; } }
@@ -868,8 +831,28 @@
       try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
     }
 
-    function isTwitchPkceSupported(){
-      return !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+    function base64UrlEncode(uint8){
+      let s = '';
+      uint8.forEach(b => s += String.fromCharCode(b));
+      return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    }
+
+    function randomString(len=64){
+      try{
+        const a = new Uint8Array(len);
+        crypto.getRandomValues(a);
+        return base64UrlEncode(a);
+      }catch(e){
+        let s='';
+        for(let i=0;i<len;i++) s += String.fromCharCode(Math.floor(Math.random()*256));
+        return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+    }
+
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', enc);
+      return new Uint8Array(hash);
     }
 
     function withTimeout(promise, ms=12000){
@@ -879,57 +862,12 @@
       });
     }
 
-    async function twitchLogin(){
-      clearOrderMsg();
-
-      // If embedded (preview/iframe), warn (Twitch blocks).
-      try{
-        if(window.self !== window.top){
-          setOrderMsg({
-            type:'warn',
-            title:'Открой в браузере',
-            text:'Twitch вход часто не работает в превью/встроенном окне. Открой сайт в отдельной вкладке браузера и попробуй снова.'
-          });
-          return;
-        }
-      }catch(e){}
-
-      // Always reset PKCE so user can retry
-      clearPkceState();
-      try{ cleanUrlAfterOAuth(); }catch(e){}
-
-      const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
-
-      // If PKCE not supported (some in-app / old browsers), use implicit flow fallback.
-      if(!isTwitchPkceSupported()){
-        const state = `v0_${randomString(18)}`;
-        const params = new URLSearchParams({
-          response_type: 'token',
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          scope: TWITCH_SCOPES.join(' '),
-          state
-        });
-        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
-        return;
-      }
-
-      const state = `v1_${randomString(24)}`;
-      const verifier = randomString(64);
-      const challenge = base64UrlEncode(await sha256(verifier));
-      setPkceState({ state, verifier, at: Date.now() });
-
-      const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: TWITCH_CLIENT_ID,
-        redirect_uri: redirectUri,
-        scope: TWITCH_SCOPES.join(' '),
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256'
-      });
-
-      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+    function cleanUrlAfterOAuth(){
+      const url = new URL(window.location.href);
+      url.searchParams.delete('code');
+      url.searchParams.delete('scope');
+      url.searchParams.delete('state');
+      window.history.replaceState({}, document.title, url.toString());
     }
 
     async function twitchExchangeCode(code){
@@ -947,11 +885,7 @@
         code_verifier: String(st.verifier || '')
       });
 
-      const endpoints = [
-        'https://id.twitch.tv/oauth2/token',
-        'https://api.twitch.tv/oauth2/token'
-      ];
-
+      const endpoints = ['https://id.twitch.tv/oauth2/token','https://api.twitch.tv/oauth2/token'];
       let lastTxt = '';
       let lastJson = null;
       let lastStatus = 0;
@@ -965,7 +899,6 @@
             body: params.toString()
           }), 12000);
         }catch(e){
-          // network blocked / CORS / adblock => try next endpoint
           lastTxt = String(e?.message || e);
           lastJson = null;
           lastStatus = 0;
@@ -977,9 +910,7 @@
         lastJson = null;
         try{ lastJson = JSON.parse(lastTxt); }catch(e){}
 
-        if(res.ok && lastJson?.access_token){
-          return lastJson;
-        }
+        if(res.ok && lastJson?.access_token) return lastJson;
       }
 
       const desc = lastJson?.message || lastJson?.error_description || lastJson?.error || lastTxt || `HTTP ${lastStatus}`;
@@ -992,7 +923,7 @@
       throw new Error(`Token exchange failed: ${desc} (${dbg})`);
     }
 
-    async function twitchGetUser(accessToken){
+    async function twitchGetUserHelix(accessToken){
       const res = await withTimeout(fetch('https://api.twitch.tv/helix/users', {
         headers: {
           'Authorization': `Bearer ${accessToken}`,
@@ -1013,102 +944,14 @@
     }
 
     function handleImplicitTokenFromHash(){
-      // Implicit flow returns access_token in URL hash.
       const h = String(window.location.hash || '');
       if(!h || !h.includes('access_token=')) return null;
       const params = new URLSearchParams(h.replace(/^#/,''));
       const token = params.get('access_token');
       const state = params.get('state') || '';
       if(!token) return null;
-
-      // Clean hash
       try{ history.replaceState({}, document.title, window.location.pathname + window.location.search); }catch(e){}
-
       return { access_token: token, state };
-    }
-
-    async function handleTwitchOAuthCallback(){
-      // 1) Implicit token flow
-      const implicit = handleImplicitTokenFromHash();
-      if(implicit?.access_token){
-        try{
-          const user = await twitchGetUser(implicit.access_token);
-          if(!user?.login) throw new Error('No login');
-          setAuth({ login: user.login, access_token: implicit.access_token, expires_in: 0, obtained_at: Date.now(), implicit: true });
-          setNickUIAuthed(user.login);
-          await refreshBalanceForAuthed();
-        }catch(e){
-          clearAuth();
-          setNickUIAuthed('');
-          const hint = document.getElementById('balanceHint');
-          const out = document.getElementById('balanceResult');
-          if(out) out.textContent = '—';
-          if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || e)}`;
-        }
-        return;
-      }
-
-      // 2) PKCE code flow
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
-      if(!code) return;
-
-      const st0 = getPkceState();
-      if(!st0?.state || !st0?.verifier){
-        clearPkceState();
-        cleanUrlAfterOAuth();
-        setNickUIAuthed('');
-        const hint = document.getElementById('balanceHint');
-        const out = document.getElementById('balanceResult');
-        if(out) out.textContent = '—';
-        if(hint) hint.textContent = 'Не удалось завершить вход. Нажми «Войти через Twitch» ещё раз (не обновляй страницу во время входа).';
-        return;
-      }
-
-      try{
-        const st = getPkceState();
-        if(!st?.state || st.state !== state) throw new Error('Bad state');
-        if(!TWITCH_CLIENT_ID || !TWITCH_REDIRECT_URI) throw new Error('Twitch config missing');
-
-        const token = await twitchExchangeCode(code);
-        const user = await twitchGetUser(token.access_token);
-        if(!user?.login) throw new Error('No login');
-
-        setAuth({
-          login: user.login,
-          access_token: token.access_token,
-          expires_in: token.expires_in,
-          obtained_at: Date.now()
-        });
-
-        setNickUIAuthed(user.login);
-        await refreshBalanceForAuthed();
-      }catch(e){
-        clearAuth();
-        setNickUIAuthed('');
-
-        const hint = document.getElementById('balanceHint');
-        const out = document.getElementById('balanceResult');
-        if(out) out.textContent = '—';
-        const msg = String(e?.message || '').trim();
-        if(hint) hint.textContent = msg
-          ? `Не удалось войти через Twitch. ${msg}`
-          : 'Не удалось войти через Twitch. Нажми «Войти через Twitch» ещё раз.';
-
-        console.warn('Twitch OAuth failed', e);
-      }finally{
-        clearPkceState();
-        cleanUrlAfterOAuth();
-      }
-    }
-
-    function cleanUrlAfterOAuth(){
-      const url = new URL(window.location.href);
-      url.searchParams.delete('code');
-      url.searchParams.delete('scope');
-      url.searchParams.delete('state');
-      window.history.replaceState({}, document.title, url.toString());
     }
 
     function setNickUIAuthed(login){
@@ -1116,22 +959,13 @@
       const nickLine = document.getElementById('nickLine');
 
       if(nickLine) nickLine.textContent = login ? login : '—';
+      if(status) status.textContent = login ? 'Вы вошли через Twitch.' : 'Нужно войти через Twitch, чтобы увидеть баланс.';
 
-      if(status){
-        status.textContent = login
-          ? 'Вы вошли через Twitch.'
-          : 'Нужно войти через Twitch, чтобы увидеть баланс.';
-      }
-
-      // logout visible only when logged
       document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !login);
-
-      // toggle order section UI
       try{ updateOrderGateUI(); }catch(e){}
     }
 
     function getKnownNick(){
-      // only from auth
       const a = getAuth();
       return String(a?.login || '').trim();
     }
@@ -1165,9 +999,8 @@
           if(out) out.textContent = `${String(res.nick).trim()} — ${pts} 🪙`;
           if(hint) hint.textContent = 'Если баллы не совпадают — проверь обновление таблицы.';
         }else{
-          // IMPORTANT: if not found -> 0
           if(out) out.textContent = `${login} — 0 🪙 😢`;
-          if(hint) hint.textContent = 'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.';
+          if(hint) hint.textContent = 'У вас 0 баллов 😢';
         }
       }catch(e){
         if(out) out.textContent = 'Ошибка загрузки.';
@@ -1176,64 +1009,108 @@
     }
 
     async function handleTwitchOAuthCallback(){
+      // Implicit token flow
+      const implicit = handleImplicitTokenFromHash();
+      if(implicit?.access_token){
+        try{
+          const user = await twitchGetUserHelix(implicit.access_token);
+          if(!user?.login) throw new Error('No login');
+          setAuth({ login: user.login, access_token: implicit.access_token, obtained_at: Date.now(), implicit: true });
+          setNickUIAuthed(user.login);
+          await refreshBalanceForAuthed();
+        }catch(e){
+          clearAuth();
+          setNickUIAuthed('');
+          const hint = document.getElementById('balanceHint');
+          if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || e)}`;
+        }
+        return;
+      }
+
+      // PKCE code flow
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
       if(!code) return;
 
-      // If we have a code but lost PKCE state (common after hard reload)
       const st0 = getPkceState();
       if(!st0?.state || !st0?.verifier){
         clearPkceState();
         cleanUrlAfterOAuth();
+        clearAuth();
         setNickUIAuthed('');
         const hint = document.getElementById('balanceHint');
-        const out = document.getElementById('balanceResult');
-        if(out) out.textContent = '—';
-        if(hint) hint.textContent = 'Не удалось завершить вход. Нажми «Войти через Twitch» ещё раз (не обновляй страницу во время входа).';
-        // ensure login button remains usable
+        if(hint) hint.textContent = 'Не удалось завершить вход. Нажми «Войти через Twitch» ещё раз.';
         return;
       }
 
       try{
         const st = getPkceState();
-        if(!st?.state || st.state !== state) throw new Error('Bad state');
-
-        // Extra debugging hint for redirect mismatch
-        if(!TWITCH_CLIENT_ID || !TWITCH_REDIRECT_URI) throw new Error('Twitch config missing');
+        if(st.state !== state) throw new Error('Bad state');
 
         const token = await twitchExchangeCode(code);
-        const user = await twitchGetUser(token.access_token);
+        const user = await twitchGetUserHelix(token.access_token);
         if(!user?.login) throw new Error('No login');
 
-        // Save auth (persistent if "remember" is checked, otherwise session-only)
-        setAuth({
-          login: user.login,
-          access_token: token.access_token,
-          expires_in: token.expires_in,
-          obtained_at: Date.now()
-        });
-
+        setAuth({ login: user.login, access_token: token.access_token, expires_in: token.expires_in, obtained_at: Date.now() });
         setNickUIAuthed(user.login);
         await refreshBalanceForAuthed();
       }catch(e){
         clearAuth();
         setNickUIAuthed('');
-
         const hint = document.getElementById('balanceHint');
-        const out = document.getElementById('balanceResult');
-        if(out) out.textContent = '—';
-        const msg = String(e?.message || '').trim();
-        if(hint) hint.textContent = msg
-          ? `Не удалось войти через Twitch. ${msg}`
-          : 'Не удалось войти через Twitch. Нажми «Войти через Twitch» ещё раз.';
-
-        console.warn('Twitch OAuth failed', e);
+        if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || e)}`;
       }finally{
-        // Always clear PKCE state so user can try again
         clearPkceState();
         cleanUrlAfterOAuth();
       }
+    }
+
+    async function twitchLogin(){
+      clearOrderMsg();
+
+      // Always reset so user can retry
+      clearPkceState();
+      try{ cleanUrlAfterOAuth(); }catch(e){}
+
+      const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
+
+      // If PKCE is not supported (or if token endpoint is blocked), implicit is more compatible.
+      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+
+      // Prefer implicit on known-problematic UAs (Yandex, in-app), to avoid token exchange fetch
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
+
+      if(!canPkce || looksBlocked){
+        const state = `v0_${randomString(18)}`;
+        const params = new URLSearchParams({
+          response_type: 'token',
+          client_id: TWITCH_CLIENT_ID,
+          redirect_uri: redirectUri,
+          scope: TWITCH_SCOPES.join(' '),
+          state
+        });
+        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        return;
+      }
+
+      const state = `v1_${randomString(24)}`;
+      const verifier = randomString(64);
+      const challenge = base64UrlEncode(await sha256(verifier));
+      setPkceState({ state, verifier, at: Date.now() });
+
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: TWITCH_CLIENT_ID,
+        redirect_uri: redirectUri,
+        scope: TWITCH_SCOPES.join(' '),
+        state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
+      });
+
+      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
     }
 
     function twitchLogout(){
@@ -1253,6 +1130,22 @@
       if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
     }
 
+    // ----- Order gate -----
+    function updateOrderGateUI(){
+      const authed = !!getKnownNick();
+      const intro = document.getElementById('orderIntro');
+      const help = document.getElementById('orderHelp');
+      const card = document.getElementById('orderCard');
+
+      if(intro){
+        intro.textContent = authed
+          ? 'Напишите мне в ЛС в Telegram — одним кликом из этого сайта.'
+          : 'Для начала авторизуйтесь на твич.';
+      }
+      if(help) help.classList.toggle('hidden', !authed);
+      if(card) card.classList.toggle('hidden', !authed);
+    }
+
     // ----- Place order -----
     function parsePickedPrice(str){
       const s = String(str || '');
@@ -1265,13 +1158,12 @@
       clearOrderMsg();
       const toastEl = document.getElementById('orderToast');
 
-      // Must be authed
       const nick = getKnownNick();
       if(!nick){
         setOrderMsg({
           type:'warn',
           title:'Нужно авторизоваться на Twitch',
-          text:'Чтобы оформить заказ и списать баллы, сначала войди через Twitch в блоке «Проверка баланса».',
+          text:'Чтобы оформить заказ, сначала войди через Twitch в блоке «Проверка баланса».',
           actions:[{ label:'Войти через Twitch', onClick: ()=> twitchLogin() }]
         });
         return;
@@ -1293,7 +1185,6 @@
             setOrderMsg({ type:'error', title:'Недостаточно баллов 😢', text:`Для этого заказа нужно ${spend} 🪙.` });
             return;
           }else if(res.reason === 'notfound'){
-            // authed but not in table
             setOrderMsg({ type:'warn', title:'У вас 0 баллов 😢', text:'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.' });
             return;
           }else{
@@ -1340,21 +1231,6 @@
     });
 
     // ----- Init balance block (OAuth only) -----
-    function updateOrderGateUI(){
-      const authed = !!getKnownNick();
-      const intro = document.getElementById('orderIntro');
-      const help = document.getElementById('orderHelp');
-      const card = document.getElementById('orderCard');
-
-      if(intro){
-        intro.textContent = authed
-          ? 'Напишите мне в ЛС в Telegram — одним кликом из этого сайта.'
-          : 'Для начала авторизуйтесь на твич.';
-      }
-      if(help) help.classList.toggle('hidden', !authed);
-      if(card) card.classList.toggle('hidden', !authed);
-    }
-
     function initBalanceUI(){
       initCopyButtons();
 
@@ -1366,13 +1242,11 @@
       document.getElementById('twitchLogoutBtn')?.addEventListener('click', twitchLogout);
       document.getElementById('clearNick')?.addEventListener('click', clearSavedAuth);
 
-      // restore auth if exists and remember is on
+      // restore auth if exists
       const auth = getAuth();
       const remember = document.getElementById('rememberNick');
       if(auth?.login){
-        // If auth exists in either session or local storage, reflect it in UI
         if(remember){
-          // checked only if persisted in localStorage
           remember.checked = !!localStorage.getItem(AUTH_STORAGE_KEY);
         }
         setNickUIAuthed(auth.login);
@@ -1382,28 +1256,19 @@
         refreshBalanceForAuthed();
       }
 
-      // remember checkbox behavior: if user turns it off, move auth to session-only (or clear)
       remember?.addEventListener('change', (e)=>{
         const a = getAuth();
         if(!a?.login) return;
         if(e.target.checked){
-          // move to persistent
           try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
           try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
         }else{
-          // move to session-only
           try{ sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
           try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
         }
       });
 
-      // Do NOT clear PKCE state here. It is cleared in handleTwitchOAuthCallback() finally.
-      // Clearing it here can break the callback if scripts run before it finishes.
-
-      // Ensure correct order gate state on first load
       updateOrderGateUI();
-
-      // No manual nick input anymore (UI shows nickLine only).
     }
 
     // ----- Reveal -----
