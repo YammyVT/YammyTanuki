@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазинчик Ями — оформление заказов</title>
+  <title>Магазинчик Ями1 — оформление заказов</title>
   <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -946,20 +946,15 @@
       try{ cleanUrlAfterOAuth(); }catch(e){}
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       
-      // Более точное определение мобильных устройств
+      // Определение устройства и браузера
       const ua = (navigator.userAgent || '').toLowerCase();
-      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua);
-      const isTablet = /ipad|android(?!.*mobile)/i.test(ua);
-      const isMobileDevice = isMobile || isTablet;
+      const isAndroid = /android/i.test(ua);
+      const isIOS = /iphone|ipad|ipod/i.test(ua);
+      const isMobileDevice = isAndroid || isIOS || /mobile/i.test(ua);
       
-      // Проверка на проблемные браузеры/окружения
-      const isInApp = ua.includes('telegram') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
-      const isYandex = ua.includes('yabrowser') || ua.includes('yandex');
-      
-      // Для ВСЕХ мобильных устройств используем только Implicit flow
-      // Это полностью избегает проблем с приложением Twitch и PKCE
-      if(isMobileDevice || isInApp || isYandex){
-        const state = randomString(32);
+      // Для мобильных устройств используем только Implicit flow
+      if(isMobileDevice){
+        const state = `mobile_${randomString(24)}`;
         const params = new URLSearchParams({
           client_id: TWITCH_CLIENT_ID,
           redirect_uri: redirectUri,
@@ -968,16 +963,29 @@
           state: state
         });
         
-        // Открываем в том же окне для мобильных
-        window.location.replace(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+        
+        // Для Android используем Intent URI чтобы избежать открытия приложения Twitch
+        if(isAndroid){
+          // Intent URI заставляет Chrome открыть в браузере, а не в приложении
+          const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
+          window.location.href = intentUrl;
+          
+          // Fallback на обычный URL через 500ms если Intent не сработал
+          setTimeout(() => {
+            window.location.href = authUrl;
+          }, 500);
+        } else {
+          // Для iOS просто используем обычный редирект
+          window.location.href = authUrl;
+        }
         return;
       }
       
       // Для десктопа используем PKCE
       const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
       if(!canPkce){
-        // Fallback на Implicit для старых браузеров
-        const state = randomString(32);
+        const state = `implicit_${randomString(24)}`;
         const params = new URLSearchParams({
           client_id: TWITCH_CLIENT_ID,
           redirect_uri: redirectUri,
@@ -985,26 +993,27 @@
           scope: TWITCH_SCOPES.join(' '),
           state: state
         });
-        window.location.replace(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        const url = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+        window.location.replace(url);
         return;
       }
       
-      const state = randomString(32);
+      const state = `pkce_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
       setPkceState({ state, verifier, at: Date.now() });
       
       const params = new URLSearchParams({
+        response_type: 'code',
         client_id: TWITCH_CLIENT_ID,
         redirect_uri: redirectUri,
-        response_type: 'code',
         scope: TWITCH_SCOPES.join(' '),
-        state: state,
+        state,
         code_challenge: challenge,
         code_challenge_method: 'S256'
       });
       
-      window.location.replace(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
     }
     function twitchLogout(){
       clearAuth();
