@@ -19,7 +19,6 @@
       --gold2: #e7bf2b;
       --gold3: #c9961d;
     }
-
     html,body{height:100%;}
     body{
       overflow-x:hidden;
@@ -30,7 +29,6 @@
       color: var(--text);
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
-
     body::before{
       content:"";
       position:fixed;
@@ -39,11 +37,9 @@
       z-index:0;
       pointer-events:none;
     }
-
     .compact h1{ font-size: clamp(1.55rem, 3.6vw, 2.6rem) !important; }
     .compact h2{ font-size: clamp(1.25rem, 2.6vw, 1.85rem) !important; }
     .compact h3{ font-size: 1.05rem !important; }
-
     .noise{
       pointer-events:none;
       position:fixed; inset:0;
@@ -52,7 +48,6 @@
       opacity:.14;
       z-index: 2;
     }
-
     #stars{ position:fixed; inset:0; z-index:1; pointer-events:none; }
     .star{
       position:absolute;
@@ -62,7 +57,6 @@
       transform: translate3d(0,0,0) rotate(0deg);
       animation: starFall linear infinite;
     }
-
     .star::before{
       content:"";
       position:absolute; inset:0;
@@ -71,14 +65,12 @@
       clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
       border-radius: 2px;
     }
-
     @keyframes starFall{
       0%{ transform: translate3d(var(--x,0), -15vh, 0) rotate(0deg) scale(var(--s,1)); opacity:0; }
       10%{opacity: var(--o,.85);}
       90%{opacity: var(--o,.85);}
       100%{ transform: translate3d(calc(var(--x,0) + var(--drift,0px)), 115vh, 0) rotate(260deg) scale(var(--s,1)); opacity:0; }
     }
-
     #clouds{ position:fixed; inset:0; z-index:0; pointer-events:none; }
     .cloud{
       position:absolute;
@@ -105,12 +97,10 @@
     }
     .cloud:before{ width: 60%; height: 85%; left: 8%; top: -35%; }
     .cloud:after{ width: 55%; height: 75%; right: 10%; top: -25%; }
-
     @keyframes cloudMove{
       from{ transform: translate3d(-120%, 0, 0); }
       to{ transform: translate3d(120vw, 0, 0); }
     }
-
     .glass{
       background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08));
       border: 1px solid rgba(255,255,255,.18);
@@ -131,10 +121,8 @@
       animation: halo 10s linear infinite;
     }
     @keyframes halo{ to{ transform: rotate(360deg); } }
-
     .floaty{ animation: floaty 6s ease-in-out infinite; }
     @keyframes floaty{ 0%,100%{ transform: translateY(0px); } 50%{ transform: translateY(-10px); } }
-
     .btn{
       background: linear-gradient(135deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
       border: 1px solid rgba(255,255,255,.25);
@@ -145,21 +133,17 @@
     }
     .btn:hover{ transform: translateY(-2px); box-shadow: 0 18px 44px rgba(10,20,80,.22); }
     .btn:active{ transform: translateY(0px) scale(.99); }
-
+    .stickyCalc{ position: sticky; top: 1rem; }
     .reveal{ opacity:0; transform: translateY(14px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.in{ opacity:1; transform: translateY(0); }
-
     .no-io .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
-
     @media (max-width: 1024px){
       .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
     }
-
     @media (prefers-reduced-motion: reduce){
       .star, .cloud, .floaty, .glow:before{ animation: none !important; }
       .reveal{ transition:none; }
     }
-
     @media (max-width: 640px){
       .noise{ display:none !important; }
       #stars{ display:none !important; }
@@ -171,13 +155,11 @@
       #rules, #goods, #order{ padding-top: 1rem !important; padding-bottom: 1rem !important; }
       .glass{ box-shadow: none !important; }
     }
-
     @media (prefers-reduced-motion: reduce){
       #stars, #clouds, .noise{ display:none !important; }
       .glow:before{ display:none !important; }
       .glass, .btn{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
     }
-
     .yammy-check{
       -webkit-appearance: none;
       appearance: none;
@@ -204,16 +186,12 @@
       margin-top: -1px;
     }
     .yammy-check:checked::after{ opacity: 1; }
-
-    .tgwarn{ display:none; }
-    .tg .tgwarn{ display:block; }
   </style>
 </head>
 <body class="compact">
   <div id="clouds" aria-hidden="true"></div>
   <div id="stars" aria-hidden="true"></div>
   <div class="noise" aria-hidden="true"></div>
-
   <header class="relative z-10">
     <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-6 sm:pt-10 pb-3">
       <div class="glass glow rounded-3xl p-5 sm:p-8">
@@ -237,49 +215,22 @@
               <a href="#order" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">✉️ Как оформить заказ</a>
             </div>
           </div>
-
           <div class="floaty">
             <div class="glass rounded-3xl p-5 sm:p-6 border border-white/20 shadow-[0_16px_54px_rgba(10,20,80,.16)]">
-              <div class="text-sm text-white/80">Подсказка</div>
-              <div class="mt-1 text-base font-bold">Собери заказ внизу</div>
+              <div class="flex items-start justify-between gap-3">
+                <div>
+                  <div class="text-sm text-white/80">Подсказка</div>
+                  <div class="mt-1 text-base font-bold">Собери заказ внизу</div>
+                </div>
+              </div>
               <div class="mt-2 text-xs text-white/75">Калькулятор — в разделе «Правила» (кнопка 🧮). Ничего не копируем — просто считаем.</div>
             </div>
           </div>
-
         </div>
       </div>
     </div>
   </header>
-
   <main class="relative z-10">
-    <!-- Telegram bridge modal -->
-    <div id="tgModal" class="fixed inset-0 z-[70] hidden">
-      <div class="absolute inset-0 bg-black/55 backdrop-blur-sm"></div>
-      <div class="relative mx-auto max-w-md px-4 sm:px-6 pt-20 sm:pt-28">
-        <div class="glass glow rounded-3xl p-5 sm:p-6">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h3 class="text-lg font-extrabold">🔐 Вход через Twitch</h3>
-              <div class="text-xs text-white/70">В Telegram это часто ломается (ошибка 400)</div>
-            </div>
-            <button id="tgClose" class="btn rounded-xl px-3 py-2 text-sm font-semibold">✕</button>
-          </div>
-
-          <div class="mt-4 text-sm text-white/85 leading-relaxed">
-            Открой сайт в обычном браузере (Chrome / Safari) и войди там.
-            После входа ник и баланс сохранятся.
-          </div>
-
-          <div class="mt-4 flex flex-col sm:flex-row gap-2">
-            <button id="tgOpenBrowser" class="btn rounded-2xl px-4 py-3 text-sm font-semibold grow">Открыть в браузере</button>
-            <button id="tgCopyLink" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Скопировать ссылку</button>
-          </div>
-          <p id="tgToast" class="mt-3 text-xs text-white/70 hidden">Ссылка скопирована ✅</p>
-          <div class="mt-3 text-[11px] text-white/65">В Telegram: «⋯» → «Открыть в браузере».</div>
-        </div>
-      </div>
-    </div>
-
     <section id="rules" class="mx-auto max-w-6xl px-4 sm:px-6 py-5 sm:py-8">
       <div class="grid grid-cols-1 gap-5">
         <div class="reveal">
@@ -300,42 +251,35 @@
                   </div>
                   <p class="mt-2"><span class="font-semibold">⚠️ Важно:</span> если клип не о чем — баллы не начисляются!</p>
                   <p><span class="font-semibold">💡 Совет:</span> чем больше клипов в стриме — тем выгоднее!</p>
+                  <p class="text-white/70 text-xs sm:text-sm">Совет: сначала войди через Twitch справа — так баланс подтянется автоматически ✨</p>
                 </div>
-
                 <div class="mt-4 flex flex-wrap items-center gap-3">
                   <button id="openCalc" class="btn rounded-2xl px-4 py-2.5 text-sm font-semibold">🧮 Калькулятор</button>
                   <p class="text-xs text-white/70">Откроется сверху — быстро посчитать баллы.</p>
                 </div>
               </div>
-
               <div class="shrink-0 w-full lg:max-w-sm">
                 <div class="rounded-2xl bg-white/8 border border-white/14 px-4 py-4">
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <div class="text-sm font-bold text-white/90">🔎 Проверка баланса</div>
                       <div id="nickStatus" class="mt-1 text-[11px] text-white/65">Нужно войти через Twitch, чтобы увидеть баланс.</div>
-                      <div class="tgwarn mt-2 text-[11px] text-amber-100/90 bg-amber-500/10 border border-amber-200/20 rounded-xl px-3 py-2">
-                        Открыто из Telegram. Нажми «Войти через Twitch» — появится окно, как открыть в браузере.
-                      </div>
                     </div>
                     <div class="flex items-center gap-2">
-                      <button id="twitchLoginBtn" type="button" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Войти через Twitch</button>
-                      <button id="twitchLogoutBtn" type="button" class="btn rounded-xl px-3 py-2 text-xs font-semibold hidden">Выйти</button>
+                      <button id="twitchLoginBtn" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Войти через Twitch</button>
+                      <button id="twitchLogoutBtn" class="btn rounded-xl px-3 py-2 text-xs font-semibold hidden">Выйти</button>
                     </div>
                   </div>
-
                   <div class="mt-4">
                     <div class="rounded-2xl bg-black/12 border border-white/12 p-4">
                       <div class="text-xs text-white/70">Ваш ник:</div>
                       <div id="nickLine" class="mt-1 text-base font-extrabold">—</div>
                     </div>
-
                     <div class="mt-3 rounded-2xl bg-black/12 border border-white/12 p-4">
                       <div class="text-xs text-white/70">Баланс:</div>
                       <div id="balanceResult" class="mt-1 text-base font-extrabold">—</div>
                       <p id="balanceHint" class="mt-2 text-xs text-white/70">Данные подтягиваются из Google Таблицы.</p>
                     </div>
-
                     <div class="mt-3 flex items-center gap-2">
                       <label class="inline-flex items-center gap-2 text-xs text-white/75 select-none">
                         <input id="rememberNick" type="checkbox" checked class="yammy-check" />
@@ -344,7 +288,6 @@
                       <button id="clearNick" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Очистить</button>
                     </div>
                   </div>
-
                   <div class="mt-4 rounded-xl bg-black/14 border border-white/12 px-3 py-3">
                     <div class="text-[11px] text-white/70">Либо вы можете проверить на Twitch командой</div>
                     <div class="mt-2 flex items-center gap-2">
@@ -355,13 +298,11 @@
                   </div>
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </div>
     </section>
-
     <div id="calcModal" class="fixed inset-0 z-50 hidden">
       <div class="absolute inset-0 bg-black/45 backdrop-blur-sm"></div>
       <div class="relative mx-auto max-w-md px-4 sm:px-6 pt-20 sm:pt-28">
@@ -373,7 +314,6 @@
             </div>
             <button id="closeCalc" class="btn rounded-xl px-3 py-2 text-sm font-semibold">✕</button>
           </div>
-
           <div class="mt-4 grid grid-cols-1 gap-3">
             <label class="text-sm text-white/80">Сколько клипов?</label>
             <div class="flex items-center gap-2">
@@ -381,13 +321,11 @@
               <input id="clips" type="number" min="0" value="1" class="w-full rounded-xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none focus:border-white/40" />
               <button id="clipsPlus" class="btn rounded-xl px-3 py-2 text-sm font-bold">+</button>
             </div>
-
             <div class="mt-1 rounded-2xl bg-black/12 border border-white/12 p-4">
               <div class="text-sm text-white/75">Итого баллов:</div>
               <div class="mt-1 text-2xl font-extrabold tracking-tight"><span id="total">50</span> <span class="text-lg">🪙</span></div>
               <div class="mt-2 text-xs text-white/70">Считаем: 50, потом каждый следующий = предыдущий × 1.03</div>
             </div>
-
             <div class="flex gap-2">
               <button id="calcApply" class="btn rounded-2xl px-4 py-3 text-sm font-semibold grow">Готово</button>
               <button id="calcCopyInside" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Копировать</button>
@@ -397,7 +335,6 @@
         </div>
       </div>
     </div>
-
     <section id="goods" class="mx-auto max-w-6xl px-4 sm:px-6 py-5 sm:py-8">
       <div class="reveal">
         <div class="glass glow rounded-3xl p-5 sm:p-7">
@@ -408,12 +345,10 @@
             </div>
             <div class="text-sm text-white/75 hidden sm:block">Совет: сначала проверь баллы, потом выбери награду.</div>
           </div>
-
           <div id="goodsGrid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
       </div>
     </section>
-
     <section id="order" class="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-12">
       <div class="reveal">
         <div class="glass glow rounded-3xl p-6 sm:p-8">
@@ -426,18 +361,15 @@
                 Telegram откроется автоматически с готовым текстом.
               </p>
             </div>
-
             <div class="w-full lg:max-w-sm">
               <div id="orderCard" class="glass rounded-3xl p-5 border border-white/20 hidden">
                 <div class="text-sm text-white/75">Выбрано:</div>
                 <div id="picked" class="mt-2 text-lg font-extrabold">Пока ничего</div>
-
                 <div id="orderMsg" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm">
                   <div id="orderMsgTitle" class="font-bold"></div>
                   <div id="orderMsgText" class="mt-1 text-white/80 text-xs"></div>
                   <div id="orderMsgActions" class="mt-3 hidden flex flex-wrap gap-2"></div>
                 </div>
-
                 <div class="mt-3">
                   <label class="text-sm text-white/80">Доп. комментарий (опционально)</label>
                   <textarea id="comment" rows="3" class="mt-2 w-full rounded-2xl bg-black/20 border border-white/20 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: жанр/настроение/какая именно игра..."></textarea>
@@ -447,12 +379,10 @@
               </div>
             </div>
           </div>
-
           <div class="mt-6 text-xs text-white/65">Примечание: этот сайт — удобная витрина. Оплата/подтверждение — по твоим правилам в чате.</div>
         </div>
       </div>
     </section>
-
     <footer class="mx-auto max-w-6xl px-4 sm:px-6 pb-10">
       <div class="glass rounded-3xl p-5 sm:p-6 border border-white/20 text-white/75">
         <div class="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
@@ -465,30 +395,17 @@
       </div>
     </footer>
   </main>
-
   <script>
-    // --- UA detection ---
-    function uaLower(){ return String(navigator.userAgent || '').toLowerCase(); }
-    function isTelegramUA(){
-      const ua = uaLower();
-      return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('telegrambot') || ua.includes('org.telegram.messenger');
-    }
-    function isInAppUA(){
-      const ua = uaLower();
-      return isTelegramUA() || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
-    }
-
+    // --- In-app browsers fallback ---
     try{
-      const inApp = isInAppUA();
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const inApp = ua.includes('telegram') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
       if(inApp) document.documentElement.classList.add('no-io');
-      if(isTelegramUA()) document.documentElement.classList.add('tg');
       if(!('IntersectionObserver' in window)) document.documentElement.classList.add('no-io');
     }catch(e){ document.documentElement.classList.add('no-io'); }
-
     // ----- Helpers -----
     const $ = (sel, root=document) => root.querySelector(sel);
     const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
     async function copyText(text){
       try{ await navigator.clipboard.writeText(text); return true; }
       catch(e){
@@ -503,7 +420,6 @@
         finally{ document.body.removeChild(ta); }
       }
     }
-
     function toast(el){
       if(!el) return;
       el.classList.remove('hidden');
@@ -516,14 +432,12 @@
         setTimeout(()=> el.classList.add('hidden'), 260);
       }, 1300);
     }
-
     function roundNice(n){
       const r = Math.round(n);
       if (Math.abs(n - r) < 1e-9) return String(r);
       const one = Math.round(n * 10) / 10;
       return String(one).replace('.', ',');
     }
-
     // ----- Calculator -----
     function calcTotal(clips){
       clips = Math.max(0, Math.floor(Number(clips) || 0));
@@ -535,7 +449,6 @@
       }
       return total;
     }
-
     function updateCalc(){
       const clipsEl = $('#clips');
       const totalEl = $('#total');
@@ -544,7 +457,6 @@
       clipsEl.value = c;
       totalEl.textContent = roundNice(calcTotal(c));
     }
-
     function openCalc(){
       const m = $('#calcModal');
       if(!m) return;
@@ -553,47 +465,37 @@
       updateCalc();
       setTimeout(()=> $('#clips')?.focus(), 50);
     }
-
     function closeCalc(){
       const m = $('#calcModal');
       if(!m) return;
       m.classList.add('hidden');
       document.body.style.overflow = '';
     }
-
     function initCalculator(){
       $('#clipsMinus')?.addEventListener('click', ()=>{ const i = $('#clips'); if(!i) return; i.value = Math.max(0, (Number(i.value)||0) - 1); updateCalc(); });
       $('#clipsPlus')?.addEventListener('click', ()=>{ const i = $('#clips'); if(!i) return; i.value = (Number(i.value)||0) + 1; updateCalc(); });
       $('#clips')?.addEventListener('input', updateCalc);
-
       $('#openCalc')?.addEventListener('click', openCalc);
       $('#closeCalc')?.addEventListener('click', closeCalc);
       $('#calcApply')?.addEventListener('click', closeCalc);
-
-      $('#calcModal')?.addEventListener('click', (e)=>{ if(e.target === $('#calcModal')) closeCalc(); });
       $('#calcModal .absolute')?.addEventListener('click', closeCalc);
-
       document.addEventListener('keydown', (e)=>{
         if(e.key === 'Escape' && !$('#calcModal')?.classList.contains('hidden')) closeCalc();
       });
-
       $('#calcCopyInside')?.addEventListener('click', async ()=>{
         const c = Number($('#clips')?.value)||0;
         const t = $('#total')?.textContent || '';
         const ok = await copyText(`Клипов: ${c}. Итого баллов: ${t} 🪙`);
         if(ok) toast($('#calcToastInside'));
       });
-
       updateCalc();
     }
-
     function initCopyButtons(){
       $('#copyBalance')?.addEventListener('click', async ()=>{
         const ok = await copyText('!Баланс');
         if(ok) toast($('#copyToast'));
       });
     }
-
     // ----- Products -----
     const PRODUCTS = [
       { title: '🥨 Закуски (Мемы)', badge: 'юмор', note: 'Лёгкий контент для настроения ✨', options: [ { label: '20 мемов', price: 200 }, { label: '45 мемов', price: 400 } ] },
@@ -604,28 +506,22 @@
       { title: '🖌️ Рисунки', badge: 'арт', note: 'Небольшие рисунки по твоей идее ✨', options: [ { label: 'Заказать всратыша', price: 3000 } ] },
       { title: '🎁 Свой вариант', badge: 'предложение', note: 'Главное — чтобы было интересно и по правилам ✨', options: [ { label: 'Хочу обсудить индивидуальный заказ', price: null } ] },
     ];
-
     function formatCoins(price){
       return (price === null || price === undefined) ? '—' : `${price} 🪙`;
     }
-
     function orderTextFrom(title, opt){
       const p = (opt.price === null || opt.price === undefined) ? '' : ` (${opt.price} 🪙)`;
       return `${title} — ${opt.label}${p}`;
     }
-
     function renderGoods(){
       const grid = document.getElementById('goodsGrid');
       if(!grid) return;
       grid.innerHTML = '';
-
       const small = window.matchMedia('(max-width: 640px)').matches;
-
       for(const product of PRODUCTS){
         const card = document.createElement('article');
         card.className = 'group glass rounded-3xl border border-white/20 hover:border-white/40 transition-all duration-300 hover:-translate-y-1';
         card.classList.add(small ? 'p-4' : 'p-5');
-
         const head = document.createElement('div');
         head.className = 'flex items-center justify-between gap-3';
         const titleClass = small ? 'text-lg' : 'text-xl';
@@ -633,7 +529,6 @@
           <h3 class="${titleClass} font-extrabold">${product.title}</h3>
           <span class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/15">${product.badge || ''}</span>
         `;
-
         const list = document.createElement('ul');
         list.className = 'mt-3 space-y-2 text-white/85';
         list.innerHTML = product.options.map(opt => `
@@ -642,10 +537,8 @@
             <span class="font-bold">${formatCoins(opt.price)}</span>
           </li>
         `).join('');
-
         const actions = document.createElement('div');
         actions.className = 'mt-4 flex flex-wrap gap-2';
-
         product.options.forEach((opt, idx)=>{
           const b = document.createElement('button');
           b.className = 'btn rounded-2xl px-4 py-2 text-sm font-semibold';
@@ -655,11 +548,9 @@
           b.setAttribute('data-order', orderTextFrom(product.title, opt));
           actions.appendChild(b);
         });
-
         const note = document.createElement('p');
         note.className = 'mt-3 text-xs text-white/70';
         note.textContent = product.note || '';
-
         card.appendChild(head);
         card.appendChild(list);
         card.appendChild(actions);
@@ -667,31 +558,28 @@
         grid.appendChild(card);
       }
     }
-
     let picked = '';
     function wireGoodsButtons(){
       $$('#goodsGrid [data-order]').forEach(btn => {
         btn.addEventListener('click', ()=>{
           picked = btn.getAttribute('data-order') || '';
-          $('#picked') && ($('#picked').textContent = picked || 'Пока ничего');
+          const pickedEl = $('#picked');
+          if(pickedEl) pickedEl.textContent = picked || 'Пока ничего';
           document.querySelector('#order')?.scrollIntoView?.({behavior:'smooth', block:'start'});
         });
       });
     }
-
     function initGoods(){
-      renderGoods();
-      wireGoodsButtons();
+      try{ renderGoods(); wireGoodsButtons(); }
+      catch(e){ console.warn('Goods init failed', e); }
     }
-
-    // ----- Order message -----
+    // ----- Order inline messages -----
     function setOrderMsg({type='info', title='', text='', actions=[]}={}){
       const box = document.getElementById('orderMsg');
       const t = document.getElementById('orderMsgTitle');
       const tx = document.getElementById('orderMsgText');
       const act = document.getElementById('orderMsgActions');
       if(!box || !t || !tx || !act) return;
-
       const styles = {
         info:  { cls:'bg-white/8 border-white/18', title:'text-white/95' },
         warn:  { cls:'bg-amber-500/10 border-amber-200/25', title:'text-amber-100' },
@@ -699,12 +587,10 @@
         ok:    { cls:'bg-emerald-500/10 border-emerald-200/25', title:'text-emerald-100' },
       };
       const s = styles[type] || styles.info;
-
       box.className = `mt-3 rounded-2xl border px-4 py-3 text-sm ${s.cls}`;
       t.className = `font-bold ${s.title}`;
       t.textContent = title;
       tx.textContent = text;
-
       act.innerHTML = '';
       if(actions && actions.length){
         act.classList.remove('hidden');
@@ -718,21 +604,17 @@
       }else{
         act.classList.add('hidden');
       }
-
       box.classList.remove('hidden');
       box.scrollIntoView({behavior:'smooth', block:'nearest'});
     }
-
     function clearOrderMsg(){
       const box = document.getElementById('orderMsg');
       if(box) box.classList.add('hidden');
       const act = document.getElementById('orderMsgActions');
       if(act) act.classList.add('hidden');
     }
-
     // ----- Telegram -----
     const TG_TARGET_DEFAULT = 'https://t.me/YammyTanuki';
-
     function normalizeTgTarget(raw){
       const v = String(raw || '').trim();
       if(!v) return '';
@@ -745,9 +627,8 @@
       s = s.replace(/[^a-zA-Z0-9_]/g,'');
       return s;
     }
-
     function buildOrderText(){
-      const cmt = ($('#comment')?.value || '').trim();
+      const cmt = ($('#comment').value || '').trim();
       const item = picked || '[награда]';
       const nick = getKnownNick();
       const parts = [];
@@ -756,21 +637,17 @@
       if(cmt) parts.push(`Комментарий: ${cmt}`);
       return parts.join('\n');
     }
-
     function getTgUrl(){
       const user = normalizeTgTarget(TG_TARGET_DEFAULT);
       if(!user) return '';
       const text = buildOrderText();
       return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
     }
-
-    // ----- Balance + Spend API -----
+    // ----- Google Sheets API (Apps Script) -----
     const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
     const SPEND_ENABLED = true;
     const SPEND_TOKEN = 'yammy_spend_v1';
-
     function normNick(s){ return String(s ?? '').trim().toLowerCase(); }
-
     function parsePoints(v){
       if(v === null || v === undefined) return NaN;
       if(typeof v === 'number') return v;
@@ -778,7 +655,6 @@
       const n = Number(s);
       return Number.isFinite(n) ? n : NaN;
     }
-
     async function fetchBalances(){
       const res = await fetch(BALANCE_API_URL, { cache: 'no-store' });
       if(!res.ok) throw new Error('API request failed');
@@ -786,13 +662,11 @@
       if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
       return json.data;
     }
-
     async function spendPoints({nick, amount, item, comment}={}){
       const cleanNick = String(nick || '').trim();
       const a = Number(amount);
       if(!cleanNick) return { ok:false, reason:'nonick' };
       if(!Number.isFinite(a) || a <= 0) return { ok:false, reason:'badamount' };
-
       const payload = {
         action: 'spend',
         token: SPEND_TOKEN,
@@ -802,26 +676,21 @@
         comment: String(comment || '').slice(0, 500),
         at: Date.now(),
       };
-
       const res = await fetch(BALANCE_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload)
       });
-
       const txt = await res.text();
       try{ return JSON.parse(txt); }
       catch(e){ return { ok:false, reason:'badjson', raw: txt.slice(0,200) }; }
     }
-
     async function findBalanceByNick(nick){
       const needle = normNick(nick);
       if(!needle) return { found:false, reason:'empty' };
-
       const rows = await fetchBalances();
-      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник','login','Login'];
+      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник'];
       const pointsKeys = ['Итоговые баллы','итоговые баллы','Баллы','баллы','Points','points'];
-
       for(const r of rows){
         const nickVal = nickKeys.map(k=>r[k]).find(v=>v!==undefined);
         const rowNick = normNick(nickVal);
@@ -834,18 +703,17 @@
       }
       return { found:false, reason:'notfound' };
     }
-
-    // ----- Twitch OAuth (PKCE) + session -----
+    // ----- Twitch OAuth (PKCE primary + Implicit fallback) -----
     const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
-    // IMPORTANT: must match exactly the OAuth Redirect URL in Twitch Dev Console
     const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
-    const TWITCH_SCOPES = []; // none needed for helix/users
-
+    const TWITCH_SCOPES = [];
     const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v2';
-    const PKCE_KEY = 'yammy_twitch_pkce_v2';
-
+    const PKCE_STORAGE_KEY = 'yammy_twitch_pkce_v2';
+    function setPkceState(obj){ sessionStorage.setItem(PKCE_STORAGE_KEY, JSON.stringify(obj||{})); }
+    function getPkceState(){ try{ return JSON.parse(sessionStorage.getItem(PKCE_STORAGE_KEY) || '{}'); }catch(e){ return {}; } }
+    function clearPkceState(){ sessionStorage.removeItem(PKCE_STORAGE_KEY); }
     function setAuth(obj){
-      const remember = $('#rememberNick');
+      const remember = document.getElementById('rememberNick');
       const data = obj || {};
       try{
         if(remember && remember.checked === false){
@@ -859,185 +727,151 @@
         try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data)); }catch(err){}
       }
     }
-
     function getAuth(){
       try{ const s = sessionStorage.getItem(AUTH_STORAGE_KEY); if(s) return JSON.parse(s); }catch(e){}
       try{ return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}'); }catch(e){ return {}; }
     }
-
     function clearAuth(){
       try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
       try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(e){}
     }
-
-    function setPkce(obj){
-      try{ sessionStorage.setItem(PKCE_KEY, JSON.stringify(obj || {})); }catch(e){}
-    }
-    function getPkce(){
-      try{ return JSON.parse(sessionStorage.getItem(PKCE_KEY) || '{}'); }catch(e){ return {}; }
-    }
-    function clearPkce(){
-      try{ sessionStorage.removeItem(PKCE_KEY); }catch(e){}
-    }
-
     function base64UrlEncode(uint8){
       let s = '';
       uint8.forEach(b => s += String.fromCharCode(b));
       return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     }
-
+    function randomString(len=64){
+      try{
+        const a = new Uint8Array(len);
+        crypto.getRandomValues(a);
+        return base64UrlEncode(a);
+      }catch(e){
+        let s='';
+        for(let i=0;i<len;i++) s += String.fromCharCode(Math.floor(Math.random()*256));
+        return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+      }
+    }
     async function sha256(text){
       const enc = new TextEncoder().encode(text);
       const hash = await crypto.subtle.digest('SHA-256', enc);
       return new Uint8Array(hash);
     }
-
-    function randomString(len=32){
-      const a = new Uint8Array(len);
-      crypto.getRandomValues(a);
-      return base64UrlEncode(a);
-    }
-
-    async function twitchLogin(){
-      if(isTelegramUA()){
-        openTgModal();
-        return;
-      }
-
-      // If the page is opened without trailing slash, OAuth redirect will mismatch.
-      // Force canonical URL (with /) before starting login.
-      if(!window.location.pathname.endsWith('/')){
-        const u = new URL(window.location.href);
-        u.pathname = u.pathname + '/';
-        window.location.replace(u.toString());
-        return;
-      }
-      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
-        setOrderMsg({ type:'warn', title:'Twitch вход недоступен', text:'Этот браузер не поддерживает безопасную авторизацию. Открой в Chrome/Safari.' });
-        return;
-      }
-
-      clearPkce();
-
-      const state = 'v2_' + randomString(18);
-      const verifier = randomString(64);
-      const challenge = base64UrlEncode(await sha256(verifier));
-
-      setPkce({ state, verifier, at: Date.now(), redirect: TWITCH_REDIRECT_URI });
-
-      const params = new URLSearchParams({
-        response_type: 'code',
-        client_id: TWITCH_CLIENT_ID,
-        redirect_uri: TWITCH_REDIRECT_URI,
-        scope: TWITCH_SCOPES.join(' '),
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256'
+    function withTimeout(promise, ms=12000){
+      return new Promise((resolve, reject)=>{
+        const t = setTimeout(()=> reject(new Error('Timeout')), ms);
+        promise.then(v=>{ clearTimeout(t); resolve(v); }, e=>{ clearTimeout(t); reject(e); });
       });
-
-      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
     }
-
-    async function twitchTokenExchange(code){
-      const st = getPkce();
-      if(!st?.verifier || !st?.redirect) throw new Error('PKCE state lost');
-
-      const params = new URLSearchParams({
-        client_id: TWITCH_CLIENT_ID,
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: st.redirect,
-        code_verifier: st.verifier
-      });
-
-      const res = await fetch('https://id.twitch.tv/oauth2/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-      });
-
-      const txt = await res.text();
-      let json = null;
-      try{ json = JSON.parse(txt); }catch(e){}
-      if(!res.ok){
-        const msg = json?.message || json?.error_description || txt.slice(0,120) || 'token exchange failed';
-        throw new Error('Token exchange failed: ' + msg);
-      }
-      return json;
-    }
-
-    async function twitchGetUser(accessToken){
-      const res = await fetch('https://api.twitch.tv/helix/users', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Client-ID': TWITCH_CLIENT_ID
-        }
-      });
-      if(!res.ok) throw new Error('Failed to fetch user profile');
-      const json = await res.json();
-      const u = json?.data?.[0];
-      if(!u?.login) throw new Error('No login in profile');
-      return { login: u.login, display_name: u.display_name || u.login };
-    }
-
-    function cleanOAuthUrl(){
+    function cleanUrlAfterOAuth(){
       const url = new URL(window.location.href);
       url.searchParams.delete('code');
       url.searchParams.delete('scope');
       url.searchParams.delete('state');
       window.history.replaceState({}, document.title, url.toString());
     }
-
-    async function handleOAuthCallback(){
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get('code');
-      const state = url.searchParams.get('state');
-      if(!code) return;
-
-      try{
-        const st = getPkce();
-        if(!st?.state || st.state !== state) throw new Error('State mismatch');
-
-        $('#nickStatus') && ($('#nickStatus').textContent = 'Вхожу через Twitch…');
-        const token = await twitchTokenExchange(code);
-        const user = await twitchGetUser(token.access_token);
-
-        setAuth({ login: user.login, display_name: user.display_name, at: Date.now() });
-        setNickUIAuthed(user.login);
-        await refreshBalanceForAuthed();
-      }catch(e){
-        const msg = (e && (e.message || String(e))) || 'unknown';
-        $('#nickStatus') && ($('#nickStatus').textContent = `Не удалось войти через Twitch. ${msg}`);
-      }finally{
-        clearPkce();
-        cleanOAuthUrl();
+    async function twitchExchangeCode(code){
+      const st = getPkceState();
+      if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
+      const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
+      const dbg = `client_id=${TWITCH_CLIENT_ID} redirect_uri=${redirectUri}`;
+      const params = new URLSearchParams({
+        client_id: TWITCH_CLIENT_ID,
+        grant_type: 'authorization_code',
+        code: String(code || ''),
+        redirect_uri: redirectUri,
+        code_verifier: String(st.verifier || '')
+      });
+      const endpoints = ['https://id.twitch.tv/oauth2/token','https://api.twitch.tv/oauth2/token'];
+      let lastTxt = '';
+      let lastJson = null;
+      let lastStatus = 0;
+      for(const ep of endpoints){
+        let res;
+        try{
+          res = await withTimeout(fetch(ep, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: params.toString()
+          }), 12000);
+        }catch(e){
+          lastTxt = String(e?.message || e);
+          lastJson = null;
+          lastStatus = 0;
+          continue;
+        }
+        lastStatus = res.status;
+        lastTxt = await res.text();
+        lastJson = null;
+        try{ lastJson = JSON.parse(lastTxt); }catch(e){}
+        if(res.ok && lastJson?.access_token) return lastJson;
       }
+      const desc = lastJson?.message || lastJson?.error_description || lastJson?.error || lastTxt || `HTTP ${lastStatus}`;
+      if(String(desc).toLowerCase().includes('invalid client credentials')){
+        throw new Error(`Token exchange failed: Invalid client credentials (${dbg})`);
+      }
+      if(String(desc).toLowerCase().includes('failed to fetch') || String(desc).toLowerCase().includes('timeout')){
+        throw new Error(`Token exchange failed: Failed to fetch (возможна блокировка сети/AdBlock/браузером). Попробуй другой браузер или выключи блокировщик. (${dbg})`);
+      }
+      throw new Error(`Token exchange failed: ${desc} (${dbg})`);
     }
-
+    async function twitchGetUserHelix(accessToken){
+      const res = await withTimeout(fetch('https://api.twitch.tv/helix/users', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Client-ID': TWITCH_CLIENT_ID
+        }
+      }), 12000);
+      const txt = await res.text();
+      let json = null;
+      try{ json = JSON.parse(txt); }catch(e){}
+      if(!res.ok){
+        const desc = json?.message || json?.error || txt.slice(0,200);
+        throw new Error(`Failed to fetch user: ${desc}`);
+      }
+      const u = json?.data?.[0];
+      const login = String(u?.login || '').trim();
+      const display = String(u?.display_name || login).trim();
+      return login ? { login, display_name: display } : null;
+    }
+    function handleImplicitTokenFromHash(){
+      const h = String(window.location.hash || '');
+      if(!h || !h.includes('access_token=')) return null;
+      const params = new URLSearchParams(h.replace(/^#/,''));
+      const token = params.get('access_token');
+      const state = params.get('state') || '';
+      if(!token) return null;
+      try{ history.replaceState({}, document.title, window.location.pathname + window.location.search); }catch(e){}
+      return { access_token: token, state };
+    }
+    function setNickUIAuthed(login){
+      const status = document.getElementById('nickStatus');
+      const nickLine = document.getElementById('nickLine');
+      if(nickLine) nickLine.textContent = login ? login : '—';
+      if(status) status.textContent = login ? 'Вы вошли через Twitch.' : 'Нужно войти через Twitch, чтобы увидеть баланс.';
+      document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !login);
+      try{ updateOrderGateUI(); }catch(e){}
+    }
     function getKnownNick(){
       const a = getAuth();
       return String(a?.login || '').trim();
     }
-
-    function setNickUIAuthed(login){
-      $('#nickLine') && ($('#nickLine').textContent = login ? login : '—');
-      $('#nickStatus') && ($('#nickStatus').textContent = login ? 'Вы вошли.' : 'Нужно войти через Twitch, чтобы увидеть баланс.');
-      $('#twitchLogoutBtn')?.classList.toggle('hidden', !login);
-      $('#twitchLoginBtn')?.classList.toggle('hidden', !!login);
-      updateOrderGateUI();
-    }
-
     async function refreshBalanceForAuthed(){
-      const out = $('#balanceResult');
-      const hint = $('#balanceHint');
+      const out = document.getElementById('balanceResult');
+      const hint = document.getElementById('balanceHint');
+      const nickLine = document.getElementById('nickLine');
       const login = getKnownNick();
-
       if(!login){
+        if(nickLine) nickLine.textContent = '—';
         if(out) out.textContent = '—';
-        if(hint) hint.textContent = 'Данные подтягиваются из Google Таблицы.';
+        if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
         return;
       }
-
+      if(nickLine) nickLine.textContent = login;
+      if(!BALANCE_API_URL){
+        if(out) out.textContent = 'Баланс пока не подключён.';
+        if(hint) hint.textContent = 'Нужно вставить URL Apps Script в переменную BALANCE_API_URL.';
+        return;
+      }
       if(out) out.textContent = 'Загружаю…';
       try{
         const res = await findBalanceByNick(login);
@@ -1054,47 +888,125 @@
         if(hint) hint.textContent = 'Проверь доступ Apps Script (Deploy → Web app → доступ: "Все").';
       }
     }
-
+    async function handleTwitchOAuthCallback(){
+      // Implicit token flow
+      const implicit = handleImplicitTokenFromHash();
+      if(implicit?.access_token){
+        try{
+          const user = await twitchGetUserHelix(implicit.access_token);
+          if(!user?.login) throw new Error('No login');
+          setAuth({ login: user.login, access_token: implicit.access_token, obtained_at: Date.now(), implicit: true });
+          setNickUIAuthed(user.login);
+          await refreshBalanceForAuthed();
+        }catch(e){
+          clearAuth();
+          setNickUIAuthed('');
+          const hint = document.getElementById('balanceHint');
+          if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || e)}`;
+        }
+        return;
+      }
+      // PKCE code flow
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      if(!code) return;
+      const st0 = getPkceState();
+      if(!st0?.state || !st0?.verifier){
+        clearPkceState();
+        cleanUrlAfterOAuth();
+        clearAuth();
+        setNickUIAuthed('');
+        const hint = document.getElementById('balanceHint');
+        if(hint) hint.textContent = 'Не удалось завершить вход. Нажми «Войти через Twitch» ещё раз.';
+        return;
+      }
+      try{
+        const st = getPkceState();
+        if(st.state !== state) throw new Error('Bad state');
+        const token = await twitchExchangeCode(code);
+        const user = await twitchGetUserHelix(token.access_token);
+        if(!user?.login) throw new Error('No login');
+        setAuth({ login: user.login, access_token: token.access_token, expires_in: token.expires_in, obtained_at: Date.now() });
+        setNickUIAuthed(user.login);
+        await refreshBalanceForAuthed();
+      }catch(e){
+        clearAuth();
+        setNickUIAuthed('');
+        const hint = document.getElementById('balanceHint');
+        if(hint) hint.textContent = `Не удалось войти через Twitch. ${String(e?.message || e)}`;
+      }finally{
+        clearPkceState();
+        cleanUrlAfterOAuth();
+      }
+    }
+    async function twitchLogin(){
+      clearOrderMsg();
+      // Always reset so user can retry
+      clearPkceState();
+      try{ cleanUrlAfterOAuth(); }catch(e){}
+      const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
+      // If PKCE is not supported (or if token endpoint is blocked), implicit is more compatible.
+      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+      // Prefer implicit on known-problematic UAs (Yandex, in-app), to avoid token exchange fetch
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
+      if(!canPkce || looksBlocked){
+        const state = `v0_${randomString(18)}`;
+        const params = new URLSearchParams({
+          response_type: 'token',
+          client_id: TWITCH_CLIENT_ID,
+          redirect_uri: redirectUri,
+          scope: TWITCH_SCOPES.join(' '),
+          state
+        });
+        window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+        return;
+      }
+      const state = `v1_${randomString(24)}`;
+      const verifier = randomString(64);
+      const challenge = base64UrlEncode(await sha256(verifier));
+      setPkceState({ state, verifier, at: Date.now() });
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: TWITCH_CLIENT_ID,
+        redirect_uri: redirectUri,
+        scope: TWITCH_SCOPES.join(' '),
+        state,
+        code_challenge: challenge,
+        code_challenge_method: 'S256'
+      });
+      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+    }
     function twitchLogout(){
       clearAuth();
       setNickUIAuthed('');
       refreshBalanceForAuthed();
     }
-
     function clearSavedAuth(){
       clearAuth();
       setNickUIAuthed('');
-      refreshBalanceForAuthed();
+      const out = document.getElementById('balanceResult');
+      const hint = document.getElementById('balanceHint');
+      const nickLine = document.getElementById('nickLine');
+      if(nickLine) nickLine.textContent = '—';
+      if(out) out.textContent = '—';
+      if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
     }
-
+    // ----- Order gate -----
     function updateOrderGateUI(){
       const authed = !!getKnownNick();
-      const intro = $('#orderIntro');
-      const help = $('#orderHelp');
-      const card = $('#orderCard');
-
+      const intro = document.getElementById('orderIntro');
+      const help = document.getElementById('orderHelp');
+      const card = document.getElementById('orderCard');
       if(intro){
-        intro.textContent = authed ? 'Напишите мне в ЛС в Telegram — одним кликом из этого сайта.' : 'Для начала авторизуйтесь на твич.';
+        intro.textContent = authed
+          ? 'Напишите мне в ЛС в Telegram — одним кликом из этого сайта.'
+          : 'Для начала авторизуйтесь на твич.';
       }
-      help?.classList.toggle('hidden', !authed);
-      card?.classList.toggle('hidden', !authed);
+      if(help) help.classList.toggle('hidden', !authed);
+      if(card) card.classList.toggle('hidden', !authed);
     }
-
-    // ----- Telegram modal bridge -----
-    function openTgModal(){
-      const m = $('#tgModal');
-      if(!m) return;
-      m.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeTgModal(){
-      const m = $('#tgModal');
-      if(!m) return;
-      m.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-
     // ----- Place order -----
     function parsePickedPrice(str){
       const s = String(str || '');
@@ -1102,52 +1014,56 @@
       if(!m) return NaN;
       return Number(m[1]);
     }
-
-    $('#placeOrder')?.addEventListener('click', async ()=>{
+    document.getElementById('placeOrder')?.addEventListener('click', async ()=>{
       clearOrderMsg();
-      const toastEl = $('#orderToast');
+      const toastEl = document.getElementById('orderToast');
       const nick = getKnownNick();
-
       if(!nick){
         setOrderMsg({
           type:'warn',
           title:'Нужно авторизоваться на Twitch',
-          text:'Чтобы оформить заказ, сначала войди через Twitch.',
-          actions:[{ label:'Войти', onClick: twitchLogin }]
+          text:'Чтобы оформить заказ, сначала войди через Twitch в блоке «Проверка баланса».',
+          actions:[{ label:'Войти через Twitch', onClick: ()=> twitchLogin() }]
         });
         return;
       }
-
       if(!picked){
         setOrderMsg({ type:'warn', title:'Выбери товар', text:'Сначала выбери награду в разделе «Товары».' });
         return;
       }
-
       const spend = parsePickedPrice(picked);
       if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
         if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
         try{
-          const res = await spendPoints({ nick, amount: spend, item: picked, comment: ($('#comment')?.value||'').trim() });
+          const res = await spendPoints({ nick, amount: spend, item: picked, comment: ($('#comment').value||'').trim() });
           if(res.ok){
             await refreshBalanceForAuthed();
           }else if(res.reason === 'insufficient'){
             setOrderMsg({ type:'error', title:'Недостаточно баллов 😢', text:`Для этого заказа нужно ${spend} 🪙.` });
             return;
           }else if(res.reason === 'notfound'){
-            setOrderMsg({ type:'warn', title:'У вас 0 баллов 😢', text:'Похоже, тебя нет в таблице.' });
+            setOrderMsg({ type:'warn', title:'У вас 0 баллов 😢', text:'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.' });
             return;
           }else{
-            setOrderMsg({ type:'warn', title:'Таблица не ответила', text:'Можно всё равно открыть Telegram — Ями проверит вручную.', actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }] });
+            setOrderMsg({
+              type:'warn',
+              title:'Таблица не ответила',
+              text:'Не удалось списать баллы автоматически. Можно всё равно открыть Telegram — Ями проверит вручную.',
+              actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }]
+            });
             return;
           }
         }catch(e){
-          setOrderMsg({ type:'warn', title:'Ошибка связи', text:'Можно всё равно открыть Telegram — Ями проверит вручную.', actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }] });
+          setOrderMsg({
+            type:'warn',
+            title:'Ошибка связи',
+            text:'Не удалось связаться с таблицей. Можно всё равно открыть Telegram — Ями проверит вручную.',
+            actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }]
+          });
           return;
         }
       }
-
       openTg();
-
       function openTg(){
         const url = getTgUrl();
         if(!url){
@@ -1159,41 +1075,74 @@
         let w = null;
         try{ w = window.open(url, '_blank', 'noopener,noreferrer'); }catch(e){}
         if(!w){
-          setOrderMsg({ type:'warn', title:'Браузер заблокировал открытие', text:'Нажми кнопку ниже, чтобы открыть Telegram.', actions:[{ label:'Открыть Telegram', onClick: ()=> window.open(url, '_blank', 'noopener,noreferrer') }] });
+          setOrderMsg({
+            type:'warn',
+            title:'Браузер заблокировал открытие',
+            text:'Нажми кнопку ниже, чтобы открыть Telegram.',
+            actions: [{ label:'Открыть Telegram', onClick: ()=> window.open(url, '_blank', 'noopener,noreferrer') }]
+          });
         }
       }
     });
-
-    // ----- Reveal -----
-    function initReveal(){
-      try{
-        const force = document.documentElement.classList.contains('no-io');
-        const isSmallOrTablet = window.matchMedia('(max-width: 1024px)').matches;
-        if(!force && !isSmallOrTablet && 'IntersectionObserver' in window){
-          const io = new IntersectionObserver((entries)=>{
-            for(const e of entries){
-              if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
-            }
-          }, {threshold: 0.12});
-          $$('.reveal').forEach(el => io.observe(el));
-        }else{
-          $$('.reveal').forEach(el => el.classList.add('in'));
+    // ----- Init balance block (OAuth only) -----
+    function initBalanceUI(){
+      initCopyButtons();
+      // handle callback first
+      handleTwitchOAuthCallback();
+      // wire buttons
+      document.getElementById('twitchLoginBtn')?.addEventListener('click', twitchLogin);
+      document.getElementById('twitchLogoutBtn')?.addEventListener('click', twitchLogout);
+      document.getElementById('clearNick')?.addEventListener('click', clearSavedAuth);
+      // restore auth if exists
+      const auth = getAuth();
+      const remember = document.getElementById('rememberNick');
+      if(auth?.login){
+        if(remember){
+          remember.checked = !!localStorage.getItem(AUTH_STORAGE_KEY);
         }
-      }catch(err){
+        setNickUIAuthed(auth.login);
+        setTimeout(()=> refreshBalanceForAuthed(), 250);
+      }else{
+        setNickUIAuthed('');
+        refreshBalanceForAuthed();
+      }
+      remember?.addEventListener('change', (e)=>{
+        const a = getAuth();
+        if(!a?.login) return;
+        if(e.target.checked){
+          try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
+          try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
+        }else{
+          try{ sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
+          try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
+        }
+      });
+      updateOrderGateUI();
+    }
+    // ----- Reveal -----
+    try{
+      const force = document.documentElement.classList.contains('no-io');
+      const isSmallOrTablet = window.matchMedia('(max-width: 1024px)').matches;
+      if(!force && !isSmallOrTablet && 'IntersectionObserver' in window){
+        const io = new IntersectionObserver((entries)=>{
+          for(const e of entries){
+            if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); }
+          }
+        }, {threshold: 0.12});
+        $$('.reveal').forEach(el => io.observe(el));
+      }else{
         $$('.reveal').forEach(el => el.classList.add('in'));
       }
+    }catch(err){
+      $$('.reveal').forEach(el => el.classList.add('in'));
     }
-
     // ----- Decorative effects (desktop only) -----
-    function initEffects(){
-      const isMobile = window.matchMedia('(max-width: 640px)').matches;
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const inApp = document.documentElement.classList.contains('no-io');
-      if(isMobile || reduced || inApp) return;
-
+    const isMobile = window.matchMedia('(max-width: 640px)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const inApp = document.documentElement.classList.contains('no-io');
+    if(!isMobile && !reduced && !inApp){
       const cloudsRoot = document.getElementById('clouds');
       const starsRoot = document.getElementById('stars');
-
       if(cloudsRoot){
         function addCloud({top, duration, delay, scale, opacity}){
           const c = document.createElement('div');
@@ -1216,7 +1165,6 @@
           });
         }
       }
-
       if(starsRoot){
         function addStar(){
           const s = document.createElement('div');
@@ -1227,7 +1175,6 @@
           const opacity = 0.18 + Math.random()*0.48;
           const dur = 8 + Math.random()*13;
           const delay = Math.random()*dur;
-
           s.style.left = left + 'vw';
           s.style.setProperty('--x', '0px');
           s.style.setProperty('--drift', drift + 'px');
@@ -1242,96 +1189,24 @@
           starsRoot.appendChild(s);
           setTimeout(()=>{ s.remove(); }, (dur+2)*1000);
         }
-
         const initial = Math.min(55, Math.max(35, Math.floor(window.innerWidth/22)));
         for(let i=0;i<initial;i++) addStar();
         setInterval(()=>{ for(let i=0;i<2;i++) addStar(); }, 950);
       }
     }
-
-    // ----- Init -----
-    function init(){
+    document.getElementById('toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+    function initCriticalUI(){
       initCalculator();
       initGoods();
-      initCopyButtons();
-      initReveal();
-      initEffects();
-
-      // Telegram modal wiring
-      $('#tgClose')?.addEventListener('click', closeTgModal);
-      $('#tgModal .absolute')?.addEventListener('click', closeTgModal);
-      $('#tgOpenBrowser')?.addEventListener('click', ()=>{
-        const url = window.location.href;
-        const isAndroid = /android/i.test(navigator.userAgent || '');
-        const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
-
-        if(isAndroid){
-          const clean = url.replace(/^https?:\/\//i,'');
-          const intentUrl = `intent://${clean}#Intent;scheme=https;package=com.android.chrome;end`;
-          try{ window.location.href = intentUrl; return; }catch(e){}
-        }
-
-        if(isIOS){
-          try{ const w = window.open(url, '_blank', 'noopener,noreferrer'); if(!w) window.location.href = url; }
-          catch(e){ window.location.href = url; }
-          return;
-        }
-
-        try{ const w = window.open(url, '_blank', 'noopener,noreferrer'); if(!w) window.location.href = url; }
-        catch(e){ window.location.href = url; }
-      });
-      $('#tgCopyLink')?.addEventListener('click', async ()=>{
-        const ok = await copyText(window.location.href);
-        if(ok) toast($('#tgToast'));
-      });
-
-      // Twitch login buttons
-      $('#twitchLoginBtn')?.addEventListener('click', (e)=>{
-        if(isTelegramUA()){
-          try{ e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); }catch(err){}
-          openTgModal();
-          return;
-        }
-        twitchLogin();
-      });
-      $('#twitchLogoutBtn')?.addEventListener('click', twitchLogout);
-      $('#clearNick')?.addEventListener('click', clearSavedAuth);
-
-      // Remember toggle moves auth between storages
-      $('#rememberNick')?.addEventListener('change', (e)=>{
-        const a = getAuth();
-        if(!a?.login) return;
-        if(e.target.checked){
-          try{ localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
-          try{ sessionStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
-        }else{
-          try{ sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(a)); }catch(err){}
-          try{ localStorage.removeItem(AUTH_STORAGE_KEY); }catch(err){}
-        }
-      });
-
-      $('#toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
-
-      // OAuth callback handling
-      handleOAuthCallback();
-
-      // Restore auth
-      const auth = getAuth();
-      if(auth?.login){
-        setNickUIAuthed(auth.login);
-        setTimeout(()=> refreshBalanceForAuthed(), 150);
-      }else{
-        setNickUIAuthed('');
-        refreshBalanceForAuthed();
-      }
-
-      updateOrderGateUI();
     }
-
+    function initAllAfterDom(){
+      initBalanceUI();
+    }
     if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', init, {once:true});
+      document.addEventListener('DOMContentLoaded', ()=>{ initCriticalUI(); initAllAfterDom(); }, {once:true});
     }else{
-      init();
+      initCriticalUI();
+      initAllAfterDom();
     }
   </script>
 </body>
