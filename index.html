@@ -861,6 +861,9 @@
 
     async function twitchLogin(){
       clearOrderMsg();
+      // always reset pkce so user can retry
+      clearPkceState();
+
       if(!isTwitchSupported()){
         setOrderMsg({type:'warn', title:'Twitch вход недоступен', text:'Этот браузер ограничивает безопасную авторизацию. Открой сайт в обычном Chrome/Safari.'});
         return;
@@ -911,7 +914,8 @@
       });
       if(!res.ok) throw new Error('Failed to fetch userinfo');
       const json = await res.json();
-      const login = json?.preferred_username || json?.login || json?.nickname || '';
+      // Twitch OIDC returns preferred_username
+      const login = String(json?.preferred_username || json?.login || json?.nickname || '').trim();
       return login ? { login, display_name: login } : null;
     }
 
@@ -1019,8 +1023,16 @@
       }catch(e){
         clearAuth();
         setNickUIAuthed('');
+
+        // Show a user-friendly message in balance block too
+        const hint = document.getElementById('balanceHint');
+        const out = document.getElementById('balanceResult');
+        if(out) out.textContent = '—';
+        if(hint) hint.textContent = 'Не удалось войти через Twitch. Нажми «Войти через Twitch» ещё раз.';
+
         console.warn('Twitch OAuth failed', e);
       }finally{
+        // Always clear PKCE state so user can try again
         clearPkceState();
         cleanUrlAfterOAuth();
       }
@@ -1172,10 +1184,14 @@
       // remember checkbox behavior: if user turns it off, clear saved auth
       remember?.addEventListener('change', (e)=>{
         if(!e.target.checked){
-          // do not sign out immediately from twitch, just clear local saved auth
+          // clear saved auth
           clearSavedAuth();
         }
       });
+
+      // If we returned from Twitch OAuth and couldn't complete (missing PKCE state),
+      // allow trying again by ensuring no stale pkce state is left.
+      clearPkceState();
 
       // Ensure correct order gate state on first load
       updateOrderGateUI();
