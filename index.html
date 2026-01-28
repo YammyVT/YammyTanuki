@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Магазинчик Ями — оформление заказов</title>
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval';" />
   <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -24,7 +23,6 @@
     html,body{height:100%;}
     body{
       overflow-x:hidden;
-      /* Softer, less saturated background + darker veil for readable text */
       background:
         radial-gradient(900px 600px at 18% 14%, rgba(255,255,255,.10), transparent 62%),
         radial-gradient(800px 520px at 82% 22%, rgba(255,255,255,.08), transparent 60%),
@@ -33,23 +31,19 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    /* Dark veil to increase contrast everywhere */
     body::before{
       content:"";
       position:fixed;
       inset:0;
-      /* slightly stronger veil for readability */
       background: linear-gradient(180deg, rgba(6,10,28,.56), rgba(6,10,28,.40));
       z-index:0;
       pointer-events:none;
     }
 
-    /* Global scale down */
     .compact h1{ font-size: clamp(1.55rem, 3.6vw, 2.6rem) !important; }
     .compact h2{ font-size: clamp(1.25rem, 2.6vw, 1.85rem) !important; }
     .compact h3{ font-size: 1.05rem !important; }
 
-    /* Subtle noise */
     .noise{
       pointer-events:none;
       position:fixed; inset:0;
@@ -59,7 +53,6 @@
       z-index: 2;
     }
 
-    /* Stars layer */
     #stars{ position:fixed; inset:0; z-index:1; pointer-events:none; }
     .star{
       position:absolute;
@@ -86,7 +79,6 @@
       100%{ transform: translate3d(calc(var(--x,0) + var(--drift,0px)), 115vh, 0) rotate(260deg) scale(var(--s,1)); opacity:0; }
     }
 
-    /* Clouds */
     #clouds{ position:fixed; inset:0; z-index:0; pointer-events:none; }
     .cloud{
       position:absolute;
@@ -119,7 +111,6 @@
       to{ transform: translate3d(120vw, 0, 0); }
     }
 
-    /* Glass cards */
     .glass{
       background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08));
       border: 1px solid rgba(255,255,255,.18);
@@ -127,10 +118,7 @@
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
     }
-    .glow{
-      position: relative;
-      isolation:isolate;
-    }
+    .glow{ position: relative; isolation:isolate; }
     .glow:before{
       content:"";
       position:absolute;
@@ -161,54 +149,37 @@
     .btn:hover{ transform: translateY(-2px); box-shadow: 0 18px 44px rgba(10,20,80,.22); }
     .btn:active{ transform: translateY(0px) scale(.99); }
 
-    /* Mobile-friendly sticky calculator */
-    .stickyCalc{ position: sticky; top: 1rem; }
-
-    /* Smooth entry */
     .reveal{ opacity:0; transform: translateY(14px); transition: opacity .7s ease, transform .7s ease; }
     .reveal.in{ opacity:1; transform: translateY(0); }
-
-    /* In-app browsers fallback: ensure content is visible even if JS observers fail */
     .no-io .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
 
-    /* Mobile/in-app hard fallback: never hide content */
     @media (max-width: 1024px){
       .reveal{ opacity:1 !important; transform:none !important; transition:none !important; }
     }
 
-    /* Reduce motion */
     @media (prefers-reduced-motion: reduce){
       .star, .cloud, .floaty, .glow:before{ animation: none !important; }
       .reveal{ transition:none; }
     }
 
-    /* Performance: on small screens keep effects minimal + more compact layout */
     @media (max-width: 640px){
       .noise{ display:none !important; }
       #stars{ display:none !important; }
       #clouds{ display:none !important; }
-
-      /* Disable expensive blurs/halos on mobile */
       .glow:before{ display:none !important; }
       .glass{ backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
       .btn{ backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-
-      /* Slightly stronger veil to keep text readable when effects are off */
       body::before{ background: linear-gradient(180deg, rgba(6,10,28,.62), rgba(6,10,28,.48)) !important; }
-
-      /* Make the page feel less "long" on mobile */
       #rules, #goods, #order{ padding-top: 1rem !important; padding-bottom: 1rem !important; }
       .glass{ box-shadow: none !important; }
     }
 
-    /* Also minimize effects for users who prefer reduced motion */
     @media (prefers-reduced-motion: reduce){
       #stars, #clouds, .noise{ display:none !important; }
       .glow:before{ display:none !important; }
       .glass, .btn{ backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
     }
 
-    /* Custom checkbox (stable in Telegram/Safari in-app browsers) */
     .yammy-check{
       -webkit-appearance: none;
       appearance: none;
@@ -273,17 +244,6 @@
                   <div class="text-sm text-white/80">Подсказка</div>
                   <div class="mt-1 text-base font-bold">Собери заказ внизу</div>
                 </div>
-
-                <div class="shrink-0 hidden">
-                  <div class="rounded-2xl bg-white/8 border border-white/14 px-3 py-2 min-w-[130px]">
-                    <div class="text-[11px] text-white/70">Сейчас онлайн</div>
-                    <div class="mt-1 flex items-baseline gap-2">
-                      <div id="onlineCount" class="text-xl font-extrabold tracking-tight">—</div>
-                      <div class="text-xs text-white/70">чел.</div>
-                    </div>
-                    <div id="onlineHint" class="mt-1 text-[11px] text-white/60 hidden">Оффлайн‑режим</div>
-                  </div>
-                </div>
               </div>
 
               <div class="mt-2 text-xs text-white/75">Калькулятор — в разделе «Правила» (кнопка 🧮). Ничего не копируем — просто считаем.</div>
@@ -315,7 +275,7 @@
                   </div>
                   <p class="mt-2"><span class="font-semibold">⚠️ Важно:</span> если клип не о чем — баллы не начисляются!</p>
                   <p><span class="font-semibold">💡 Совет:</span> чем больше клипов в стриме — тем выгоднее!</p>
-                  <p class="text-white/70 text-xs sm:text-sm">Совет: сначала проверь баланс по нику справа — так удобнее ✨</p>
+                  <p class="text-white/70 text-xs sm:text-sm">Совет: войди через Twitch справа — так баланс подтянется автоматически ✨</p>
                 </div>
 
                 <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -329,34 +289,33 @@
                   <div class="flex items-start justify-between gap-3">
                     <div>
                       <div class="text-sm font-bold text-white/90">🔎 Проверка баланса</div>
-                      <div id="nickStatus" class="mt-1 text-[11px] text-white/65">Ник не указан — введи ниже или войди через Twitch.</div>
+                      <div id="nickStatus" class="mt-1 text-[11px] text-white/65">Нужно войти через Twitch, чтобы увидеть баланс.</div>
                     </div>
                     <div class="flex items-center gap-2">
                       <button id="twitchLoginBtn" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Войти через Twitch</button>
-                      <button id="changeNick" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Сменить</button>
+                      <button id="twitchLogoutBtn" class="btn rounded-xl px-3 py-2 text-xs font-semibold hidden">Выйти</button>
                     </div>
                   </div>
 
                   <div class="mt-4">
-                    <label class="text-sm text-white/80" for="twitchNick">Ник Twitch</label>
-                    <div class="mt-2 flex items-center gap-2">
-                      <input id="twitchNick" type="text" class="w-full rounded-xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: YammyTanuki" />
-                      <button id="findBalance" class="btn rounded-xl px-4 py-2 text-sm font-semibold">Найти</button>
+                    <div class="rounded-2xl bg-black/12 border border-white/12 p-4">
+                      <div class="text-xs text-white/70">Ваш ник:</div>
+                      <div id="nickLine" class="mt-1 text-base font-extrabold">—</div>
                     </div>
-                    <p class="mt-2 text-[12px] text-white/70">Подсказка: ник ищется без учёта регистра (YammyTanuki = yammytanuki).</p>
+
+                    <div class="mt-3 rounded-2xl bg-black/12 border border-white/12 p-4">
+                      <div class="text-xs text-white/70">Баланс:</div>
+                      <div id="balanceResult" class="mt-1 text-base font-extrabold">—</div>
+                      <p id="balanceHint" class="mt-2 text-xs text-white/70">Данные подтягиваются из Google Таблицы.</p>
+                    </div>
+
                     <div class="mt-3 flex items-center gap-2">
                       <label class="inline-flex items-center gap-2 text-xs text-white/75 select-none">
                         <input id="rememberNick" type="checkbox" checked class="yammy-check" />
-                        <span>Запомнить ник на этом устройстве</span>
+                        <span>Запомнить вход на этом устройстве</span>
                       </label>
                       <button id="clearNick" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Очистить</button>
                     </div>
-                  </div>
-
-                  <div class="mt-3 rounded-2xl bg-black/12 border border-white/12 p-4">
-                    <div class="text-xs text-white/70">Результат:</div>
-                    <div id="balanceResult" class="mt-1 text-base font-extrabold">—</div>
-                    <p id="balanceHint" class="mt-2 text-xs text-white/70">Данные подтягиваются из Google Таблицы.</p>
                   </div>
 
                   <div class="mt-4 rounded-xl bg-black/14 border border-white/12 px-3 py-3">
@@ -375,7 +334,6 @@
       </div>
     </section>
 
-    <!-- Calculator modal -->
     <div id="calcModal" class="fixed inset-0 z-50 hidden">
       <div class="absolute inset-0 bg-black/45 backdrop-blur-sm"></div>
       <div class="relative mx-auto max-w-md px-4 sm:px-6 pt-20 sm:pt-28">
@@ -436,36 +394,23 @@
           <div class="flex flex-col lg:flex-row gap-6 lg:items-start lg:justify-between">
             <div class="max-w-2xl">
               <h2 class="text-2xl sm:text-3xl font-extrabold">✉️ Как оформить заказ?</h2>
-              <p class="mt-3 text-white/85 leading-relaxed">
-                Напишите мне в ЛС в Telegram — одним кликом из этого сайта.
+              <p id="orderIntro" class="mt-3 text-white/85 leading-relaxed">
+                Для начала авторизуйтесь на твич.
               </p>
-
-
-              <p class="mt-4 text-white/80">
+              <p id="orderHelp" class="mt-4 text-white/80 hidden">
                 Выбери награду в разделе «Товары». Добавь комментарий (если нужно) и нажми «Заказать».
                 Telegram откроется автоматически с готовым текстом.
               </p>
             </div>
 
             <div class="w-full lg:max-w-sm">
-              <div class="glass rounded-3xl p-5 border border-white/20">
+              <div id="orderCard" class="glass rounded-3xl p-5 border border-white/20 hidden">
                 <div class="text-sm text-white/75">Выбрано:</div>
                 <div id="picked" class="mt-2 text-lg font-extrabold">Пока ничего</div>
 
-                <!-- Inline status (instead of browser alerts/prompts) -->
                 <div id="orderMsg" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm">
                   <div id="orderMsgTitle" class="font-bold"></div>
                   <div id="orderMsgText" class="mt-1 text-white/80 text-xs"></div>
-
-                  <!-- Inline nick input (shown only when needed) -->
-                  <div id="orderNickWrap" class="mt-3 hidden">
-                    <label class="text-xs text-white/75" for="orderNick">Ник Twitch (для заказа)</label>
-                    <div class="mt-2 flex items-center gap-2">
-                      <input id="orderNick" type="text" class="w-full rounded-xl bg-black/20 border border-white/20 px-3 py-2 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: YammyTanuki" />
-                      <button id="orderNickSave" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Сохранить</button>
-                    </div>
-                    <p class="mt-2 text-[11px] text-white/65">Ник сохранится на этом устройстве (если включено «Запомнить ник»).</p>
-                  </div>
 
                   <div id="orderMsgActions" class="mt-3 hidden flex flex-wrap gap-2"></div>
                 </div>
@@ -501,19 +446,13 @@
   </main>
 
   <script>
-    // Telegram/Instagram in-app browsers sometimes break IntersectionObserver.
-    // If that happens, we force all reveal blocks visible.
-    // Also: if we are inside an in-app browser (Telegram/Instagram), be safe and disable heavy effects too.
+    // --- In-app browsers fallback ---
     try{
       const ua = (navigator.userAgent || '').toLowerCase();
       const inApp = ua.includes('telegram') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
       if(inApp) document.documentElement.classList.add('no-io');
       if(!('IntersectionObserver' in window)) document.documentElement.classList.add('no-io');
     }catch(e){ document.documentElement.classList.add('no-io'); }
-
-    // In-app browsers: do NOT remove DOM nodes (can cause layout issues).
-    // We already disable effects via CSS and by not starting generators.
-    // Keep this block empty intentionally.
 
     // ----- Helpers -----
     const $ = (sel, root=document) => root.querySelector(sel);
@@ -524,7 +463,6 @@
         await navigator.clipboard.writeText(text);
         return true;
       } catch(e){
-        // Fallback
         const ta = document.createElement('textarea');
         ta.value = text;
         ta.style.position = 'fixed';
@@ -551,24 +489,20 @@
     }
 
     function roundNice(n){
-      // Show integer if close, else one decimal with comma
       const r = Math.round(n);
       if (Math.abs(n - r) < 1e-9) return String(r);
       const one = Math.round(n * 10) / 10;
       return String(one).replace('.', ',');
     }
 
-    // ----- Calculator (init safely after DOM ready) -----
+    // ----- Calculator -----
     function calcTotal(clips){
       clips = Math.max(0, Math.floor(Number(clips) || 0));
       let total = 0;
       let prev = 50;
       for(let i=1;i<=clips;i++){
         if(i===1){ total += 50; prev = 50; }
-        else{
-          prev = prev * 1.03;
-          total += prev;
-        }
+        else{ prev = prev * 1.03; total += prev; }
       }
       return total;
     }
@@ -607,13 +541,7 @@
       $('#closeCalc')?.addEventListener('click', closeCalc);
       $('#calcApply')?.addEventListener('click', closeCalc);
 
-      // close on overlay/backdrop click
-      $('#calcModal')?.addEventListener('click', (e)=>{
-        const modal = $('#calcModal');
-        if(e.target === modal) closeCalc();
-      });
       $('#calcModal .absolute')?.addEventListener('click', closeCalc);
-
       document.addEventListener('keydown', (e)=>{
         if(e.key === 'Escape' && !$('#calcModal')?.classList.contains('hidden')) closeCalc();
       });
@@ -628,7 +556,6 @@
       updateCalc();
     }
 
-    // ----- Copy buttons -----
     function initCopyButtons(){
       $('#copyBalance')?.addEventListener('click', async ()=>{
         const ok = await copyText('!Баланс');
@@ -636,74 +563,16 @@
       });
     }
 
-    // ----- Goods data (easy to edit) -----
-    // Добавлять новые товары удобно здесь: копируй объект и меняй поля.
-    // options: массив вариантов внутри карточки.
+    // ----- Products -----
     const PRODUCTS = [
-      {
-        title: '🥨 Закуски (Мемы)',
-        badge: 'юмор',
-        note: 'Лёгкий контент для настроения ✨',
-        options: [
-          { label: '20 мемов', price: 200 },
-          { label: '45 мемов', price: 400 },
-        ]
-      },
-      {
-        title: '🍿 Основное блюдо (Кино и Аниме)',
-        badge: 'до 2 часов',
-        note: 'Если зайдёт — смотрим фулл.',
-        options: [
-          { label: 'Фильм / Мультфильм', price: 750 },
-          { label: 'Аниме / Сериал / Телешоу', price: 750 },
-        ]
-      },
-      {
-        title: '🌶️ На десерт (18+)',
-        badge: '18+',
-        note: 'На твой/мой выбор.',
-        options: [
-          { label: 'Хентай аниме / Порно‑игры на Boosty', price: 1000 },
-        ]
-      },
-      {
-        title: '🎮 Геймерская зона',
-        badge: '2 часа',
-        note: '❗ Для MMO — только бесплатные игры. ⚠️ Если игра не «зашла» — стоп через 2 часа.',
-        options: [
-          { label: 'Играю в ТВОЮ игру', price: 1500 },
-        ]
-      },
-      {
-        title: '👑 Ультимативный заказ',
-        badge: 'марафон',
-        note: 'Для самых мощных заказов ✨',
-        options: [
-          { label: '12 часов стрима', price: 5000 },
-        ]
-      },
-      {
-        title: '🖌️ Рисунки',
-        badge: 'арт',
-        note: 'Небольшие рисунки по твоей идее ✨',
-        options: [
-          { label: 'Заказать всратыша', price: 3000 },
-        ]
-      },
-      {
-        title: '🎁 Свой вариант',
-        badge: 'предложение',
-        note: 'Главное — чтобы было интересно и по правилам ✨',
-        options: [
-          { label: 'Хочу обсудить индивидуальный заказ', price: null },
-        ]
-      },
+      { title: '🥨 Закуски (Мемы)', badge: 'юмор', note: 'Лёгкий контент для настроения ✨', options: [ { label: '20 мемов', price: 200 }, { label: '45 мемов', price: 400 } ] },
+      { title: '🍿 Основное блюдо (Кино и Аниме)', badge: 'до 2 часов', note: 'Если зайдёт — смотрим фулл.', options: [ { label: 'Фильм / Мультфильм', price: 750 }, { label: 'Аниме / Сериал / Телешоу', price: 750 } ] },
+      { title: '🌶️ На десерт (18+)', badge: '18+', note: 'На твой/мой выбор.', options: [ { label: 'Хентай аниме / Порно‑игры на Boosty', price: 1000 } ] },
+      { title: '🎮 Геймерская зона', badge: '2 часа', note: '❗ Для MMO — только бесплатные игры. ⚠️ Если игра не «зашла» — стоп через 2 часа.', options: [ { label: 'Играю в ТВОЮ игру', price: 1500 } ] },
+      { title: '👑 Ультимативный заказ', badge: 'марафон', note: 'Для самых мощных заказов ✨', options: [ { label: '12 часов стрима', price: 5000 } ] },
+      { title: '🖌️ Рисунки', badge: 'арт', note: 'Небольшие рисунки по твоей идее ✨', options: [ { label: 'Заказать всратыша', price: 3000 } ] },
+      { title: '🎁 Свой вариант', badge: 'предложение', note: 'Главное — чтобы было интересно и по правилам ✨', options: [ { label: 'Хочу обсудить индивидуальный заказ', price: null } ] },
     ];
-
-    // Safety: if anything earlier fails in in-app browsers, still try to render goods.
-    window.addEventListener('error', ()=>{
-      try{ renderGoods(); wireGoodsButtons(); }catch(e){}
-    });
 
     function formatCoins(price){
       return (price === null || price === undefined) ? '—' : `${price} 🪙`;
@@ -768,28 +637,6 @@
       }
     }
 
-    // Render goods after DOM is fully ready (some in-app browsers can execute scripts oddly)
-    function initGoods(){
-      try{
-        renderGoods();
-        wireGoodsButtons();
-      }catch(e){
-        console.warn('Goods init failed', e);
-      }
-    }
-
-    // Extra safety for Telegram/iOS: ensure goods render after first paint.
-    function ensureGoods(){
-      try{
-        const grid = document.getElementById('goodsGrid');
-        if(grid && grid.children.length === 0){
-          renderGoods();
-          wireGoodsButtons();
-        }
-      }catch(e){}
-    }
-
-    // ----- Goods selection -----
     let picked = '';
     function wireGoodsButtons(){
       $$('#goodsGrid [data-order]').forEach(btn => {
@@ -802,22 +649,12 @@
       });
     }
 
-    function initCriticalUI(){
-      // Calculator + goods must be initialized even in Telegram in-app
-      initCalculator();
-      initGoods();
-      // one more time after first paint (some in-app browsers execute scripts oddly)
-      requestAnimationFrame(()=> setTimeout(ensureGoods, 0));
-      setTimeout(ensureGoods, 350);
+    function initGoods(){
+      try{ renderGoods(); wireGoodsButtons(); }
+      catch(e){ console.warn('Goods init failed', e); }
     }
 
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', initCriticalUI, {once:true});
-    }else{
-      initCriticalUI();
-    }
-
-    // ----- Inline order messages (no alert/confirm/prompt) -----
+    // ----- Order inline messages -----
     function setOrderMsg({type='info', title='', text='', actions=[]}={}){
       const box = document.getElementById('orderMsg');
       const t = document.getElementById('orderMsgTitle');
@@ -853,22 +690,7 @@
       }
 
       box.classList.remove('hidden');
-      // scroll a bit into view on mobile
       box.scrollIntoView({behavior:'smooth', block:'nearest'});
-    }
-
-    function showOrderNickInput(show){
-      const wrap = document.getElementById('orderNickWrap');
-      const inp = document.getElementById('orderNick');
-      if(!wrap) return;
-      if(show){
-        wrap.classList.remove('hidden');
-        // prefill from saved nick if any
-        const known = getKnownNick();
-        if(inp && !inp.value) inp.value = known || '';
-      }else{
-        wrap.classList.add('hidden');
-      }
     }
 
     function clearOrderMsg(){
@@ -876,176 +698,120 @@
       if(box) box.classList.add('hidden');
       const act = document.getElementById('orderMsgActions');
       if(act) act.classList.add('hidden');
-      showOrderNickInput(false);
     }
 
-    // ----- Place order (optionally spend points, then open Telegram) -----
-    // Вернули обычное открытие Telegram (без предварительной вкладки about:blank)
-    document.getElementById('placeOrder')?.addEventListener('click', async ()=>{
-      clearOrderMsg();
+    // ----- Telegram -----
+    const TG_TARGET_DEFAULT = 'https://t.me/YammyTanuki';
 
-      const btn = document.getElementById('placeOrder');
-      const toastEl = document.getElementById('orderToast');
-
-      if(!picked){
-        setOrderMsg({
-          type:'warn',
-          title:'Выбери товар',
-          text:'Сначала выбери награду в разделе «Товары», и она появится здесь.',
-        });
-        return;
-      }
-
-      // Need nick: allow entering it right here
-      let nick = getKnownNick();
-      if(!nick){
-        setOrderMsg({
-          type:'warn',
-          title:'Нужен ник Twitch',
-          text:'Укажи свой ник — так будет понятно, кто заказал (и можно проверить/списать баллы).',
-        });
-        showOrderNickInput(true);
-        setTimeout(()=>{ const i = document.getElementById('orderNick'); i?.focus(); i?.select(); }, 50);
-        return;
-      }
-
-      // Try to spend points (simple mode)
-      const spend = parsePickedPrice(picked);
-      if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
-        if(btn){ btn.disabled = true; btn.classList.add('opacity-60'); }
-        if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
-
-        try{
-          const res = await spendPoints({ nick, amount: spend, item: picked, comment: ($('#comment').value||'').trim() });
-          if(res.ok){
-            if(nick) await onFindBalance({auto:true});
-          }else if(res.reason === 'insufficient'){
-            setOrderMsg({
-              type:'error',
-              title:'Недостаточно баллов 😢',
-              text:`Для этого заказа нужно ${spend} 🪙. Накопи ещё баллов и возвращайся!`,
-            });
-            return;
-          }else if(res.reason === 'notfound'){
-            setOrderMsg({
-              type:'error',
-              title:'Ник не найден',
-              text:'Не нашёл твой ник в таблице. Проверь написание (без пробелов) и попробуй снова.',
-              actions: [{
-                label:'Проверить ник',
-                onClick: ()=>{
-                  document.querySelector('#rules')?.scrollIntoView({behavior:'smooth', block:'start'});
-                  setTimeout(()=>{ const i = document.getElementById('twitchNick'); i?.focus(); i?.select(); }, 350);
-                }
-              }]
-            });
-            return;
-          }else{
-            // Soft-fail: allow proceeding without spending
-            setOrderMsg({
-              type:'warn',
-              title:'Не удалось списать баллы',
-              text:'Сейчас таблица не ответила. Можно всё равно открыть Telegram — Ями проверит и спишет вручную.',
-              actions: [{ label:'Всё равно заказать', onClick: ()=>{ openTg(); } }]
-            });
-            return;
-          }
-        }catch(e){
-          setOrderMsg({
-            type:'warn',
-            title:'Ошибка связи',
-            text:'Не удалось связаться с таблицей. Можно всё равно открыть Telegram — Ями проверит и спишет вручную.',
-            actions: [{ label:'Всё равно заказать', onClick: ()=>{ openTg(); } }]
-          });
-          return;
-        }finally{
-          if(btn){ btn.disabled = false; btn.classList.remove('opacity-60'); }
-        }
-      }
-
-      // If no spend required or spend succeeded
-      openTg();
-
-      function openTg(){
-        const url = getTgUrl();
-        if(!url){
-          setOrderMsg({ type:'error', title:'Ошибка', text:'Не удалось сформировать ссылку Telegram.' });
-          return;
-        }
-
-        if(toastEl){ toastEl.textContent = 'Открываю Telegram…'; }
-        toast(toastEl);
-
-        let w = null;
-        try{ w = window.open(url, '_blank', 'noopener,noreferrer'); }catch(e){}
-        if(!w){
-          setOrderMsg({
-            type:'warn',
-            title:'Браузер заблокировал открытие',
-            text:'Нажми кнопку ниже, чтобы открыть Telegram (или разреши всплывающие окна для этого сайта).',
-            actions: [{ label:'Открыть Telegram', onClick: ()=> window.open(url, '_blank', 'noopener,noreferrer') }]
-          });
-        }
-      }
-    });
-
-    function parsePickedPrice(str){
-      // Extract first number that looks like price in coins
-      const s = String(str || '');
-      const m = s.match(/\b(\d{2,7})\b\s*🪙?/);
-      if(!m) return NaN;
-      return Number(m[1]);
-    }
-
-    $('#toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
-
-    // ----- Telegram deep link -----
     function normalizeTgTarget(raw){
       const v = String(raw || '').trim();
       if(!v) return '';
-      // Accept: @user, user, https://t.me/user, t.me/user
       let s = v;
       s = s.replace(/^https?:\/\//i,'');
       s = s.replace(/^t\.me\//i,'');
       s = s.replace(/^telegram\.me\//i,'');
       s = s.replace(/^@/,'');
-      // remove query/hash
       s = s.split('?')[0].split('#')[0].trim();
-      // basic sanitization
       s = s.replace(/[^a-zA-Z0-9_]/g,'');
       return s;
-    }
-
-    function getKnownNick(){
-      const inp = document.getElementById('twitchNick');
-      const v = (inp?.value || localStorage.getItem(NICK_STORAGE_KEY) || '').trim();
-      return v;
     }
 
     function buildOrderText(){
       const cmt = ($('#comment').value || '').trim();
       const item = picked || '[награда]';
       const nick = getKnownNick();
-
       const parts = [];
       parts.push(`Ями, беру ${item}`);
-      parts.push(`Ник Twitch: ${nick || '[укажи ник]'}`);
+      parts.push(`Ник Twitch: ${nick || '[не указан]'}`);
       if(cmt) parts.push(`Комментарий: ${cmt}`);
-
       return parts.join('\n');
     }
 
-    // ----- Telegram target (built-in) -----
-    const TG_TARGET_DEFAULT = 'https://t.me/YammyTanuki';
+    function getTgUrl(){
+      const user = normalizeTgTarget(TG_TARGET_DEFAULT);
+      if(!user) return '';
+      const text = buildOrderText();
+      return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
+    }
+
+    // ----- Google Sheets API (Apps Script) -----
+    const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
+    const SPEND_ENABLED = true;
+    const SPEND_TOKEN = 'yammy_spend_v1';
+
+    function normNick(s){ return String(s ?? '').trim().toLowerCase(); }
+
+    function parsePoints(v){
+      if(v === null || v === undefined) return NaN;
+      if(typeof v === 'number') return v;
+      const s = String(v).trim().replace(',', '.');
+      const n = Number(s);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    async function fetchBalances(){
+      const res = await fetch(BALANCE_API_URL, { cache: 'no-store' });
+      if(!res.ok) throw new Error('API request failed');
+      const json = await res.json();
+      if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
+      return json.data;
+    }
+
+    async function spendPoints({nick, amount, item, comment}={}){
+      const cleanNick = String(nick || '').trim();
+      const a = Number(amount);
+      if(!cleanNick) return { ok:false, reason:'nonick' };
+      if(!Number.isFinite(a) || a <= 0) return { ok:false, reason:'badamount' };
+
+      const payload = {
+        action: 'spend',
+        token: SPEND_TOKEN,
+        nick: cleanNick,
+        amount: a,
+        item: String(item || '').slice(0, 200),
+        comment: String(comment || '').slice(0, 500),
+        at: Date.now(),
+      };
+
+      const res = await fetch(BALANCE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+
+      const txt = await res.text();
+      try{ return JSON.parse(txt); }
+      catch(e){ return { ok:false, reason:'badjson', raw: txt.slice(0,200) }; }
+    }
+
+    async function findBalanceByNick(nick){
+      const needle = normNick(nick);
+      if(!needle) return { found:false, reason:'empty' };
+
+      const rows = await fetchBalances();
+      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник'];
+      const pointsKeys = ['Итоговые баллы','итоговые баллы','Баллы','баллы','Points','points'];
+
+      for(const r of rows){
+        const nickVal = nickKeys.map(k=>r[k]).find(v=>v!==undefined);
+        const rowNick = normNick(nickVal);
+        if(!rowNick) continue;
+        if(rowNick === needle){
+          const ptsVal = pointsKeys.map(k=>r[k]).find(v=>v!==undefined);
+          const pts = parsePoints(ptsVal);
+          return { found:true, nick: nickVal ?? nick, points: ptsVal, pointsNum: pts };
+        }
+      }
+      return { found:false, reason:'notfound' };
+    }
 
     // ----- Twitch OAuth (PKCE) -----
-    // Нужно: создать приложение в Twitch Developer Console и вставить Client ID ниже.
-    // Redirect URL должен быть: https://yammytanuki.netlify.app/
-    const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq'; // Twitch Client ID
-    const TWITCH_REDIRECT_URI = 'https://yammytanuki.netlify.app/';
-    // Для безопасного получения ника в SPA проще всего использовать OIDC userinfo.
-    // Для этого нужен scope `openid`.
+    const TWITCH_CLIENT_ID = '89zu7axvj9y80avfsn6a5l20mv5kjq';
+    const TWITCH_REDIRECT_URI = 'https://yammyvt.github.io/YammyTanuki/';
     const TWITCH_SCOPES = ['openid'];
+
+    const AUTH_STORAGE_KEY = 'yammy_twitch_auth_v1'; // store token + login if user wants
+    const PKCE_STORAGE_KEY = 'yammy_twitch_pkce_v1';
 
     function base64UrlEncode(uint8){
       let s = '';
@@ -1053,77 +819,57 @@
       return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
     }
 
-    async function sha256(text){
-      // crypto.subtle might be unavailable in some in-app browsers.
-      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
-        throw new Error('crypto.subtle unavailable');
-      }
-      const enc = new TextEncoder().encode(text);
-      const hash = await crypto.subtle.digest('SHA-256', enc);
-      return new Uint8Array(hash);
-    }
-
     function randomString(len=64){
-      // In some in-app browsers crypto.getRandomValues can be restricted.
-      // Fallback to Math.random (enough for state/PKCE here).
       try{
         const a = new Uint8Array(len);
         crypto.getRandomValues(a);
         return base64UrlEncode(a);
       }catch(e){
-        let s = '';
+        let s='';
         for(let i=0;i<len;i++) s += String.fromCharCode(Math.floor(Math.random()*256));
         return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
       }
     }
 
-    const TWITCH_OAUTH_KEY = 'yammy_twitch_oauth_pkce_v1';
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const hash = await crypto.subtle.digest('SHA-256', enc);
+      return new Uint8Array(hash);
+    }
 
-    function getAuthState(){
-      try{ return JSON.parse(sessionStorage.getItem(TWITCH_OAUTH_KEY) || '{}'); }
+    function setPkceState(obj){
+      sessionStorage.setItem(PKCE_STORAGE_KEY, JSON.stringify(obj||{}));
+    }
+    function getPkceState(){
+      try{ return JSON.parse(sessionStorage.getItem(PKCE_STORAGE_KEY) || '{}'); }
       catch(e){ return {}; }
     }
+    function clearPkceState(){ sessionStorage.removeItem(PKCE_STORAGE_KEY); }
 
-    function setAuthState(obj){
-      sessionStorage.setItem(TWITCH_OAUTH_KEY, JSON.stringify(obj || {}));
+    function setAuth(obj){
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(obj||{}));
     }
+    function getAuth(){
+      try{ return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || '{}'); }
+      catch(e){ return {}; }
+    }
+    function clearAuth(){ localStorage.removeItem(AUTH_STORAGE_KEY); }
 
-    function clearAuthState(){
-      sessionStorage.removeItem(TWITCH_OAUTH_KEY);
+    function isTwitchSupported(){
+      return !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
     }
 
     async function twitchLogin(){
-      if(!TWITCH_CLIENT_ID){
-        setOrderMsg({ type:'warn', title:'Twitch вход не настроен', text:'Добавь Client ID в код сайта (TWITCH_CLIENT_ID).' });
-        return;
-      }
-
-      // Some in-app browsers don't support crypto.subtle -> PKCE breaks.
-      // In that case we show a friendly message instead of crashing the whole page.
-      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
-        setOrderMsg({
-          type:'warn',
-          title:'Twitch вход недоступен в этом браузере',
-          text:'Открой сайт в обычном браузере (Chrome/Safari) или зайди с ПК, чтобы войти через Twitch.'
-        });
+      clearOrderMsg();
+      if(!isTwitchSupported()){
+        setOrderMsg({type:'warn', title:'Twitch вход недоступен', text:'Этот браузер ограничивает безопасную авторизацию. Открой сайт в обычном Chrome/Safari.'});
         return;
       }
 
       const state = randomString(24);
       const verifier = randomString(64);
-      let challenge = '';
-      try{
-        challenge = base64UrlEncode(await sha256(verifier));
-      }catch(e){
-        setOrderMsg({
-          type:'warn',
-          title:'Не удалось запустить Twitch вход',
-          text:'Этот браузер ограничивает криптографию. Открой сайт в Chrome/Safari или с ПК.'
-        });
-        return;
-      }
-
-      setAuthState({ state, verifier, at: Date.now() });
+      const challenge = base64UrlEncode(await sha256(verifier));
+      setPkceState({ state, verifier, at: Date.now() });
 
       const params = new URLSearchParams({
         response_type: 'code',
@@ -1139,7 +885,7 @@
     }
 
     async function twitchExchangeCode(code){
-      const st = getAuthState();
+      const st = getPkceState();
       if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
 
       const params = new URLSearchParams({
@@ -1159,17 +905,12 @@
       return await res.json();
     }
 
-    // Получаем профиль через OIDC userinfo (работает со scope openid)
     async function twitchGetUser(accessToken){
       const res = await fetch('https://id.twitch.tv/oauth2/userinfo', {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+        headers: { 'Authorization': `Bearer ${accessToken}` }
       });
       if(!res.ok) throw new Error('Failed to fetch userinfo');
       const json = await res.json();
-      // userinfo обычно содержит preferred_username
-      // также может быть `sub`, `picture`, etc.
       const login = json?.preferred_username || json?.login || json?.nickname || '';
       return login ? { login, display_name: login } : null;
     }
@@ -1182,313 +923,267 @@
       window.history.replaceState({}, document.title, url.toString());
     }
 
+    function setNickUIAuthed(login){
+      const status = document.getElementById('nickStatus');
+      const nickLine = document.getElementById('nickLine');
+
+      if(nickLine) nickLine.textContent = login ? login : '—';
+
+      if(status){
+        status.textContent = login
+          ? 'Вы вошли через Twitch.'
+          : 'Нужно войти через Twitch, чтобы увидеть баланс.';
+      }
+
+      // logout visible only when logged
+      document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !login);
+
+      // toggle order section UI
+      try{ updateOrderGateUI(); }catch(e){}
+    }
+
+    function getKnownNick(){
+      // only from auth
+      const a = getAuth();
+      return String(a?.login || '').trim();
+    }
+
+    async function refreshBalanceForAuthed(){
+      const out = document.getElementById('balanceResult');
+      const hint = document.getElementById('balanceHint');
+      const nickLine = document.getElementById('nickLine');
+      const login = getKnownNick();
+
+      if(!login){
+        if(nickLine) nickLine.textContent = '—';
+        if(out) out.textContent = '—';
+        if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
+        return;
+      }
+
+      if(nickLine) nickLine.textContent = login;
+
+      if(!BALANCE_API_URL){
+        if(out) out.textContent = 'Баланс пока не подключён.';
+        if(hint) hint.textContent = 'Нужно вставить URL Apps Script в переменную BALANCE_API_URL.';
+        return;
+      }
+
+      if(out) out.textContent = 'Загружаю…';
+      try{
+        const res = await findBalanceByNick(login);
+        if(res.found){
+          const pts = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : res.points;
+          if(out) out.textContent = `${String(res.nick).trim()} — ${pts} 🪙`;
+          if(hint) hint.textContent = 'Если баллы не совпадают — проверь обновление таблицы.';
+        }else{
+          // IMPORTANT: if not found -> 0
+          if(out) out.textContent = `${login} — 0 🪙 😢`;
+          if(hint) hint.textContent = 'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.';
+        }
+      }catch(e){
+        if(out) out.textContent = 'Ошибка загрузки.';
+        if(hint) hint.textContent = 'Проверь доступ Apps Script (Deploy → Web app → доступ: "Все").';
+      }
+    }
+
     async function handleTwitchOAuthCallback(){
       const url = new URL(window.location.href);
       const code = url.searchParams.get('code');
       const state = url.searchParams.get('state');
       if(!code) return;
 
-      // If PKCE is not supported here, don't break the page.
-      if(!(window.crypto && crypto.subtle && crypto.subtle.digest)){
-        setOrderMsg({
-          type:'warn',
-          title:'Twitch вход недоступен в этом браузере',
-          text:'Похоже, этот браузер не поддерживает безопасную авторизацию. Открой сайт в обычном браузере (Chrome/Safari) и войди ещё раз.'
-        });
-        clearAuthState();
-        cleanUrlAfterOAuth();
-        return;
-      }
-
-      const st = getAuthState();
-      if(!st || !st.state || st.state !== state){
-        clearAuthState();
-        setOrderMsg({ type:'error', title:'Ошибка входа Twitch', text:'Неверный state. Попробуй войти ещё раз.' });
-        cleanUrlAfterOAuth();
-        return;
-      }
-
       try{
-        setOrderMsg({ type:'info', title:'Вход через Twitch…', text:'Секунду, получаю ваш ник.' });
+        const st = getPkceState();
+        if(!st?.state || st.state !== state) throw new Error('Bad state');
+
         const token = await twitchExchangeCode(code);
         const user = await twitchGetUser(token.access_token);
-        if(user?.login){
-          applyNickEverywhere(user.login);
-          setTimeout(()=> onFindBalance({auto:true}), 150);
-          setOrderMsg({ type:'ok', title:'Готово!', text:`Вы вошли как ${user.display_name || user.login}.` });
+        if(!user?.login) throw new Error('No login');
+
+        // Remember only if user agreed
+        if(document.getElementById('rememberNick')?.checked){
+          setAuth({
+            login: user.login,
+            access_token: token.access_token,
+            expires_in: token.expires_in,
+            obtained_at: Date.now()
+          });
         }else{
-          setOrderMsg({ type:'warn', title:'Не удалось получить ник', text:'Попробуй ещё раз.' });
+          // keep in memory only (no localStorage)
+          setAuth({ login: user.login, access_token: token.access_token, expires_in: token.expires_in, obtained_at: Date.now(), ephemeral:true });
         }
+
+        setNickUIAuthed(user.login);
+        await refreshBalanceForAuthed();
       }catch(e){
-        const msg = (e && (e.message || String(e))) || 'unknown';
-        setOrderMsg({ type:'error', title:'Ошибка входа Twitch', text:`Не удалось завершить авторизацию. Попробуй позже. (${msg})` });
+        clearAuth();
+        setNickUIAuthed('');
+        console.warn('Twitch OAuth failed', e);
       }finally{
-        clearAuthState();
+        clearPkceState();
         cleanUrlAfterOAuth();
       }
     }
 
-    function getTgUrl(){
-      const user = normalizeTgTarget(TG_TARGET_DEFAULT);
-      if(!user) return '';
-      const text = buildOrderText();
-      return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
+    function twitchLogout(){
+      clearAuth();
+      setNickUIAuthed('');
+      refreshBalanceForAuthed();
     }
 
-    // ----- Balance lookup + spending (Google Sheets via Apps Script) -----
-    // URL веб‑приложения Apps Script (Deploy → Web app):
-    const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
-
-    // Включает списание баллов при заказе (опционально, простая защита). Для простоты — фиксированный токен.
-    // ВАЖНО: так как токен лежит на сайте, это не "железная" защита, но отсекает случайные запросы.
-    const SPEND_ENABLED = true;
-    const SPEND_TOKEN = 'yammy_spend_v1';
-
-    function normNick(s){
-      return String(s ?? '').trim().toLowerCase();
-    }
-
-    function parsePoints(v){
-      if(v === null || v === undefined) return NaN;
-      if(typeof v === 'number') return v;
-      const s = String(v).trim().replace(',', '.');
-      const n = Number(s);
-      return Number.isFinite(n) ? n : NaN;
-    }
-
-    async function fetchBalances(){
-      if(!BALANCE_API_URL) throw new Error('BALANCE_API_URL is empty');
-      const res = await fetch(BALANCE_API_URL, { cache: 'no-store' });
-      if(!res.ok) throw new Error('API request failed');
-      const json = await res.json();
-      if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
-      return json.data;
-    }
-
-    async function spendPoints({nick, amount, item, comment}={}){
-      const cleanNick = String(nick || '').trim();
-      const a = Number(amount);
-      if(!cleanNick) return { ok:false, reason:'nonick' };
-      if(!Number.isFinite(a) || a <= 0) return { ok:false, reason:'badamount' };
-      if(!BALANCE_API_URL) return { ok:false, reason:'nourl' };
-
-      const payload = {
-        action: 'spend',
-        token: SPEND_TOKEN,
-        nick: cleanNick,
-        amount: a,
-        item: String(item || '').slice(0, 200),
-        comment: String(comment || '').slice(0, 500),
-        at: Date.now(),
-      };
-
-      const res = await fetch(BALANCE_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-
-      // Apps Script sometimes returns 302/HTML on error; try to parse safely
-      const txt = await res.text();
-      try{
-        const json = JSON.parse(txt);
-        return json;
-      }catch(e){
-        return { ok:false, reason:'badjson', raw: txt.slice(0, 200) };
-      }
-    }
-
-    async function findBalanceByNick(nick){
-      const needle = normNick(nick);
-      if(!needle) return { found:false, reason:'empty' };
-
-      const rows = await fetchBalances();
-      // Ожидаем заголовки ровно как в таблице: "Никнейм" и "Итоговые баллы"
-      // Но на всякий случай пробуем несколько вариантов ключей.
-      const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник'];
-      const pointsKeys = ['Итоговые баллы','итоговые баллы','Баллы','баллы','Points','points'];
-
-      for(const r of rows){
-        const nickVal = nickKeys.map(k=>r[k]).find(v=>v!==undefined);
-        const rowNick = normNick(nickVal);
-        if(!rowNick) continue;
-        if(rowNick === needle){
-          const ptsVal = pointsKeys.map(k=>r[k]).find(v=>v!==undefined);
-          const pts = parsePoints(ptsVal);
-          return { found:true, nick: nickVal ?? nick, points: ptsVal, pointsNum: pts };
-        }
-      }
-      return { found:false, reason:'notfound' };
-    }
-
-    const NICK_STORAGE_KEY = 'yammy_shop_twitch_nick_v1';
-
-    function setNickUI(nick){
-      const status = document.getElementById('nickStatus');
-      const inp = document.getElementById('twitchNick');
-      const btn = document.getElementById('findBalance');
-      const remember = document.getElementById('rememberNick');
-
-      const clean = String(nick || '').trim();
-      if(inp) inp.value = clean;
-
-      if(status){
-        status.textContent = clean ? `Текущий ник: ${clean}` : 'Ник не указан — введи ниже.';
-      }
-
-      if(btn){
-        btn.textContent = clean ? 'Обновить' : 'Найти';
-      }
-
-      if(remember && !clean){
-        // keep checkbox as-is, no forced change
-      }
-    }
-
-    function saveNickIfAllowed(nick){
-      const remember = document.getElementById('rememberNick');
-      const clean = String(nick || '').trim();
-      if(!clean) return;
-      if(remember?.checked){
-        localStorage.setItem(NICK_STORAGE_KEY, clean);
-      }
-    }
-
-    function applyNickEverywhere(nick){
-      const clean = String(nick || '').trim();
-      if(!clean) return;
-      setNickUI(clean);
-      saveNickIfAllowed(clean);
-      // also update inline order nick field if present
-      const o = document.getElementById('orderNick');
-      if(o) o.value = clean;
-    }
-
-    function clearSavedNick(){
-      localStorage.removeItem(NICK_STORAGE_KEY);
-      setNickUI('');
+    function clearSavedAuth(){
+      clearAuth();
+      setNickUIAuthed('');
       const out = document.getElementById('balanceResult');
       const hint = document.getElementById('balanceHint');
+      const nickLine = document.getElementById('nickLine');
+      if(nickLine) nickLine.textContent = '—';
       if(out) out.textContent = '—';
-      if(hint) hint.textContent = 'Данные подтягиваются из Google Таблицы.';
+      if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
     }
 
-    async function onFindBalance({auto=false} = {}){
-      const inp = document.getElementById('twitchNick');
-      const out = document.getElementById('balanceResult');
-      const hint = document.getElementById('balanceHint');
-      const btn = document.getElementById('findBalance');
+    // ----- Place order -----
+    function parsePickedPrice(str){
+      const s = String(str || '');
+      const m = s.match(/\b(\d{2,7})\b\s*🪙?/);
+      if(!m) return NaN;
+      return Number(m[1]);
+    }
 
-      if(!inp || !out || !hint || !btn) return;
+    document.getElementById('placeOrder')?.addEventListener('click', async ()=>{
+      clearOrderMsg();
+      const toastEl = document.getElementById('orderToast');
 
-      const nick = (inp.value || '').trim();
-      setNickUI(nick);
-
+      // Must be authed
+      const nick = getKnownNick();
       if(!nick){
-        if(!auto) out.textContent = 'Введи ник Twitch выше.';
+        setOrderMsg({
+          type:'warn',
+          title:'Нужно авторизоваться на Twitch',
+          text:'Чтобы оформить заказ и списать баллы, сначала войди через Twitch в блоке «Проверка баланса».',
+          actions:[{ label:'Войти через Twitch', onClick: ()=> twitchLogin() }]
+        });
         return;
       }
 
-      if(!BALANCE_API_URL){
-        out.textContent = 'Баланс пока не подключён.';
-        hint.textContent = 'Нужно вставить URL Apps Script в переменную BALANCE_API_URL (внизу файла).';
+      if(!picked){
+        setOrderMsg({ type:'warn', title:'Выбери товар', text:'Сначала выбери награду в разделе «Товары».' });
         return;
       }
 
-      btn.disabled = true;
-      btn.classList.add('opacity-60');
-      out.textContent = auto ? 'Загружаю…' : 'Ищу…';
-      try{
-        const res = await findBalanceByNick(nick);
-        if(res.found){
-          const pts = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : res.points;
-          out.textContent = `${String(res.nick).trim()} — ${pts} 🪙`;
-          hint.textContent = 'Если баллы не совпадают — проверь ник и обновление таблицы.';
-          saveNickIfAllowed(String(res.nick).trim() || nick);
-          setNickUI(String(res.nick).trim() || nick);
-        }else{
-          out.textContent = 'Не найдено 😢';
-          hint.textContent = 'Проверь написание ника (без пробелов).';
-          // всё равно можем сохранить введённый ник, если человек так хочет
-          saveNickIfAllowed(nick);
-          setNickUI(nick);
+      const spend = parsePickedPrice(picked);
+      if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
+        if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
+        try{
+          const res = await spendPoints({ nick, amount: spend, item: picked, comment: ($('#comment').value||'').trim() });
+          if(res.ok){
+            await refreshBalanceForAuthed();
+          }else if(res.reason === 'insufficient'){
+            setOrderMsg({ type:'error', title:'Недостаточно баллов 😢', text:`Для этого заказа нужно ${spend} 🪙.` });
+            return;
+          }else if(res.reason === 'notfound'){
+            // authed but not in table
+            setOrderMsg({ type:'warn', title:'У вас 0 баллов 😢', text:'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.' });
+            return;
+          }else{
+            setOrderMsg({
+              type:'warn',
+              title:'Таблица не ответила',
+              text:'Не удалось списать баллы автоматически. Можно всё равно открыть Telegram — Ями проверит вручную.',
+              actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }]
+            });
+            return;
+          }
+        }catch(e){
+          setOrderMsg({
+            type:'warn',
+            title:'Ошибка связи',
+            text:'Не удалось связаться с таблицей. Можно всё равно открыть Telegram — Ями проверит вручную.',
+            actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }]
+          });
+          return;
         }
-      }catch(e){
-        out.textContent = 'Ошибка загрузки.';
-        hint.textContent = 'Проверь ссылку Apps Script и доступ (Deploy → Web app → доступ: "Все").';
-      }finally{
-        btn.disabled = false;
-        btn.classList.remove('opacity-60');
       }
+
+      openTg();
+
+      function openTg(){
+        const url = getTgUrl();
+        if(!url){
+          setOrderMsg({ type:'error', title:'Ошибка', text:'Не удалось сформировать ссылку Telegram.' });
+          return;
+        }
+        if(toastEl){ toastEl.textContent = 'Открываю Telegram…'; }
+        toast(toastEl);
+        let w = null;
+        try{ w = window.open(url, '_blank', 'noopener,noreferrer'); }catch(e){}
+        if(!w){
+          setOrderMsg({
+            type:'warn',
+            title:'Браузер заблокировал открытие',
+            text:'Нажми кнопку ниже, чтобы открыть Telegram.',
+            actions: [{ label:'Открыть Telegram', onClick: ()=> window.open(url, '_blank', 'noopener,noreferrer') }]
+          });
+        }
+      }
+    });
+
+    // ----- Init balance block (OAuth only) -----
+    function updateOrderGateUI(){
+      const authed = !!getKnownNick();
+      const intro = document.getElementById('orderIntro');
+      const help = document.getElementById('orderHelp');
+      const card = document.getElementById('orderCard');
+
+      if(intro){
+        intro.textContent = authed
+          ? 'Напишите мне в ЛС в Telegram — одним кликом из этого сайта.'
+          : 'Для начала авторизуйтесь на твич.';
+      }
+      if(help) help.classList.toggle('hidden', !authed);
+      if(card) card.classList.toggle('hidden', !authed);
     }
 
     function initBalanceUI(){
-      document.getElementById('findBalance')?.addEventListener('click', ()=> onFindBalance({auto:false}));
-      document.getElementById('twitchLoginBtn')?.addEventListener('click', twitchLogin);
-      // If we returned from Twitch OAuth with ?code=..., handle it
-      handleTwitchOAuthCallback();
-      document.getElementById('twitchNick')?.addEventListener('keydown', (e)=>{
-        if(e.key === 'Enter') onFindBalance({auto:false});
-      });
+      initCopyButtons();
 
-      // Автоподстановка ника при заходе (и тихая подгрузка баланса без блокировки рендера)
-      const saved = (localStorage.getItem(NICK_STORAGE_KEY) || '').trim();
+      // handle callback first
+      handleTwitchOAuthCallback();
+
+      // wire buttons
+      document.getElementById('twitchLoginBtn')?.addEventListener('click', twitchLogin);
+      document.getElementById('twitchLogoutBtn')?.addEventListener('click', twitchLogout);
+      document.getElementById('clearNick')?.addEventListener('click', clearSavedAuth);
+
+      // restore auth if exists and remember is on
+      const auth = getAuth();
       const remember = document.getElementById('rememberNick');
-      if(saved){
+      if(auth?.login){
         if(remember) remember.checked = true;
-        setNickUI(saved);
-        setTimeout(()=> onFindBalance({auto:true}), 250);
+        setNickUIAuthed(auth.login);
+        // try to refresh balance (token might expire, but we only need login for table)
+        setTimeout(()=> refreshBalanceForAuthed(), 250);
       }else{
-        setNickUI('');
+        setNickUIAuthed('');
+        refreshBalanceForAuthed();
       }
 
-      document.getElementById('clearNick')?.addEventListener('click', clearSavedNick);
-      document.getElementById('changeNick')?.addEventListener('click', ()=>{
-        const inp = document.getElementById('twitchNick');
-        inp?.focus();
-        inp?.select();
+      // remember checkbox behavior: if user turns it off, clear saved auth
+      remember?.addEventListener('change', (e)=>{
+        if(!e.target.checked){
+          // do not sign out immediately from twitch, just clear local saved auth
+          clearSavedAuth();
+        }
       });
 
-      document.getElementById('twitchNick')?.addEventListener('input', (e)=>{
-        const v = (e.target.value || '').trim();
-        setNickUI(v);
-      });
+      // Ensure correct order gate state on first load
+      updateOrderGateUI();
 
-      document.getElementById('rememberNick')?.addEventListener('change', (e)=>{
-        const rememberNow = e.target.checked;
-        const nick = (document.getElementById('twitchNick')?.value || '').trim();
-        if(rememberNow && nick) localStorage.setItem(NICK_STORAGE_KEY, nick);
-        if(!rememberNow) localStorage.removeItem(NICK_STORAGE_KEY);
-      });
-
-      initCopyButtons();
+      // No manual nick input anymore (UI shows nickLine only).
     }
 
-    // Inline nick in order block
-    document.getElementById('orderNickSave')?.addEventListener('click', async ()=>{
-      const v = (document.getElementById('orderNick')?.value || '').trim();
-      if(!v){
-        setOrderMsg({ type:'warn', title:'Ник пустой', text:'Введи ник Twitch, чтобы продолжить.' });
-        showOrderNickInput(true);
-        return;
-      }
-      applyNickEverywhere(v);
-      showOrderNickInput(false);
-      // show confirmation
-      setOrderMsg({ type:'ok', title:'Ник сохранён', text:`Текущий ник: ${v}. Теперь можно нажимать «Заказать».` });
-      // optionally refresh balance in the right block
-      onFindBalance({auto:true});
-    });
-
-    document.getElementById('orderNick')?.addEventListener('keydown', (e)=>{
-      if(e.key === 'Enter') document.getElementById('orderNickSave')?.click();
-    });
-
-
-    // ----- Reveal on scroll -----
-    // Telegram in-app browsers can be buggy; we prefer showing content rather than hiding it.
-    // On mobile/tablet we force all reveal blocks visible via CSS (see @media rule).
-    // Here we only use IntersectionObserver on desktop for a nice effect.
+    // ----- Reveal -----
     try{
       const force = document.documentElement.classList.contains('no-io');
       const isSmallOrTablet = window.matchMedia('(max-width: 1024px)').matches;
@@ -1506,90 +1201,85 @@
       $$('.reveal').forEach(el => el.classList.add('in'));
     }
 
-    // ----- Decorative effects (disabled on mobile/in-app for performance) -----
+    // ----- Decorative effects (desktop only) -----
     const isMobile = window.matchMedia('(max-width: 640px)').matches;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const inApp = document.documentElement.classList.contains('no-io');
 
-    // Only run clouds/stars on desktop browsers and when motion is allowed.
-    // In-app browsers (Telegram) and mobiles often lag — keep it OFF there.
     if(!isMobile && !reduced && !inApp){
-      // ----- Decorative: clouds -----
       const cloudsRoot = document.getElementById('clouds');
-      function addCloud({top, duration, delay, scale, opacity}){
-        const c = document.createElement('div');
-        c.className = 'cloud';
-        c.style.top = top + 'vh';
-        c.style.animationDuration = duration + 's';
-        c.style.animationDelay = (-delay) + 's';
-        c.style.transform = `translate3d(-120%,0,0) scale(${scale})`;
-        c.style.opacity = opacity;
-        cloudsRoot.appendChild(c);
-      }
-
-      const cloudCount = 5; // slightly less for performance
-      for(let i=0;i<cloudCount;i++){
-        addCloud({
-          top: 6 + Math.random()*40,
-          duration: 52 + Math.random()*60,
-          delay: Math.random()*80,
-          scale: 0.7 + Math.random()*0.9,
-          opacity: 0.34 + Math.random()*0.34
-        });
-      }
-
-      // ----- Decorative: stars -----
       const starsRoot = document.getElementById('stars');
-      function addStar(){
-        const s = document.createElement('div');
-        s.className = 'star';
-        const left = Math.random()*100;
-        const drift = (Math.random()*2 - 1) * 70; // px
-        const scale = 0.6 + Math.random()*1.2;
-        const opacity = 0.18 + Math.random()*0.48;
-        const dur = 8 + Math.random()*13;
-        const delay = Math.random()*dur;
 
-        s.style.left = left + 'vw';
-        s.style.setProperty('--x', '0px');
-        s.style.setProperty('--drift', drift + 'px');
-        s.style.setProperty('--s', scale);
-        s.style.setProperty('--o', opacity);
-        s.style.animationDuration = dur + 's';
-        s.style.animationDelay = (-delay) + 's';
-        s.style.top = '-12vh';
-        const sz = (8 + Math.random()*10);
-        s.style.width = sz + 'px';
-        s.style.height = sz + 'px';
-        starsRoot.appendChild(s);
-
-        setTimeout(()=>{ s.remove(); }, (dur+2)*1000);
+      if(cloudsRoot){
+        function addCloud({top, duration, delay, scale, opacity}){
+          const c = document.createElement('div');
+          c.className = 'cloud';
+          c.style.top = top + 'vh';
+          c.style.animationDuration = duration + 's';
+          c.style.animationDelay = (-delay) + 's';
+          c.style.transform = `translate3d(-120%,0,0) scale(${scale})`;
+          c.style.opacity = opacity;
+          cloudsRoot.appendChild(c);
+        }
+        const cloudCount = 5;
+        for(let i=0;i<cloudCount;i++){
+          addCloud({
+            top: 6 + Math.random()*40,
+            duration: 52 + Math.random()*60,
+            delay: Math.random()*80,
+            scale: 0.7 + Math.random()*0.9,
+            opacity: 0.34 + Math.random()*0.34
+          });
+        }
       }
 
-      // Lower amount to reduce DOM work
-      const initial = Math.min(55, Math.max(35, Math.floor(window.innerWidth/22)));
-      for(let i=0;i<initial;i++) addStar();
+      if(starsRoot){
+        function addStar(){
+          const s = document.createElement('div');
+          s.className = 'star';
+          const left = Math.random()*100;
+          const drift = (Math.random()*2 - 1) * 70;
+          const scale = 0.6 + Math.random()*1.2;
+          const opacity = 0.18 + Math.random()*0.48;
+          const dur = 8 + Math.random()*13;
+          const delay = Math.random()*dur;
 
-      const intervalMs = 950;
-      setInterval(()=>{
-        const perTick = 2;
-        for(let i=0;i<perTick;i++) addStar();
-      }, intervalMs);
+          s.style.left = left + 'vw';
+          s.style.setProperty('--x', '0px');
+          s.style.setProperty('--drift', drift + 'px');
+          s.style.setProperty('--s', scale);
+          s.style.setProperty('--o', opacity);
+          s.style.animationDuration = dur + 's';
+          s.style.animationDelay = (-delay) + 's';
+          s.style.top = '-12vh';
+          const sz = (8 + Math.random()*10);
+          s.style.width = sz + 'px';
+          s.style.height = sz + 'px';
+          starsRoot.appendChild(s);
+          setTimeout(()=>{ s.remove(); }, (dur+2)*1000);
+        }
+
+        const initial = Math.min(55, Math.max(35, Math.floor(window.innerWidth/22)));
+        for(let i=0;i<initial;i++) addStar();
+        setInterval(()=>{ for(let i=0;i<2;i++) addStar(); }, 950);
+      }
     }
 
-    // Improve accessibility: avoid focus outlines getting lost
-    document.addEventListener('keydown', (e)=>{
-      if(e.key === 'Tab') document.documentElement.classList.add('kb');
-    }, {once:true});
+    document.getElementById('toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
 
-    // ----- Init remaining UI safely after DOM is ready -----
+    function initCriticalUI(){
+      initCalculator();
+      initGoods();
+    }
+
     function initAllAfterDom(){
-      try{ initBalanceUI(); }catch(e){ console.warn('Balance init failed', e); }
+      initBalanceUI();
     }
 
     if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', initAllAfterDom, {once:true});
+      document.addEventListener('DOMContentLoaded', ()=>{ initCriticalUI(); initAllAfterDom(); }, {once:true});
     }else{
+      initCriticalUI();
       initAllAfterDom();
     }
   </script>
