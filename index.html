@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазинчик Ями1 — оформление заказов</title>
+  <title>Магазинчик Ями — оформление заказов</title>
   <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -942,77 +942,20 @@
     }
     async function twitchLogin(){
       clearOrderMsg();
+      // Always reset so user can retry
       clearPkceState();
       try{ cleanUrlAfterOAuth(); }catch(e){}
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       
-      // Определение устройства и браузера
-      const ua = (navigator.userAgent || '').toLowerCase();
-      const isAndroid = /android/i.test(ua);
-      const isIOS = /iphone|ipad|ipod/i.test(ua);
-      const isMobileDevice = isAndroid || isIOS || /mobile/i.test(ua);
-      
-      // Для мобильных устройств используем только Implicit flow
-      if(isMobileDevice){
-        const state = `mobile_${randomString(24)}`;
-        const params = new URLSearchParams({
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          response_type: 'token',
-          scope: TWITCH_SCOPES.join(' '),
-          state: state
-        });
-        
-        const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-        
-        // Для Android используем Intent URI чтобы избежать открытия приложения Twitch
-        if(isAndroid){
-          // Intent URI заставляет Chrome открыть в браузере, а не в приложении
-          const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
-          window.location.href = intentUrl;
-          
-          // Fallback на обычный URL через 500ms если Intent не сработал
-          setTimeout(() => {
-            window.location.href = authUrl;
-          }, 500);
-        } else {
-          // Для iOS просто используем обычный редирект
-          window.location.href = authUrl;
-        }
-        return;
-      }
-      
-      // Для десктопа используем PKCE
-      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
-      if(!canPkce){
-        const state = `implicit_${randomString(24)}`;
-        const params = new URLSearchParams({
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          response_type: 'token',
-          scope: TWITCH_SCOPES.join(' '),
-          state: state
-        });
-        const url = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-        window.location.replace(url);
-        return;
-      }
-      
-      const state = `pkce_${randomString(24)}`;
-      const verifier = randomString(64);
-      const challenge = base64UrlEncode(await sha256(verifier));
-      setPkceState({ state, verifier, at: Date.now() });
-      
+      // Always use Implicit flow - it's more reliable across devices
+      const state = `v0_${randomString(18)}`;
       const params = new URLSearchParams({
-        response_type: 'code',
+        response_type: 'token',
         client_id: TWITCH_CLIENT_ID,
         redirect_uri: redirectUri,
         scope: TWITCH_SCOPES.join(' '),
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256'
+        state
       });
-      
       window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
     }
     function twitchLogout(){
