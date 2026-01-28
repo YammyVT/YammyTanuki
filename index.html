@@ -774,13 +774,12 @@
       if(!st || !st.verifier) throw new Error('Missing PKCE verifier');
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       const dbg = `client_id=${TWITCH_CLIENT_ID} redirect_uri=${redirectUri}`;
-      const params = new URLSearchParams({
-        client_id: TWITCH_CLIENT_ID,
-        grant_type: 'authorization_code',
-        code: String(code || ''),
-        redirect_uri: redirectUri,
-        code_verifier: String(st.verifier || '')
-      });
+      // Manual URL encoding for better compatibility
+      const body = `client_id=${encodeURIComponent(TWITCH_CLIENT_ID)}&` +
+        `grant_type=authorization_code&` +
+        `code=${encodeURIComponent(String(code || ''))}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `code_verifier=${encodeURIComponent(String(st.verifier || ''))}`;
       const endpoints = ['https://id.twitch.tv/oauth2/token','https://api.twitch.tv/oauth2/token'];
       let lastTxt = '';
       let lastJson = null;
@@ -791,7 +790,7 @@
           res = await withTimeout(fetch(ep, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: params.toString()
+            body: body
           }), 12000);
         }catch(e){
           lastTxt = String(e?.message || e);
@@ -942,36 +941,41 @@
     }
     async function twitchLogin(){
       clearOrderMsg();
+      // Always reset so user can retry
       clearPkceState();
       try{ cleanUrlAfterOAuth(); }catch(e){}
-      
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
-      
-      // Detect mobile/tablet to force Implicit flow (more reliable on mobile devices for this error)
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isSmall = window.innerWidth < 850;
-      
+      // If PKCE is not supported (or if token endpoint is blocked), implicit is more compatible.
       const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+      // Prefer implicit on known-problematic UAs (Yandex, in-app), to avoid token exchange fetch
+      const ua = (navigator.userAgent || '').toLowerCase();
+      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || ua.includes('telegram') || ua.includes('instagram');
       
-      // Force Implicit Flow on mobile or if PKCE not supported
-      if(isMobile || isSmall || !canPkce){
+      if(!canPkce || looksBlocked){
         const state = `v0_${randomString(18)}`;
-        const scopes = TWITCH_SCOPES.join(' ');
-        // Manually construct URL to ensure response_type is first and correct
-        const url = `https://id.twitch.tv/oauth2/authorize?response_type=token&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}`;
+        // Manual URL encoding for better compatibility
+        const url = `https://id.twitch.tv/oauth2/authorize?` +
+          `response_type=token&` +
+          `client_id=${encodeURIComponent(TWITCH_CLIENT_ID)}&` +
+          `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+          `scope=${encodeURIComponent(TWITCH_SCOPES.join(' '))}&` +
+          `state=${encodeURIComponent(state)}`;
         window.location.assign(url);
         return;
       }
-      
-      // PKCE Flow (Desktop)
       const state = `v1_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
       setPkceState({ state, verifier, at: Date.now() });
-      
-      const scopes = TWITCH_SCOPES.join(' ');
-      const url = `https://id.twitch.tv/oauth2/authorize?response_type=code&client_id=${TWITCH_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}&state=${encodeURIComponent(state)}&code_challenge=${challenge}&code_challenge_method=S256`;
-      
+      // Manual URL encoding for better compatibility
+      const url = `https://id.twitch.tv/oauth2/authorize?` +
+        `response_type=code&` +
+        `client_id=${encodeURIComponent(TWITCH_CLIENT_ID)}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=${encodeURIComponent(TWITCH_SCOPES.join(' '))}&` +
+        `state=${encodeURIComponent(state)}&` +
+        `code_challenge=${encodeURIComponent(challenge)}&` +
+        `code_challenge_method=S256`;
       window.location.assign(url);
     }
     function twitchLogout(){
