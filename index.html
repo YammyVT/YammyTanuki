@@ -1098,10 +1098,9 @@
 
     function isLikelyInAppBrowser(){
       const ua = (navigator.userAgent || '').toLowerCase();
-      // Telegram's in-app browser is the main troublemaker for OAuth redirects.
-      // Some Telegram builds include "Telegram" only, some include "TelegramBot" etc.
-      // "tg" can be too broad, but here it's used along with common in-app markers.
-      return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
+      // Telegram in-app (Android/iOS) can be very inconsistent with OAuth redirects.
+      // Include common markers.
+      return ua.includes('telegram') || ua.includes('tgweb') || ua.includes('telegrambot') || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
     }
 
     function openTgInAppModal(){
@@ -1123,10 +1122,10 @@
       clearOrderMsg();
 
       // If opened inside Telegram in-app: Twitch OAuth often breaks (400 / missing params / no redirect).
-      // Show a nice modal with "Open in browser" instead of trying to auth here.
+      // HARD STOP: do not attempt OAuth here; show a modal to open in external browser.
       if(isLikelyInAppBrowser()){
         const hint = document.getElementById('balanceHint');
-        if(hint) hint.textContent = 'Встроенный браузер Telegram часто ломает вход через Twitch. Открой сайт в обычном браузере (Chrome/Safari) и войди там.';
+        if(hint) hint.textContent = 'Встроенный браузер Telegram ломает вход через Twitch. Открой сайт в обычном браузере (Chrome/Safari) и войди там.';
         openTgInAppModal();
         return;
       }
@@ -1301,10 +1300,13 @@
       document.querySelector('#tgInAppModal .absolute')?.addEventListener('click', closeTgInAppModal);
       document.getElementById('openInBrowser')?.addEventListener('click', ()=>{
         const url = window.location.href;
-        // Use same-tab navigation first (often triggers Telegram's "open externally" prompt),
-        // fallback to new tab.
-        try{ window.location.href = url; }catch(e){
-          window.open(url, '_blank', 'noopener,noreferrer');
+        // Telegram hint: try to trigger native "Open in browser" by using a new-tab open.
+        // If it fails, fall back to same-tab navigation.
+        try{
+          const w = window.open(url, '_blank', 'noopener,noreferrer');
+          if(!w) window.location.href = url;
+        }catch(e){
+          try{ window.location.href = url; }catch(err){}
         }
       });
       document.getElementById('copySiteLink')?.addEventListener('click', async ()=>{
@@ -1325,7 +1327,9 @@
       handleTwitchOAuthCallback();
 
       // wire buttons
-      document.getElementById('twitchLoginBtn')?.addEventListener('click', (e)=> twitchLogin(e));
+      // Always intercept click (capture phase), so Telegram in-app can't sneak a navigation
+      // before our handler runs.
+      document.getElementById('twitchLoginBtn')?.addEventListener('click', (e)=> twitchLogin(e), true);
       document.getElementById('twitchLogoutBtn')?.addEventListener('click', twitchLogout);
       document.getElementById('clearNick')?.addEventListener('click', clearSavedAuth);
 
