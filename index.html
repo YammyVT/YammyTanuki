@@ -1001,15 +1001,13 @@
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       const ua = (navigator.userAgent || '').toLowerCase();
       
-      // Определяем устройство
+      // Определяем мобильные и проблемные браузеры
       const isAndroid = /android/i.test(ua);
       const isIOS = /iphone|ipad|ipod/i.test(ua);
-      // Более точное определение Telegram (может быть Telegram, telegram, TelegramBot)
       const isTelegramBrowser = /telegram/i.test(ua) || ua.includes('tgwebview');
       const isInAppBrowser = isTelegramBrowser || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
       
-      // Специальная обработка для Telegram встроенного браузера
-      // Показываем предупреждение только если это точно Telegram
+      // Telegram - показываем предупреждение
       if(isTelegramBrowser){
         setOrderMsg({
           type:'info',
@@ -1034,14 +1032,14 @@
         return;
       }
       
-      // Проверяем поддержку PKCE
+      // PKCE поддержка
       const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
       
-      // Проблемные браузеры, где лучше использовать Implicit
+      // Проблемные браузеры или мобильные → Implicit flow
       const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || isInAppBrowser;
+      const isMobile = isAndroid || isIOS;
       
-      // Для проблемных браузеров или мобильных - используем Implicit flow
-      if(!canPkce || looksBlocked || isAndroid || isIOS){
+      if(!canPkce || looksBlocked || isMobile){
         const state = `implicit_${randomString(24)}`;
         const params = new URLSearchParams({
           client_id: TWITCH_CLIENT_ID,
@@ -1053,7 +1051,7 @@
         
         const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
         
-        // Для Android используем Intent URI чтобы избежать открытия приложения
+        // Для Android используем Intent URI
         if(isAndroid){
           const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
           window.location.href = intentUrl;
@@ -1066,7 +1064,7 @@
         return;
       }
       
-      // Для десктопа используем PKCE (оригинальная рабочая логика)
+      // Десктоп → PKCE flow (оригинальная логика)
       const state = `pkce_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
