@@ -831,7 +831,7 @@
       const u = json?.data?.[0];
       const login = String(u?.login || '').trim();
       const display = String(u?.display_name || login).trim();
-      return login ? { login, display_name: display } : null;
+      return login ? { login, display_name: display, login_lower: login.toLowerCase() } : null;
     }
     function handleImplicitTokenFromHash(){
       const h = String(window.location.hash || '');
@@ -843,30 +843,51 @@
       try{ history.replaceState({}, document.title, window.location.pathname + window.location.search); }catch(e){}
       return { access_token: token, state };
     }
-    function setNickUIAuthed(login){
+    function setNickUIAuthed(displayName){
       const status = document.getElementById('nickStatus');
       const nickLine = document.getElementById('nickLine');
-      if(nickLine) nickLine.textContent = login ? login : '—';
-      if(status) status.textContent = login ? 'Вы вошли через Twitch.' : 'Нужно войти через Twitch, чтобы увидеть баланс.';
-      document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !login);
+      if(nickLine) nickLine.textContent = displayName ? displayName : '—';
+      if(status) status.textContent = displayName ? 'Вы вошли через Twitch.' : 'Нужно войти через Twitch, чтобы увидеть баланс.';
+      document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !displayName);
       try{ updateOrderGateUI(); }catch(e){}
     }
     function getKnownNick(){
       const a = getAuth();
       return String(a?.login || '').trim();
     }
+    function getKnownDisplayName(){
+      const a = getAuth();
+      return String(a?.display_name || a?.login || '').trim();
+    }
     async function refreshBalanceForAuthed(){
       const out = document.getElementById('balanceResult');
       const hint = document.getElementById('balanceHint');
       const nickLine = document.getElementById('nickLine');
       const login = getKnownNick();
+      let displayName = getKnownDisplayName();
+      
+      // Если нет display_name в сохраненном auth, попробуем получить с Twitch
+      const auth = getAuth();
+      if(auth?.login && !auth?.display_name && auth?.access_token){
+        try{
+          const user = await twitchGetUserHelix(auth.access_token);
+          if(user?.display_name){
+            auth.display_name = user.display_name;
+            setAuth(auth);
+            displayName = user.display_name;
+          }
+        }catch(e){
+          // Игнорируем ошибки, используем login
+        }
+      }
+      
       if(!login){
         if(nickLine) nickLine.textContent = '—';
         if(out) out.textContent = '—';
         if(hint) hint.textContent = 'Нужно войти через Twitch, чтобы увидеть баланс.';
         return;
       }
-      if(nickLine) nickLine.textContent = login;
+      if(nickLine) nickLine.textContent = displayName;
       if(!BALANCE_API_URL){
         if(out) out.textContent = 'Баланс пока не подключён.';
         if(hint) hint.textContent = 'Нужно вставить URL Apps Script в переменную BALANCE_API_URL.';
@@ -877,10 +898,10 @@
         const res = await findBalanceByNick(login);
         if(res.found){
           const pts = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : res.points;
-          if(out) out.textContent = `${String(res.nick).trim()} — ${pts} 🪙`;
+          if(out) out.textContent = `${displayName} — ${pts} 🪙`;
           if(hint) hint.textContent = 'Если баллы не совпадают — проверь обновление таблицы.';
         }else{
-          if(out) out.textContent = `${login} — 0 🪙 😢`;
+          if(out) out.textContent = `${displayName} — 0 🪙 😢`;
           if(hint) hint.textContent = 'У вас 0 баллов 😢';
         }
       }catch(e){
@@ -895,8 +916,8 @@
         try{
           const user = await twitchGetUserHelix(implicit.access_token);
           if(!user?.login) throw new Error('No login');
-          setAuth({ login: user.login, access_token: implicit.access_token, obtained_at: Date.now(), implicit: true });
-          setNickUIAuthed(user.login);
+          setAuth({ login: user.login, display_name: user.display_name, access_token: implicit.access_token, obtained_at: Date.now(), implicit: true });
+          setNickUIAuthed(user.display_name);
           await refreshBalanceForAuthed();
         }catch(e){
           clearAuth();
@@ -927,8 +948,8 @@
         const token = await twitchExchangeCode(code);
         const user = await twitchGetUserHelix(token.access_token);
         if(!user?.login) throw new Error('No login');
-        setAuth({ login: user.login, access_token: token.access_token, expires_in: token.expires_in, obtained_at: Date.now() });
-        setNickUIAuthed(user.login);
+        setAuth({ login: user.login, display_name: user.display_name, access_token: token.access_token, expires_in: token.expires_in, obtained_at: Date.now() });
+        setNickUIAuthed(user.display_name);
         await refreshBalanceForAuthed();
       }catch(e){
         clearAuth();
@@ -951,8 +972,35 @@
       // Определяем устройство
       const isAndroid = /android/i.test(ua);
       const isIOS = /iphone|ipad|ipod/i.test(ua);
-      const isTelegramBrowser = ua.includes('telegram');
+      // Более точное определение Telegram (может быть Telegram, telegram, TelegramBot)
+      const isTelegramBrowser = /telegram/i.test(ua) || ua.includes('tgwebview');
       const isInAppBrowser = isTelegramBrowser || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
+      
+      // Специальная обработка для Telegram встроенного браузера
+      // Показываем предупреждение только если это точно Telegram
+      if(isTelegramBrowser){
+        setOrderMsg({
+          type:'info',
+          title:'Авторизация в Telegram',
+          text:'Telegram встроенный браузер имеет ограничения безопасности. Нажмите кнопку ниже, скопируйте ссылку и откройте сайт в Chrome или Safari для авторизации.',
+          actions:[
+            { 
+              label:'Копировать ссылку на сайт', 
+              onClick: async ()=> {
+                const ok = await copyText(window.location.href);
+                if(ok){
+                  setOrderMsg({
+                    type:'ok',
+                    title:'Ссылка скопирована!',
+                    text:'Теперь откройте Chrome/Safari, вставьте ссылку и авторизуйтесь там. После этого можно вернуться в Telegram.'
+                  });
+                }
+              }
+            }
+          ]
+        });
+        return;
+      }
       
       // Проверяем поддержку PKCE
       const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
@@ -1126,7 +1174,7 @@
         if(remember){
           remember.checked = !!localStorage.getItem(AUTH_STORAGE_KEY);
         }
-        setNickUIAuthed(auth.login);
+        // НЕ показываем ник сейчас - пусть refreshBalanceForAuthed покажет display_name
         setTimeout(()=> refreshBalanceForAuthed(), 250);
       }else{
         setNickUIAuthed('');
