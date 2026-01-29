@@ -1005,7 +1005,6 @@
       const isAndroid = /android/i.test(ua);
       const isIOS = /iphone|ipad|ipod/i.test(ua);
       const isTelegramBrowser = /telegram/i.test(ua) || ua.includes('tgwebview');
-      const isInAppBrowser = isTelegramBrowser || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
       
       // Telegram - показываем предупреждение
       if(isTelegramBrowser){
@@ -1032,55 +1031,28 @@
         return;
       }
       
-      // PKCE поддержка
-      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
-      
-      // Проблемные браузеры или мобильные → Implicit flow
-      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || isInAppBrowser;
-      const isMobile = isAndroid || isIOS;
-      
-      if(!canPkce || looksBlocked || isMobile){
-        const state = `implicit_${randomString(24)}`;
-        const params = new URLSearchParams({
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          response_type: 'token',
-          scope: TWITCH_SCOPES.join(' '),
-          state: state
-        });
-        
-        const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-        
-        // Для Android используем Intent URI
-        if(isAndroid){
-          const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
-          window.location.href = intentUrl;
-          setTimeout(() => {
-            window.location.href = authUrl;
-          }, 500);
-        } else {
-          window.location.assign(authUrl);
-        }
-        return;
-      }
-      
-      // Десктоп → PKCE flow (оригинальная логика)
-      const state = `pkce_${randomString(24)}`;
-      const verifier = randomString(64);
-      const challenge = base64UrlEncode(await sha256(verifier));
-      setPkceState({ state, verifier, at: Date.now() });
-      
+      // Используем Implicit flow для ВСЕХ (проще и надежнее)
+      const state = `implicit_${randomString(24)}`;
       const params = new URLSearchParams({
-        response_type: 'code',
         client_id: TWITCH_CLIENT_ID,
         redirect_uri: redirectUri,
+        response_type: 'token',
         scope: TWITCH_SCOPES.join(' '),
-        state,
-        code_challenge: challenge,
-        code_challenge_method: 'S256'
+        state: state
       });
       
-      window.location.assign(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
+      const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
+      
+      // Для Android используем Intent URI
+      if(isAndroid && !isTelegramBrowser){
+        const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
+        window.location.href = intentUrl;
+        setTimeout(() => {
+          window.location.href = authUrl;
+        }, 500);
+      } else {
+        window.location.assign(authUrl);
+      }
     }
     function twitchLogout(){
       clearAuth();
