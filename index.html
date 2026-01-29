@@ -365,19 +365,37 @@
             </div>
             <div class="w-full lg:max-w-sm">
               <div id="orderCard" class="glass rounded-3xl p-5 border border-white/20 hidden">
-                <div class="text-sm text-white/75">Выбрано:</div>
-                <div id="picked" class="mt-2 text-lg font-extrabold">Пока ничего</div>
-                <div id="orderMsg" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm">
-                  <div id="orderMsgTitle" class="font-bold"></div>
-                  <div id="orderMsgText" class="mt-1 text-white/80 text-xs"></div>
-                  <div id="orderMsgActions" class="mt-3 hidden flex flex-wrap gap-2"></div>
+                <div id="orderFormContent">
+                  <div class="text-sm text-white/75">Выбрано:</div>
+                  <div id="picked" class="mt-2 text-lg font-extrabold">Пока ничего</div>
+                  <div id="orderMsg" class="mt-3 hidden rounded-2xl border px-4 py-3 text-sm">
+                    <div id="orderMsgTitle" class="font-bold"></div>
+                    <div id="orderMsgText" class="mt-1 text-white/80 text-xs"></div>
+                    <div id="orderMsgActions" class="mt-3 hidden flex flex-wrap gap-2"></div>
+                  </div>
+                  <div class="mt-3">
+                    <label class="text-sm text-white/80">Доп. комментарий (опционально)</label>
+                    <textarea id="comment" rows="3" class="mt-2 w-full rounded-2xl bg-black/20 border border-white/20 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: жанр/настроение/какая именно игра..."></textarea>
+                  </div>
+                  <button id="placeOrder" class="btn mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">Заказать</button>
                 </div>
-                <div class="mt-3">
-                  <label class="text-sm text-white/80">Доп. комментарий (опционально)</label>
-                  <textarea id="comment" rows="3" class="mt-2 w-full rounded-2xl bg-black/20 border border-white/20 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: жанр/настроение/какая именно игра..."></textarea>
+                <div id="orderProcessing" class="hidden text-center py-8">
+                  <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white/20 border-t-white/90"></div>
+                  <div id="processingText" class="mt-4 text-base font-bold">⏳ Обрабатываем заказ...</div>
+                  <div id="processingHint" class="mt-2 text-xs text-white/70">Проверяем баланс и отправляем в Telegram</div>
                 </div>
-                <button id="placeOrder" class="btn mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">Заказать</button>
-                <p id="orderToast" class="mt-3 text-xs text-white/70 hidden">Открываю Telegram…</p>
+                <div id="orderSuccess" class="hidden text-center py-6">
+                  <div class="text-5xl mb-4">✅</div>
+                  <div class="text-xl font-extrabold text-emerald-100">Заказ успешно отправлен!</div>
+                  <div class="mt-2 text-sm text-white/80">Ями получил твой заказ и скоро свяжется с тобой в Telegram</div>
+                  <button id="orderAgain" class="btn mt-6 rounded-2xl px-6 py-3 text-sm font-semibold">Оформить ещё один заказ</button>
+                </div>
+                <div id="orderError" class="hidden text-center py-6">
+                  <div class="text-5xl mb-4">❌</div>
+                  <div id="errorTitle" class="text-xl font-extrabold text-rose-100">Ошибка отправки</div>
+                  <div id="errorText" class="mt-2 text-sm text-white/80">Не удалось отправить заказ</div>
+                  <button id="orderRetry" class="btn mt-6 rounded-2xl px-6 py-3 text-sm font-semibold">Попробовать снова</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1104,9 +1122,43 @@
       if(!m) return NaN;
       return Number(m[1]);
     }
+    function showOrderForm(){
+      $('#orderFormContent')?.classList.remove('hidden');
+      $('#orderProcessing')?.classList.add('hidden');
+      $('#orderSuccess')?.classList.add('hidden');
+      $('#orderError')?.classList.add('hidden');
+    }
+    function showOrderProcessing(text='⏳ Обрабатываем заказ...', hint='Проверяем баланс и отправляем в Telegram'){
+      $('#orderFormContent')?.classList.add('hidden');
+      $('#orderProcessing')?.classList.remove('hidden');
+      $('#orderSuccess')?.classList.add('hidden');
+      $('#orderError')?.classList.add('hidden');
+      const processingText = $('#processingText');
+      const processingHint = $('#processingHint');
+      if(processingText) processingText.textContent = text;
+      if(processingHint) processingHint.textContent = hint;
+    }
+    function showOrderSuccess(){
+      $('#orderFormContent')?.classList.add('hidden');
+      $('#orderProcessing')?.classList.add('hidden');
+      $('#orderSuccess')?.classList.remove('hidden');
+      $('#orderError')?.classList.add('hidden');
+    }
+    function showOrderError(title='Ошибка отправки', text='Не удалось отправить заказ'){
+      $('#orderFormContent')?.classList.add('hidden');
+      $('#orderProcessing')?.classList.add('hidden');
+      $('#orderSuccess')?.classList.add('hidden');
+      $('#orderError')?.classList.remove('hidden');
+      const errorTitle = $('#errorTitle');
+      const errorText = $('#errorText');
+      if(errorTitle) errorTitle.textContent = title;
+      if(errorText) errorText.textContent = text;
+    }
+    document.getElementById('orderAgain')?.addEventListener('click', showOrderForm);
+    document.getElementById('orderRetry')?.addEventListener('click', showOrderForm);
+    
     document.getElementById('placeOrder')?.addEventListener('click', async ()=>{
       clearOrderMsg();
-      const toastEl = document.getElementById('orderToast');
       const nick = getKnownNick();
       const displayName = getKnownDisplayName();
       
@@ -1126,46 +1178,13 @@
       
       const spend = parsePickedPrice(picked);
       
-      // Проверка и списание баллов
-      if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
-        if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
-        try{
-          const res = await spendPoints({ nick, amount: spend, item: picked, comment: ($('#comment').value||'').trim() });
-          if(res.ok){
-            await refreshBalanceForAuthed();
-          }else if(res.reason === 'insufficient'){
-            setOrderMsg({ type:'error', title:'Недостаточно баллов 😢', text:`Для этого заказа нужно ${spend} 🪙.` });
-            return;
-          }else if(res.reason === 'notfound'){
-            setOrderMsg({ type:'warn', title:'У вас 0 баллов 😢', text:'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.' });
-            return;
-          }else{
-            setOrderMsg({
-              type:'warn',
-              title:'Таблица не ответила',
-              text:'Не удалось списать баллы автоматически. Можно всё равно отправить заказ — Ями проверит вручную.',
-              actions:[{ label:'Всё равно заказать', onClick: ()=> sendOrder() }]
-            });
-            return;
-          }
-        }catch(e){
-          setOrderMsg({
-            type:'warn',
-            title:'Ошибка связи',
-            text:'Не удалось связаться с таблицей. Можно всё равно отправить заказ — Ями проверит вручную.',
-            actions:[{ label:'Всё равно заказать', onClick: ()=> sendOrder() }]
-          });
-          return;
-        }
-      }
+      // Показываем индикатор загрузки
+      showOrderProcessing('⏳ Обрабатываем заказ...', 'Проверяем баланс и отправляем в Telegram');
       
-      // Отправка заказа
-      sendOrder();
-      
-      async function sendOrder(){
-        if(toastEl){ toastEl.textContent = 'Отправляю заказ…'; }
-        toast(toastEl);
-        
+      // Проверка и списание баллов ПОСЛЕ отправки в Telegram
+      try{
+        // Сначала отправляем в Telegram
+        showOrderProcessing('📨 Отправляем в Telegram...', 'Ваш заказ отправляется Ями');
         const comment = ($('#comment').value || '').trim();
         const priceText = Number.isFinite(spend) && spend > 0 ? `${spend} 🪙` : '—';
         
@@ -1176,23 +1195,33 @@
           comment: comment || 'Нет'
         });
         
-        if(result.ok){
-          setOrderMsg({
-            type:'ok',
-            title:'Заказ отправлен! ✅',
-            text:'Ями получил твой заказ и скоро свяжется с тобой в Telegram.'
-          });
-          // Очищаем форму
-          $('#comment').value = '';
-          picked = '';
-          $('#picked').textContent = 'Пока ничего';
-        }else{
-          setOrderMsg({
-            type:'error',
-            title:'Ошибка отправки',
-            text:'Не удалось отправить заказ. Попробуй ещё раз или напиши Ями напрямую в Telegram: @YammyTanuki'
-          });
+        if(!result.ok){
+          showOrderError('Ошибка отправки', 'Не удалось отправить заказ. Попробуй ещё раз или напиши Ями напрямую в Telegram: @YammyTanuki');
+          return;
         }
+        
+        // Если отправка успешна - списываем баллы
+        if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
+          showOrderProcessing('💰 Списываем баллы...', 'Обновляем ваш баланс');
+          const spendRes = await spendPoints({ nick, amount: spend, item: picked, comment });
+          if(spendRes.ok){
+            await refreshBalanceForAuthed();
+          }else if(spendRes.reason === 'insufficient'){
+            showOrderError('Недостаточно баллов 😢', `Для этого заказа нужно ${spend} 🪙. Заказ отправлен, но баллы не списаны - Ями проверит вручную.`);
+            return;
+          }
+        }
+        
+        // Успех!
+        showOrderSuccess();
+        // Очищаем форму
+        $('#comment').value = '';
+        picked = '';
+        $('#picked').textContent = 'Пока ничего';
+        
+      }catch(e){
+        showOrderError('Ошибка связи', 'Не удалось связаться с сервером. Попробуй ещё раз.');
+        console.error('Order error:', e);
       }
     });
     // ----- Init balance block (OAuth only) -----
