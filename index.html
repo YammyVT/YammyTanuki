@@ -1181,9 +1181,23 @@
       // Показываем индикатор загрузки
       showOrderProcessing('⏳ Обрабатываем заказ...', 'Проверяем баланс и отправляем в Telegram');
       
-      // Проверка и списание баллов ПОСЛЕ отправки в Telegram
       try{
-        // Сначала отправляем в Telegram
+        // СНАЧАЛА проверяем баланс (если нужно списание)
+        if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
+          showOrderProcessing('💰 Проверяем баланс...', 'Убеждаемся что хватает баллов');
+          const res = await findBalanceByNick(nick);
+          if(!res.found){
+            showOrderError('У вас 0 баллов 😢', 'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.');
+            return;
+          }
+          const currentBalance = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : 0;
+          if(currentBalance < spend){
+            showOrderError('Недостаточно баллов 😢', `Для этого заказа нужно ${spend} 🪙, а у тебя ${currentBalance} 🪙.`);
+            return;
+          }
+        }
+        
+        // Если баланса достаточно - отправляем в Telegram
         showOrderProcessing('📨 Отправляем в Telegram...', 'Ваш заказ отправляется Ями');
         const comment = ($('#comment').value || '').trim();
         const priceText = Number.isFinite(spend) && spend > 0 ? `${spend} 🪙` : '—';
@@ -1206,9 +1220,9 @@
           const spendRes = await spendPoints({ nick, amount: spend, item: picked, comment });
           if(spendRes.ok){
             await refreshBalanceForAuthed();
-          }else if(spendRes.reason === 'insufficient'){
-            showOrderError('Недостаточно баллов 😢', `Для этого заказа нужно ${spend} 🪙. Заказ отправлен, но баллы не списаны - Ями проверит вручную.`);
-            return;
+          }else{
+            // Если списание провалилось (но отправка успешна) - не критично, Ями проверит вручную
+            console.warn('Failed to spend points:', spendRes);
           }
         }
         
