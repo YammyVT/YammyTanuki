@@ -848,6 +848,7 @@
       const nickLine = document.getElementById('nickLine');
       if(nickLine) nickLine.textContent = displayName ? displayName : '—';
       if(status) status.textContent = displayName ? 'Вы вошли через Twitch.' : 'Нужно войти через Twitch, чтобы увидеть баланс.';
+      document.getElementById('twitchLoginBtn')?.classList.toggle('hidden', !!displayName);
       document.getElementById('twitchLogoutBtn')?.classList.toggle('hidden', !displayName);
       try{ updateOrderGateUI(); }catch(e){}
     }
