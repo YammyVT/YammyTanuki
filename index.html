@@ -613,35 +613,26 @@
       const act = document.getElementById('orderMsgActions');
       if(act) act.classList.add('hidden');
     }
-    // ----- Telegram -----
-    const TG_TARGET_DEFAULT = 'https://t.me/YammyTanuki';
-    function normalizeTgTarget(raw){
-      const v = String(raw || '').trim();
-      if(!v) return '';
-      let s = v;
-      s = s.replace(/^https?:\/\//i,'');
-      s = s.replace(/^t\.me\//i,'');
-      s = s.replace(/^telegram\.me\//i,'');
-      s = s.replace(/^@/,'');
-      s = s.split('?')[0].split('#')[0].trim();
-      s = s.replace(/[^a-zA-Z0-9_]/g,'');
-      return s;
-    }
-    function buildOrderText(){
-      const cmt = ($('#comment').value || '').trim();
-      const item = picked || '[награда]';
-      const nick = getKnownNick();
-      const parts = [];
-      parts.push(`Ями, беру ${item}`);
-      parts.push(`Ник Twitch: ${nick || '[не указан]'}`);
-      if(cmt) parts.push(`Комментарий: ${cmt}`);
-      return parts.join('\n');
-    }
-    function getTgUrl(){
-      const user = normalizeTgTarget(TG_TARGET_DEFAULT);
-      if(!user) return '';
-      const text = buildOrderText();
-      return `https://t.me/${encodeURIComponent(user)}?text=${encodeURIComponent(text)}`;
+    // ----- Telegram Bot API -----
+    const TELEGRAM_BOT_API_URL = 'https://script.google.com/macros/s/AKfycbzn3wvaFYwSWkopLZP1ueRb52pJnbWM7sB2Ay4DOx3FPPvBQITpaLF-cx2hflnZ10-_Xg/exec';
+    
+    async function sendOrderToBot({nick, item, price, comment}){
+      try{
+        const res = await fetch(TELEGRAM_BOT_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nick: nick || 'Не указан',
+            item: item || 'Не указано',
+            price: price || '—',
+            comment: comment || 'Нет'
+          })
+        });
+        const data = await res.json();
+        return data;
+      }catch(e){
+        return { ok: false, error: String(e) };
+      }
     }
     // ----- Google Sheets API (Apps Script) -----
     const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
@@ -855,6 +846,10 @@
     function getKnownNick(){
       const a = getAuth();
       return String(a?.login || '').trim();
+    }
+    function getKnownDisplayName(){
+      const a = getAuth();
+      return String(a?.display_name || '').trim();
     }
     function getKnownDisplayName(){
       const a = getAuth();
@@ -1093,6 +1088,8 @@
       clearOrderMsg();
       const toastEl = document.getElementById('orderToast');
       const nick = getKnownNick();
+      const displayName = getKnownDisplayName();
+      
       if(!nick){
         setOrderMsg({
           type:'warn',
@@ -1106,7 +1103,10 @@
         setOrderMsg({ type:'warn', title:'Выбери товар', text:'Сначала выбери награду в разделе «Товары».' });
         return;
       }
+      
       const spend = parsePickedPrice(picked);
+      
+      // Проверка и списание баллов
       if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
         if(toastEl){ toastEl.textContent = 'Проверяю баланс…'; toast(toastEl); }
         try{
@@ -1123,8 +1123,8 @@
             setOrderMsg({
               type:'warn',
               title:'Таблица не ответила',
-              text:'Не удалось списать баллы автоматически. Можно всё равно открыть Telegram — Ями проверит вручную.',
-              actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }]
+              text:'Не удалось списать баллы автоматически. Можно всё равно отправить заказ — Ями проверит вручную.',
+              actions:[{ label:'Всё равно заказать', onClick: ()=> sendOrder() }]
             });
             return;
           }
@@ -1132,29 +1132,45 @@
           setOrderMsg({
             type:'warn',
             title:'Ошибка связи',
-            text:'Не удалось связаться с таблицей. Можно всё равно открыть Telegram — Ями проверит вручную.',
-            actions:[{ label:'Всё равно заказать', onClick: ()=> openTg() }]
+            text:'Не удалось связаться с таблицей. Можно всё равно отправить заказ — Ями проверит вручную.',
+            actions:[{ label:'Всё равно заказать', onClick: ()=> sendOrder() }]
           });
           return;
         }
       }
-      openTg();
-      function openTg(){
-        const url = getTgUrl();
-        if(!url){
-          setOrderMsg({ type:'error', title:'Ошибка', text:'Не удалось сформировать ссылку Telegram.' });
-          return;
-        }
-        if(toastEl){ toastEl.textContent = 'Открываю Telegram…'; }
+      
+      // Отправка заказа
+      sendOrder();
+      
+      async function sendOrder(){
+        if(toastEl){ toastEl.textContent = 'Отправляю заказ…'; }
         toast(toastEl);
-        let w = null;
-        try{ w = window.open(url, '_blank', 'noopener,noreferrer'); }catch(e){}
-        if(!w){
+        
+        const comment = ($('#comment').value || '').trim();
+        const priceText = Number.isFinite(spend) && spend > 0 ? `${spend} 🪙` : '—';
+        
+        const result = await sendOrderToBot({
+          nick: displayName || nick,
+          item: picked,
+          price: priceText,
+          comment: comment || 'Нет'
+        });
+        
+        if(result.ok){
           setOrderMsg({
-            type:'warn',
-            title:'Браузер заблокировал открытие',
-            text:'Нажми кнопку ниже, чтобы открыть Telegram.',
-            actions: [{ label:'Открыть Telegram', onClick: ()=> window.open(url, '_blank', 'noopener,noreferrer') }]
+            type:'ok',
+            title:'Заказ отправлен! ✅',
+            text:'Ями получил твой заказ и скоро свяжется с тобой в Telegram.'
+          });
+          // Очищаем форму
+          $('#comment').value = '';
+          picked = '';
+          $('#picked').textContent = 'Пока ничего';
+        }else{
+          setOrderMsg({
+            type:'error',
+            title:'Ошибка отправки',
+            text:'Не удалось отправить заказ. Попробуй ещё раз или напиши Ями напрямую в Telegram: @YammyTanuki'
           });
         }
       }
