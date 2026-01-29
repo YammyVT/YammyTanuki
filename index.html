@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазинчик Ями — оформление заказов</title>
+  <title>Магазинчик Ями2 — оформление заказов</title>
   <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -945,18 +945,24 @@
       clearPkceState();
       try{ cleanUrlAfterOAuth(); }catch(e){}
       
+      const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       const ua = (navigator.userAgent || '').toLowerCase();
+      
+      // Определяем устройство
       const isAndroid = /android/i.test(ua);
       const isIOS = /iphone|ipad|ipod/i.test(ua);
-      const isMobileDevice = isAndroid || isIOS || /mobile/i.test(ua);
       const isTelegramBrowser = ua.includes('telegram');
       const isInAppBrowser = isTelegramBrowser || ua.includes('instagram') || ua.includes('fbav') || ua.includes('fban');
       
-      const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
+      // Проверяем поддержку PKCE
+      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
       
-      // Для мобильных и in-app браузеров используем Implicit flow
-      if(isInAppBrowser || isMobileDevice){
-        const state = `mobile_${randomString(24)}`;
+      // Проблемные браузеры, где лучше использовать Implicit
+      const looksBlocked = ua.includes('yabrowser') || ua.includes('yandex') || isInAppBrowser;
+      
+      // Для проблемных браузеров или мобильных - используем Implicit flow
+      if(!canPkce || looksBlocked || isAndroid || isIOS){
+        const state = `implicit_${randomString(24)}`;
         const params = new URLSearchParams({
           client_id: TWITCH_CLIENT_ID,
           redirect_uri: redirectUri,
@@ -967,6 +973,7 @@
         
         const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
         
+        // Для Android используем Intent URI чтобы избежать открытия приложения
         if(isAndroid){
           const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
           window.location.href = intentUrl;
@@ -974,29 +981,12 @@
             window.location.href = authUrl;
           }, 500);
         } else {
-          window.location.href = authUrl;
+          window.location.assign(authUrl);
         }
         return;
       }
       
       // Для десктопа используем PKCE (оригинальная рабочая логика)
-      const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
-      
-      // Фоллбэк на Implicit только если браузер не поддерживает PKCE
-      if(!canPkce){
-        const state = `implicit_${randomString(24)}`;
-        const params = new URLSearchParams({
-          client_id: TWITCH_CLIENT_ID,
-          redirect_uri: redirectUri,
-          response_type: 'token',
-          scope: TWITCH_SCOPES.join(' '),
-          state: state
-        });
-        window.location.replace(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
-        return;
-      }
-      
-      // PKCE flow для десктопа
       const state = `pkce_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
