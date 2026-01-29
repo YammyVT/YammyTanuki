@@ -623,7 +623,7 @@
         
         const res = await fetch(TELEGRAM_BOT_API_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({
             nick: nick || 'Не указан',
             item: item || 'Не указано',
