@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазинчик Ями1 — оформление заказов</title>
+  <title>Магазинчик Ями — оформление заказов</title>
   <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -618,6 +618,9 @@
     
     async function sendOrderToBot({nick, item, price, comment}){
       try{
+        console.log('Отправка заказа:', { nick, item, price, comment });
+        console.log('URL:', TELEGRAM_BOT_API_URL);
+        
         const res = await fetch(TELEGRAM_BOT_API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -628,9 +631,24 @@
             comment: comment || 'Нет'
           })
         });
-        const data = await res.json();
+        
+        console.log('Статус ответа:', res.status);
+        
+        const text = await res.text();
+        console.log('Ответ сервера:', text);
+        
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch(e) {
+          console.error('Ошибка парсинга JSON:', e);
+          return { ok: false, error: 'Неверный формат ответа сервера', raw: text };
+        }
+        
+        console.log('Данные:', data);
         return data;
       }catch(e){
+        console.error('Ошибка отправки:', e);
         return { ok: false, error: String(e) };
       }
     }
