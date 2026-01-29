@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Магазинчик Ями2 — оформление заказов</title>
+  <title>Магазинчик Ями — оформление заказов</title>
   <meta name="description" content="Магазинчик Ями — заказывай контент за баллы с клипов. Правила начисления, калькулятор баллов и товары." />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
@@ -954,38 +954,35 @@
       
       const redirectUri = String(TWITCH_REDIRECT_URI || '').trim();
       
-      // Для Telegram и других in-app браузеров используем Implicit flow (без PKCE!)
-      // PKCE ломается через приложение Twitch, Implicit работает стабильнее
+      // Для мобильных и in-app браузеров используем Implicit flow
       if(isInAppBrowser || isMobileDevice){
         const state = `mobile_${randomString(24)}`;
         const params = new URLSearchParams({
           client_id: TWITCH_CLIENT_ID,
           redirect_uri: redirectUri,
-          response_type: 'token', // Implicit flow - токен сразу в hash
+          response_type: 'token',
           scope: TWITCH_SCOPES.join(' '),
           state: state
         });
         
         const authUrl = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
         
-        // Для Android (включая Telegram на Android) используем Intent URI
         if(isAndroid){
           const intentUrl = `intent://id.twitch.tv/oauth2/authorize?${params.toString()}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${encodeURIComponent(authUrl)};end;`;
           window.location.href = intentUrl;
-          
-          // Fallback на обычный URL через 500ms если Intent не сработал
           setTimeout(() => {
             window.location.href = authUrl;
           }, 500);
         } else {
-          // Для iOS (включая Telegram на iOS) просто используем обычный редирект
           window.location.href = authUrl;
         }
         return;
       }
       
-      // Для десктопа используем PKCE
+      // Для десктопа используем PKCE (оригинальная рабочая логика)
       const canPkce = !!(window.crypto && crypto.subtle && crypto.subtle.digest && crypto.getRandomValues);
+      
+      // Фоллбэк на Implicit только если браузер не поддерживает PKCE
       if(!canPkce){
         const state = `implicit_${randomString(24)}`;
         const params = new URLSearchParams({
@@ -995,11 +992,11 @@
           scope: TWITCH_SCOPES.join(' '),
           state: state
         });
-        const url = `https://id.twitch.tv/oauth2/authorize?${params.toString()}`;
-        window.location.replace(url);
+        window.location.replace(`https://id.twitch.tv/oauth2/authorize?${params.toString()}`);
         return;
       }
       
+      // PKCE flow для десктопа
       const state = `pkce_${randomString(24)}`;
       const verifier = randomString(64);
       const challenge = base64UrlEncode(await sha256(verifier));
