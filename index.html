@@ -631,49 +631,45 @@
       const act = document.getElementById('orderMsgActions');
       if(act) act.classList.add('hidden');
     }
-    // ----- Telegram Bot API -----
-    const TELEGRAM_BOT_API_URL = 'https://script.google.com/macros/s/AKfycbzn3wvaFYwSWkopLZP1ueRb52pJnbWM7sB2Ay4DOx3FPPvBQITpaLF-cx2hflnZ10-_Xg/exec';
-    
-    async function sendOrderToBot({nick, item, price, comment}){
+    // ----- Unified Apps Script API (balance + order) -----
+    // Теперь сайт НЕ отправляет заказы напрямую в Telegram и НЕ держит spend-токен.
+    // Всё делает Apps Script через action=order (проверка баланса, списание, Telegram).
+    const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
+    function makeRequestId(){
       try{
-        console.log('Отправка заказа:', { nick, item, price, comment });
-        console.log('URL:', TELEGRAM_BOT_API_URL);
-        
-        const res = await fetch(TELEGRAM_BOT_API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({
-            nick: nick || 'Не указан',
-            item: item || 'Не указано',
-            price: price || '—',
-            comment: comment || 'Нет'
-          })
-        });
-        
-        console.log('Статус ответа:', res.status);
-        
-        const text = await res.text();
-        console.log('Ответ сервера:', text);
-        
-        let data;
-        try {
-          data = JSON.parse(text);
-        } catch(e) {
-          console.error('Ошибка парсинга JSON:', e);
-          return { ok: false, error: 'Неверный формат ответа сервера', raw: text };
-        }
-        
-        console.log('Данные:', data);
-        return data;
+        const a = new Uint8Array(10);
+        crypto.getRandomValues(a);
+        const s = Array.from(a).map(x=>x.toString(16).padStart(2,'0')).join('');
+        return `${Date.now()}_${s}`;
       }catch(e){
-        console.error('Ошибка отправки:', e);
-        return { ok: false, error: String(e) };
+        return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
       }
     }
-    // ----- Google Sheets API (Apps Script) -----
-    const BALANCE_API_URL = 'https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
-    const SPEND_ENABLED = true;
-    const SPEND_TOKEN = 'yammy_spend_v1';
+    async function postOrderToAppsScript({nick, login, display_name, item, comment, price, requestId}){
+      const body = new URLSearchParams();
+      body.set('payload', JSON.stringify({
+        action: 'order',
+        requestId: requestId || null,
+        nick,
+        login,
+        display_name,
+        item,
+        comment,
+        price: Number(price)||0,
+        ts: Date.now()
+      }));
+      const res = await fetch(BALANCE_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body
+      });
+      const txt = await res.text().catch(()=> '');
+      let data = {};
+      try{ data = txt ? JSON.parse(txt) : {}; }catch(e){ data = {}; }
+      if(!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+      if(data && data.ok === false) throw new Error(data.error || data.reason || 'order: ok=false');
+      return data;
+    }
     function normNick(s){ return String(s ?? '').trim().toLowerCase(); }
     function parsePoints(v){
       if(v === null || v === undefined) return NaN;
@@ -689,29 +685,7 @@
       if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
       return json.data;
     }
-    async function spendPoints({nick, amount, item, comment}={}){
-      const cleanNick = String(nick || '').trim();
-      const a = Number(amount);
-      if(!cleanNick) return { ok:false, reason:'nonick' };
-      if(!Number.isFinite(a) || a <= 0) return { ok:false, reason:'badamount' };
-      const payload = {
-        action: 'spend',
-        token: SPEND_TOKEN,
-        nick: cleanNick,
-        amount: a,
-        item: String(item || '').slice(0, 200),
-        comment: String(comment || '').slice(0, 500),
-        at: Date.now(),
-      };
-      const res = await fetch(BALANCE_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload)
-      });
-      const txt = await res.text();
-      try{ return JSON.parse(txt); }
-      catch(e){ return { ok:false, reason:'badjson', raw: txt.slice(0,200) }; }
-    }
+    // spendPoints() больше не нужен: списание делает Apps Script action=order
     async function findBalanceByNick(nick){
       const needle = normNick(nick);
       if(!needle) return { found:false, reason:'empty' };
@@ -882,10 +856,6 @@
     function getKnownNick(){
       const a = getAuth();
       return String(a?.login || '').trim();
-    }
-    function getKnownDisplayName(){
-      const a = getAuth();
-      return String(a?.display_name || '').trim();
     }
     function getKnownDisplayName(){
       const a = getAuth();
@@ -1150,48 +1120,28 @@
       showOrderProcessing('⏳ Обрабатываем заказ...', 'Проверяем баланс и отправляем в Telegram');
       
       try{
-        // СНАЧАЛА проверяем баланс (если нужно списание)
-        if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
-          showOrderProcessing('💰 Проверяем баланс...', 'Убеждаемся что хватает баллов');
-          const res = await findBalanceByNick(nick);
-          if(!res.found){
-            showOrderError('У вас 0 баллов 😢', 'Похоже, тебя нет в таблице. Напиши Ями, чтобы тебя добавили.');
-            return;
-          }
-          const currentBalance = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : 0;
-          if(currentBalance < spend){
-            showOrderError('Недостаточно баллов 😢', `Для этого заказа нужно ${spend} 🪙, а у тебя ${currentBalance} 🪙.`);
-            return;
-          }
-        }
+        // Баланс и списание проверяет Apps Script (action=order)
         
-        // Если баланса достаточно - отправляем в Telegram
-        showOrderProcessing('📨 Отправляем в Telegram...', 'Ваш заказ отправляется Ями');
+        // Отправка заказа через Apps Script (action=order)
+        showOrderProcessing('📨 Отправляем заказ...', 'Проверяем баланс, списываем и отправляем в Telegram');
         const comment = ($('#comment').value || '').trim();
-        const priceText = Number.isFinite(spend) && spend > 0 ? `${spend} 🪙` : '—';
-        
-        const result = await sendOrderToBot({
+
+        const reqId = makeRequestId();
+        const result = await postOrderToAppsScript({
           nick: displayName || nick,
+          login: nick,
+          display_name: displayName || nick,
           item: picked,
-          price: priceText,
-          comment: comment || 'Нет'
+          comment: comment || '',
+          price: Number.isFinite(spend) ? spend : 0,
+          requestId: reqId
         });
-        
-        if(!result.ok){
-          showOrderError('Ошибка отправки', 'Не удалось отправить заказ. Попробуй ещё раз или напиши Ями напрямую в Telegram: @YammyTanuki');
-          return;
-        }
-        
-        // Если отправка успешна - списываем баллы
-        if(SPEND_ENABLED && Number.isFinite(spend) && spend > 0){
-          showOrderProcessing('💰 Списываем баллы...', 'Обновляем ваш баланс');
-          const spendRes = await spendPoints({ nick, amount: spend, item: picked, comment });
-          if(spendRes.ok){
-            await refreshBalanceForAuthed();
-          }else{
-            // Если списание провалилось (но отправка успешна) - не критично, Ями проверит вручную
-            console.warn('Failed to spend points:', spendRes);
-          }
+
+        // обновим баланс на экране (если сервер вернул balance)
+        if(result && (result.balance !== undefined && result.balance !== null)){
+          await refreshBalanceForAuthed();
+        }else{
+          await refreshBalanceForAuthed();
         }
         
         // Успех!
