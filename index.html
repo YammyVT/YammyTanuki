@@ -658,15 +658,17 @@
         price: Number(price)||0,
         ts: Date.now()
       }));
+
       const res = await fetch(BALANCE_API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
         body
       });
+
       const txt = await res.text().catch(()=> '');
       let data = {};
       try{ data = txt ? JSON.parse(txt) : {}; }catch(e){ data = {}; }
-      if(!res.ok) throw new Error(txt || `HTTP ${res.status}`);
+      if(!res.ok) throw new Error(data.error || txt || `HTTP ${res.status}`);
       if(data && data.ok === false) throw new Error(data.error || data.reason || 'order: ok=false');
       return data;
     }
@@ -679,10 +681,16 @@
       return Number.isFinite(n) ? n : NaN;
     }
     async function fetchBalances(){
-      const res = await fetch(BALANCE_API_URL, { cache: 'no-store' });
-      if(!res.ok) throw new Error('API request failed');
-      const json = await res.json();
-      if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error('Bad API payload');
+      // ВАЖНО: для Yammy Apps Script топ/все данные отдаются через action=getAllData
+      const url = new URL(BALANCE_API_URL);
+      url.searchParams.set('action', 'getAllData');
+
+      const res = await fetch(url.toString(), { cache: 'no-store' });
+      const txt = await res.text().catch(()=> '');
+      let json = {};
+      try{ json = txt ? JSON.parse(txt) : {}; }catch(e){ json = {}; }
+      if(!res.ok) throw new Error(json.error || txt || 'API request failed');
+      if(!json || json.ok !== true || !Array.isArray(json.data)) throw new Error(json.error || 'Bad API payload');
       return json.data;
     }
     // spendPoints() больше не нужен: списание делает Apps Script action=order
