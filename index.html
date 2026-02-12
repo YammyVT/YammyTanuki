@@ -212,6 +212,7 @@
             <div class="mt-6 flex flex-wrap gap-3">
               <a href="#rules" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">📜 Правила + калькулятор</a>
               <a href="#goods" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">🛍️ Товары</a>
+              <button id="btnOpenTop" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">🏆 Топ и статистика</button>
               <a href="#order" class="btn rounded-2xl px-5 py-3 text-sm font-semibold">✉️ Как оформить заказ</a>
             </div>
           </div>
@@ -379,6 +380,14 @@
                     <textarea id="comment" rows="3" class="mt-2 w-full rounded-2xl bg-black/20 border border-white/20 px-4 py-3 text-white placeholder-white/50 outline-none focus:border-white/40" placeholder="Например: жанр/настроение/какая именно игра..."></textarea>
                   </div>
                   <button id="placeOrder" class="btn mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">Заказать</button>
+
+                  <div class="mt-4 rounded-2xl bg-black/12 border border-white/12 p-4">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="text-xs text-white/70">История заказов (на этом устройстве)</div>
+                      <button id="btnClearHistory" class="btn rounded-xl px-3 py-2 text-xs font-semibold">Очистить</button>
+                    </div>
+                    <div id="orderHistory" class="mt-3 grid gap-2"></div>
+                  </div>
                 </div>
                 <div id="orderProcessing" class="hidden text-center py-8">
                   <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-white/20 border-t-white/90"></div>
@@ -411,11 +420,106 @@
             <div class="font-bold text-white/90">✨ Магазинчик Ями</div>
             <div class="text-xs">С Любовью ❤️</div>
           </div>
-          <button id="toTop" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Наверх ↑</button>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnOpenTopFooter" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">🏆 Топ</button>
+            <button id="toTop" class="btn rounded-2xl px-4 py-3 text-sm font-semibold">Наверх ↑</button>
+          </div>
         </div>
       </div>
     </footer>
   </main>
+
+  <!-- TOP MODAL -->
+  <div id="topModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/45 backdrop-blur-sm" data-close-top="1"></div>
+    <div class="relative mx-auto max-w-6xl px-4 sm:px-6 pt-10 sm:pt-14 pb-10">
+      <div class="glass glow rounded-3xl p-5 sm:p-7 border border-white/20">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <div class="text-xs text-white/70">🏆 Топ и статистика</div>
+            <div class="mt-1 text-xl sm:text-2xl font-extrabold">Рейтинг по баллам</div>
+            <div class="mt-1 text-sm text-white/75">Данные обновляются автоматически при открытии. Можно обновить вручную.</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btnLoadTop" class="btn rounded-xl px-3 py-2 text-sm font-semibold">Обновить</button>
+            <button class="btn rounded-xl px-3 py-2 text-sm font-semibold" data-close-top="1">Закрыть</button>
+          </div>
+        </div>
+
+        <div class="mt-4 rounded-2xl bg-black/12 border border-white/12 p-4">
+          <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
+            <div class="min-w-0">
+              <div id="topStatus" class="text-sm text-white/80">Открой модалку — таблица загрузится автоматически.</div>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <input id="topSearch" type="text" class="w-full sm:w-64 rounded-2xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none focus:border-white/40 text-sm" placeholder="Поиск по нику…" />
+              <select id="topSort" class="rounded-2xl bg-black/20 border border-white/20 px-4 py-2 text-white outline-none focus:border-white/40 text-sm">
+                <option value="points" selected>Сорт: Баллы</option>
+                <option value="clips">Сорт: Клипы</option>
+                <option value="chat">Сорт: Чат</option>
+                <option value="online">Сорт: Онлайн</option>
+              </select>
+              <button id="btnShowMe" class="btn rounded-2xl px-4 py-2 text-sm font-semibold">Показать меня</button>
+            </div>
+          </div>
+
+          <div id="topLoading" class="mt-3 hidden">
+            <div class="flex items-center justify-between gap-3">
+              <div class="text-sm font-semibold text-white/90">Идёт загрузка данных…</div>
+              <div class="text-xs text-white/70">обычно 1–5 сек</div>
+            </div>
+            <div class="mt-2 h-2 rounded-full bg-white/10 overflow-hidden">
+              <div class="h-full w-1/3 bg-white/70 animate-pulse"></div>
+            </div>
+          </div>
+
+          <div class="mt-3 overflow-auto max-h-[52vh]">
+            <table class="min-w-full text-sm" id="topTable" hidden>
+              <thead class="text-white/70">
+                <tr>
+                  <th class="text-left py-2 pr-3">#</th>
+                  <th class="text-left py-2 pr-3">Никнейм</th>
+                  <th class="text-right py-2 pr-3">Баланс</th>
+                  <th class="text-right py-2 pr-3">Клипы</th>
+                  <th class="text-right py-2 pr-3">Чат</th>
+                  <th class="text-right py-2 pr-3">Онлайн</th>
+                  <th class="text-right py-2 pr-3">Макс. бонус</th>
+                </tr>
+              </thead>
+              <tbody id="topTbody" class="text-white/90"></tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 rounded-2xl bg-black/12 border border-white/12 p-4">
+            <div class="font-extrabold text-white/90">Что означают колонки</div>
+            <div class="mt-2 grid sm:grid-cols-2 lg:grid-cols-5 gap-2 text-sm text-white/80 leading-relaxed">
+              <div class="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
+                <div class="font-semibold">Баланс</div>
+                <div class="text-white/65 text-xs">Доступные баллы: начислено − списано.</div>
+              </div>
+              <div class="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
+                <div class="font-semibold">Клипы</div>
+                <div class="text-white/65 text-xs">Сколько клипов принято.</div>
+              </div>
+              <div class="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
+                <div class="font-semibold">Чат</div>
+                <div class="text-white/65 text-xs">+50 🪙 за каждые 100 сообщений.</div>
+              </div>
+              <div class="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
+                <div class="font-semibold">Онлайн</div>
+                <div class="text-white/65 text-xs">+5 🪙 за каждые 10 минут активности.</div>
+              </div>
+              <div class="rounded-2xl bg-white/5 border border-white/10 px-3 py-2">
+                <div class="font-semibold">Макс. бонус</div>
+                <div class="text-white/65 text-xs">Максимальный % бонуса по клипам.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // --- In-app browsers fallback ---
     try{
@@ -515,7 +619,103 @@
       });
     }
     // ----- Products -----
+    const LS_KEYS = {
+      orders: 'yammy.orders.history.v1',
+      balance: 'yammy.balance.v1'
+    };
+
+    function fmtCoinsInt(x){
+      const n = Number(x);
+      if(!Number.isFinite(n)) return '0';
+      return String(Math.floor(n));
+    }
+
+    function loadOrderHistory(){
+      try{
+        const raw = localStorage.getItem(LS_KEYS.orders);
+        const arr = raw ? JSON.parse(raw) : [];
+        return Array.isArray(arr) ? arr : [];
+      }catch(e){ return []; }
+    }
+
+    function saveOrderHistory(arr){
+      try{ localStorage.setItem(LS_KEYS.orders, JSON.stringify(arr || [])); }catch(e){}
+    }
+
+    function pushOrderHistory(item){
+      const arr = loadOrderHistory();
+      arr.unshift(item);
+      saveOrderHistory(arr.slice(0, 5));
+      renderOrderHistory();
+    }
+
+    function renderOrderHistory(){
+      const host = document.getElementById('orderHistory');
+      if(!host) return;
+      const arr = loadOrderHistory();
+      if(!arr.length){
+        host.innerHTML = `<div class="text-xs text-white/70">История пуста. После успешного заказа тут появятся последние заявки.</div>`;
+        return;
+      }
+      host.innerHTML = arr.map(x => {
+        const d = new Date(x.ts || Date.now());
+        const when = isNaN(d.getTime()) ? '' : d.toLocaleString('ru-RU', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+        return `
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-3">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="font-semibold break-words">${escapeHtml(x.title || '—')}</div>
+                <div class="mt-0.5 text-xs text-white/65">${escapeHtml(x.nick || '')}${when ? ` • ${escapeHtml(when)}` : ''}</div>
+              </div>
+              <div class="shrink-0 font-extrabold">${fmtCoinsInt(x.price)} 🪙</div>
+            </div>
+            <div class="mt-2 flex gap-2">
+              <button class="btn btn-copy-order rounded-xl px-3 py-2 text-xs font-semibold" data-copy="${escapeAttr(x.text || '')}">Копировать</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      host.querySelectorAll('.btn-copy-order').forEach(b => b.addEventListener('click', async ()=>{
+        const t = b.getAttribute('data-copy') || '';
+        await copyText(t);
+        b.textContent = 'Скопировано';
+        setTimeout(()=> b.textContent = 'Копировать', 900);
+      }));
+    }
+
+    function escapeHtml(str){
+      return String(str ?? '').replace(/[&<>"']/g, (c)=>({
+        '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+      }[c]));
+    }
+    function escapeAttr(str){
+      return escapeHtml(str).replace(/\n/g, '&#10;');
+    }
+
+    function getKnownBalance(){
+      try{
+        const raw = localStorage.getItem(LS_KEYS.balance);
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      }catch(e){ return null; }
+    }
+
+    function setKnownBalance(n){
+      try{ localStorage.setItem(LS_KEYS.balance, String(Number(n)||0)); }catch(e){}
+    }
+
+    function computeAffordChip(balance, price){
+      if(!getKnownNick()) return { text: 'Войди через Twitch, чтобы проверить баланс', cls: 'bg-white/8 border-white/18 text-white/80' };
+      if(balance === null) return { text: 'Баланс не загружен', cls: 'bg-white/8 border-white/18 text-white/80' };
+      const p = Number(price);
+      if(!Number.isFinite(p) || p <= 0) return { text: 'Можно оформить', cls: 'bg-emerald-500/10 border-emerald-200/25 text-emerald-100' };
+      if(balance >= p) return { text: `Хватает (${fmtCoinsInt(balance)} 🪙)`, cls: 'bg-emerald-500/10 border-emerald-200/25 text-emerald-100' };
+      return { text: `Не хватает (${fmtCoinsInt(p-balance)} 🪙)`, cls: 'bg-rose-500/10 border-rose-200/25 text-rose-100' };
+    }
+
     const PRODUCTS = [
+
       { title: '🥨 Закуски (Мемы)', badge: 'юмор', note: 'Лёгкий контент для настроения ✨', options: [ { label: '20 мемов', price: 200 }, { label: '45 мемов', price: 400 } ] },
       { title: '🍿 Основное блюдо (Кино и Аниме)', badge: 'до 2 часов', note: 'Если зайдёт — смотрим фулл.', options: [ { label: 'Фильм / Мультфильм', price: 750 }, { label: 'Аниме / Сериал / Телешоу', price: 750 } ] },
       { title: '🌶️ На десерт (18+)', badge: '18+', note: 'На твой/мой выбор.', options: [ { label: 'Хентай аниме / Порно‑игры на Boosty', price: 1000 } ] },
@@ -557,6 +757,18 @@
         `).join('');
         const actions = document.createElement('div');
         actions.className = 'mt-4 flex flex-wrap gap-2';
+
+        // afford chip (depends on login + loaded balance)
+        const bal = getKnownBalance();
+        const minPrice = (()=>{
+          const nums = product.options.map(o=>Number(o.price)).filter(n=>Number.isFinite(n) && n>0);
+          return nums.length ? Math.min(...nums) : 0;
+        })();
+        const chip = computeAffordChip(bal, minPrice);
+        const afford = document.createElement('div');
+        afford.className = `mt-3 rounded-2xl border px-3 py-2 text-xs ${chip.cls}`;
+        afford.textContent = chip.text;
+
         product.options.forEach((opt, idx)=>{
           const b = document.createElement('button');
           b.className = 'btn rounded-2xl px-4 py-2 text-sm font-semibold';
@@ -572,6 +784,7 @@
         card.appendChild(head);
         card.appendChild(list);
         card.appendChild(actions);
+        card.appendChild(afford);
         card.appendChild(note);
         grid.appendChild(card);
       }
@@ -908,15 +1121,20 @@
         const res = await findBalanceByNick(login);
         if(res.found){
           const pts = Number.isFinite(res.pointsNum) ? Math.round(res.pointsNum) : res.points;
+          setKnownBalance(Number.isFinite(res.pointsNum) ? res.pointsNum : (parsePoints(res.points) || 0));
           if(out) out.textContent = `${displayName} — ${pts} 🪙`;
           if(hint) hint.textContent = 'Если баллы не совпадают — проверь обновление таблицы.';
         }else{
+          setKnownBalance(0);
           if(out) out.textContent = `${displayName} — 0 🪙 😢`;
           if(hint) hint.textContent = 'У вас 0 баллов 😢';
         }
       }catch(e){
         if(out) out.textContent = 'Ошибка загрузки.';
         if(hint) hint.textContent = 'Проверь доступ Apps Script (Deploy → Web app → доступ: "Все").';
+      } finally {
+        // обновим afford-чипы в товарах
+        try{ renderGoods(); wireGoodsButtons(); }catch(err){}
       }
     }
     async function handleTwitchOAuthCallback(){
@@ -1147,10 +1365,21 @@
 
         // обновим баланс на экране (если сервер вернул balance)
         if(result && (result.balance !== undefined && result.balance !== null)){
+          setKnownBalance(Number(result.balance)||0);
           await refreshBalanceForAuthed();
         }else{
           await refreshBalanceForAuthed();
         }
+
+        // история заказов
+        const localText = `📦 Новый заказ:\nNick: ${displayName || nick}\nТовар: ${picked}\nКомментарий: ${comment || '-'}\nСтоимость: ${Number.isFinite(spend) ? spend : 0} 🪙`;
+        pushOrderHistory({
+          ts: Date.now(),
+          nick: displayName || nick,
+          title: picked,
+          price: Number.isFinite(spend) ? spend : 0,
+          text: localText
+        });
         
         // Успех!
         showOrderSuccess();
@@ -1158,6 +1387,8 @@
         $('#comment').value = '';
         picked = '';
         $('#picked').textContent = 'Пока ничего';
+        renderGoods();
+        wireGoodsButtons();
         
       }catch(e){
         showOrderError('Ошибка связи', 'Не удалось связаться с сервером. Попробуй ещё раз.');
@@ -1275,6 +1506,159 @@
         setInterval(()=>{ for(let i=0;i<2;i++) addStar(); }, 950);
       }
     }
+    // ===== TOP (modal table) =====
+    function pickField(obj, keys){
+      for(const k of keys){
+        if(obj && obj[k] !== undefined && obj[k] !== null) return obj[k];
+      }
+      return null;
+    }
+    function toNum(x){
+      const n = Number(String(x ?? '').replace(',', '.'));
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    const topState = { rows: [], filtered: [], sort: 'points', query: '' };
+    let topLoadingInFlight = false;
+
+    function currentNickKey(){
+      const a = getAuth();
+      return String(a?.login || '').trim().toLowerCase();
+    }
+
+    function normalizeTopRows(rows){
+      return (rows || []).map(r => {
+        const nick = String(pickField(r, ['Никнейм','Ник','nick','Nick','name','Name']) ?? '').trim();
+        const clips = toNum(pickField(r, ['Всего клипов','Клипы','Клипов','clips','Clips']));
+        const points = toNum(pickField(r, ['Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total']));
+        const chatPts = toNum(pickField(r, ['Баллы чата','Чат','chat','chatPts','Chat points']));
+        const watchPts = toNum(pickField(r, ['Баллы онлайна','Онлайн','online','watch','watchPts','Watch points']));
+        const maxBonus = pickField(r, ['Макс. бонус (%)','Макс. бонус','Бонус','bonus','Bonus','maxBonus']);
+        return { nick, points, clips, chatPts, watchPts, maxBonusRaw: maxBonus };
+      }).filter(x => x.nick);
+    }
+
+    function applyTopFilterAndSort(){
+      const q = String(topState.query || '').trim().toLowerCase();
+      const sort = topState.sort || 'points';
+      let arr = topState.rows.slice();
+      if(q) arr = arr.filter(r => r.nick.toLowerCase().includes(q));
+
+      const cmp = {
+        points: (a,b) => (b.points - a.points) || (b.clips - a.clips) || a.nick.localeCompare(b.nick, 'ru'),
+        clips: (a,b) => (b.clips - a.clips) || (b.points - a.points) || a.nick.localeCompare(b.nick, 'ru'),
+        chat: (a,b) => (b.chatPts - a.chatPts) || (b.points - a.points) || a.nick.localeCompare(b.nick, 'ru'),
+        online: (a,b) => (b.watchPts - a.watchPts) || (b.points - a.points) || a.nick.localeCompare(b.nick, 'ru')
+      }[sort] || ((a,b)=> (b.points-a.points));
+
+      arr.sort(cmp);
+      topState.filtered = arr;
+    }
+
+    function renderTopTable(){
+      const status = $('#topStatus');
+      const table = $('#topTable');
+      const tbody = $('#topTbody');
+      if(!status || !table || !tbody) return;
+
+      applyTopFilterAndSort();
+      const arr = topState.filtered;
+      if(!arr.length){
+        table.hidden = true;
+        status.textContent = topState.rows.length ? 'Ничего не найдено по фильтру.' : 'Данных пока нет.';
+        return;
+      }
+
+      const me = currentNickKey();
+
+      tbody.innerHTML = arr.slice(0, 50).map((r, i) => {
+        const isMe = me && r.nick.toLowerCase() === me;
+        const maxB = (r.maxBonusRaw === null || r.maxBonusRaw === undefined) ? '' : String(r.maxBonusRaw);
+        return `
+          <tr class="border-t border-white/10 ${isMe ? 'bg-white/10' : ''}" data-nick="${escapeHtml(r.nick.toLowerCase())}">
+            <td class="py-2 pr-3 text-white/60">${i+1}</td>
+            <td class="py-2 pr-3 font-semibold break-words">${escapeHtml(r.nick)}${isMe ? ' <span class="text-xs text-white/80 font-bold">(ты)</span>' : ''}</td>
+            <td class="py-2 pr-3 text-right font-extrabold">${fmtCoinsInt(r.points)}</td>
+            <td class="py-2 pr-3 text-right">${fmtCoinsInt(r.clips)}</td>
+            <td class="py-2 pr-3 text-right">${fmtCoinsInt(r.chatPts)}</td>
+            <td class="py-2 pr-3 text-right">${fmtCoinsInt(r.watchPts)}</td>
+            <td class="py-2 pr-3 text-right text-white/80">${escapeHtml(maxB)}</td>
+          </tr>
+        `;
+      }).join('');
+
+      status.textContent = `Показаны топ-50 (найдено строк: ${arr.length}).`;
+      table.hidden = false;
+    }
+
+    async function loadTop(){
+      const status = $('#topStatus');
+      const table = $('#topTable');
+      const tbody = $('#topTbody');
+      const btn = $('#btnLoadTop');
+      const loading = $('#topLoading');
+
+      if(!status || !table || !tbody || !btn) return;
+      if(topLoadingInFlight) return;
+
+      topLoadingInFlight = true;
+      btn.disabled = true;
+      btn.textContent = 'Загрузка…';
+      status.textContent = '';
+      if(loading) loading.classList.remove('hidden');
+      table.hidden = true;
+      tbody.innerHTML = '';
+
+      const ctrl = new AbortController();
+      const tmr = setTimeout(() => ctrl.abort(), 15000);
+
+      try{
+        const url = new URL(BALANCE_API_URL);
+        url.searchParams.set('action', 'getAllData');
+
+        const resp = await fetch(url.toString(), { method:'GET', signal: ctrl.signal, cache:'no-store' });
+        const data = await resp.json().catch(()=> ({}));
+        if(!resp.ok) throw new Error(data.error || `HTTP ${resp.status}`);
+        if(data.ok === false) throw new Error(data.error || 'ok=false');
+
+        const rows = Array.isArray(data.data) ? data.data : [];
+        topState.rows = normalizeTopRows(rows);
+
+        if(!topState.rows.length){
+          status.textContent = 'Данных пока нет.';
+          table.hidden = true;
+          return;
+        }
+
+        await new Promise(requestAnimationFrame);
+        renderTopTable();
+      }catch(e){
+        const msg = (e && e.name === 'AbortError') ? 'Таймаут: сервер долго отвечает. Попробуй ещё раз.' : (e.message || String(e));
+        status.textContent = `Ошибка загрузки: ${msg}`;
+        table.hidden = true;
+        topState.rows = [];
+        topState.filtered = [];
+      }finally{
+        clearTimeout(tmr);
+        topLoadingInFlight = false;
+        if(loading) loading.classList.add('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Обновить';
+      }
+    }
+
+    function openTop(){
+      $('#topModal')?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      setTimeout(()=> $('#btnLoadTop')?.focus(), 0);
+      loadTop();
+    }
+
+    function closeTop(){
+      $('#topModal')?.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
     document.getElementById('toTop')?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
     function initCriticalUI(){
       initCalculator();
@@ -1282,6 +1666,35 @@
     }
     function initAllAfterDom(){
       initBalanceUI();
+      renderOrderHistory();
+
+      // top modal
+      $('#btnOpenTop')?.addEventListener('click', openTop);
+      $('#btnOpenTopFooter')?.addEventListener('click', openTop);
+      $('#btnLoadTop')?.addEventListener('click', loadTop);
+      $('#topSearch')?.addEventListener('input', (e)=>{ topState.query = e.target.value || ''; renderTopTable(); });
+      $('#topSort')?.addEventListener('change', (e)=>{ topState.sort = e.target.value || 'points'; renderTopTable(); });
+      $('#btnShowMe')?.addEventListener('click', ()=>{
+        const me = currentNickKey();
+        if(!me){ $('#topStatus').textContent = 'Сначала войди через Twitch, чтобы подсветить твою строку.'; return; }
+        const row = $(`#topTbody tr[data-nick="${CSS.escape(me)}"]`);
+        if(row) row.scrollIntoView({behavior:'smooth', block:'center'});
+        else $('#topStatus').textContent = 'Твоей строки нет в текущем списке (возможно, фильтр мешает или ты не в топ-50).';
+      });
+
+      $('#topModal')?.addEventListener('click', (e)=>{
+        const t = e.target;
+        if(t && t.getAttribute && t.getAttribute('data-close-top') === '1') closeTop();
+      });
+
+      window.addEventListener('keydown', (e)=>{
+        if(e.key === 'Escape' && !$('#topModal')?.classList.contains('hidden')) closeTop();
+      });
+
+      $('#btnClearHistory')?.addEventListener('click', ()=>{
+        saveOrderHistory([]);
+        renderOrderHistory();
+      });
     }
     if(document.readyState === 'loading'){
       document.addEventListener('DOMContentLoaded', ()=>{ initCriticalUI(); initAllAfterDom(); }, {once:true});
