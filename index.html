@@ -1700,7 +1700,9 @@
         if(me){
           const row = arr.find(x => x.nick.toLowerCase() === me);
           if(row){
-            if(bEl) bEl.textContent = fmtCoinsInt(row.points);
+            // "Ваш баланс" берём именно из колонки "Баланс" (доступно к трате)
+            const bal = toNum(pickField(row.raw, ['Баланс','баланс','Balance','balance']));
+            if(bEl) bEl.textContent = fmtCoinsInt(bal);
             box?.classList.remove('hidden');
           }else{
             box?.classList.add('hidden');
