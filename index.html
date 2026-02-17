@@ -453,9 +453,6 @@
               <div id="myTopBalance" class="mt-2 text-sm text-white/85 hidden">
                 <span class="text-white/70">Ваш баланс:</span>
                 <span class="font-extrabold" id="myTopBalanceValue">—</span> 🪙
-                <span class="text-white/60">•</span>
-                <span class="text-white/70">Начислено за всё время:</span>
-                <span class="font-extrabold" id="myTopEarnedValue">—</span> 🪙
               </div>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -780,7 +777,7 @@
       }
 
       // 2) Ask amount
-      const amountStr = prompt(`Сколько списать у ${targetNick}? (только число)`);
+      const amountStr = prompt(`Сколько вычесть у ${targetNick}? (можно больше текущего баланса — уйдёт в минус. Только число)`);
       if(!amountStr) return;
       const amount = Number(String(amountStr).replace(',', '.'));
       if(!Number.isFinite(amount) || amount <= 0){
@@ -1651,9 +1648,9 @@
       return (rows || []).map(r => {
         const nick = String(pickField(r, ['Никнейм','Ник','nick','Nick','name','Name']) ?? '').trim();
         const clips = toNum(pickField(r, ['Всего клипов','Клипы','Клипов','clips','Clips']));
-        // points = доступный баланс (если Apps Script отдаёт Баланс), иначе fallback на Итоговые баллы
-        const points = toNum(pickField(r, ['Баланс','баланс','Balance','balance','Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total']));
-        const earned = toNum(pickField(r, ['Начислено','Начислено всего','Earned','earned','totalEarned','earned_total','Всего начислено','Итоговые баллы (начислено)']));
+        // points = отображаемый "Баланс" в топе: по просьбе берем из "Итоговые баллы"
+        // (то, что у вас сейчас считается основной колонкой баланса в таблице)
+        const points = toNum(pickField(r, ['Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total','Баланс','баланс','Balance','balance']));
         const chatPts = toNum(pickField(r, ['Баллы чата','Чат','chat','chatPts','Chat points']));
         const watchPts = toNum(pickField(r, ['Баллы онлайна','Онлайн','online','watch','watchPts','Watch points']));
         const maxBonus = pickField(r, ['Макс. бонус (%)','Макс. бонус','Бонус','bonus','Bonus','maxBonus']);
@@ -1700,13 +1697,10 @@
       try{
         const box = $('#myTopBalance');
         const bEl = $('#myTopBalanceValue');
-        const eEl = $('#myTopEarnedValue');
         if(me){
           const row = arr.find(x => x.nick.toLowerCase() === me);
           if(row){
             if(bEl) bEl.textContent = fmtCoinsInt(row.points);
-            // earned: если Apps Script не отдаёт отдельное поле — покажем как минимум "—"
-            if(eEl) eEl.textContent = (Number.isFinite(Number(row.earned)) && Number(row.earned) > 0) ? fmtCoinsInt(row.earned) : '—';
             box?.classList.remove('hidden');
           }else{
             box?.classList.add('hidden');
