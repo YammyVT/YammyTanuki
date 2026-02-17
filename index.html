@@ -484,6 +484,7 @@
                   <th class="text-right py-2 pr-3">Чат</th>
                   <th class="text-right py-2 pr-3">Онлайн</th>
                   <th class="text-right py-2 pr-3">Макс. бонус</th>
+                  <th class="text-right py-2 pr-3" id="thDeduct" hidden>Вычесть</th>
                 </tr>
               </thead>
               <tbody id="topTbody" class="text-white/90"></tbody>
@@ -709,6 +710,98 @@
     }
     function escapeAttr(str){
       return escapeHtml(str).replace(/\n/g, '&#10;');
+    }
+
+    // ===== Admin (safe) =====
+    const ADMIN_LOGINS = ['zakslmv','yammytanuki'];
+    const LS_ADMIN_TOKEN = 'yammy.admin.token.v1';
+
+    function isAdminUser(){
+      const a = getAuth();
+      const login = String(a?.login || '').trim().toLowerCase();
+      return !!login && ADMIN_LOGINS.includes(login);
+    }
+
+    function getAdminTokenLocal(){
+      try{ return String(localStorage.getItem(LS_ADMIN_TOKEN) || '').trim(); }catch(e){ return ''; }
+    }
+
+    function setAdminTokenLocal(t){
+      try{ localStorage.setItem(LS_ADMIN_TOKEN, String(t||'').trim()); }catch(e){}
+    }
+
+    async function adminDeduct({targetNick, amount, reason}){
+      const a = getAuth();
+      const login = String(a?.login || '').trim();
+      const adminToken = getAdminTokenLocal();
+      if(!isAdminUser()) throw new Error('not_admin');
+      if(!adminToken) throw new Error('admin_token_missing');
+
+      const body = new URLSearchParams();
+      body.set('payload', JSON.stringify({
+        action: 'adminDeduct',
+        login,
+        adminToken,
+        targetNick,
+        amount: Number(amount)||0,
+        reason: String(reason||'')
+      }));
+
+      const res = await fetch(BALANCE_API_URL, {
+        method:'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body
+      });
+
+      const txt = await res.text().catch(()=> '');
+      let data = {};
+      try{ data = txt ? JSON.parse(txt) : {}; }catch(e){ data = {}; }
+      if(!res.ok) throw new Error(data.error || txt || `HTTP ${res.status}`);
+      if(data && data.ok === false) throw new Error(data.error || data.reason || 'adminDeduct: ok=false');
+      return data;
+    }
+
+    async function openDeductFlow(targetNick){
+      if(!isAdminUser()) return;
+
+      // 1) Ensure admin token saved locally
+      let token = getAdminTokenLocal();
+      if(!token){
+        token = prompt('Админ-токен не задан. Вставь админ-токен (он хранится только на этом устройстве):');
+        if(!token) return;
+        setAdminTokenLocal(token);
+      }
+
+      // 2) Ask amount
+      const amountStr = prompt(`Сколько списать у ${targetNick}? (только число)`);
+      if(!amountStr) return;
+      const amount = Number(String(amountStr).replace(',', '.'));
+      if(!Number.isFinite(amount) || amount <= 0){
+        alert('Некорректная сумма');
+        return;
+      }
+
+      // 3) Reason
+      const reason = prompt('Причина/комментарий (не обязательно):') || '';
+
+      // 4) Send
+      try{
+        await adminDeduct({targetNick, amount, reason});
+        alert('Готово. Баллы списаны.');
+        // refresh top and my balance
+        loadTop();
+        refreshBalanceForAuthed();
+      }catch(e){
+        const msg = e?.message || String(e);
+        if(msg === 'admin_token_missing'){
+          alert('Нужен админ-токен.');
+        }else if(msg === 'bad_admin_token'){
+          localStorage.removeItem(LS_ADMIN_TOKEN);
+          alert('Неверный админ-токен. Введи заново.');
+        }else{
+          alert('Ошибка: ' + msg);
+        }
+      }
     }
 
     function getKnownBalance(){
@@ -1409,7 +1502,7 @@
         wireGoodsButtons();
         
       }catch(e){
-        showOrderError('Ошибка связи', 'Не удалось связаться с сервером. Попробуй ещё раз.');
+        showOrderError('Ошибка связи', String(e?.message || e || 'Не удалось связаться с сервером. Попробуй ещё раз.'));
         console.error('Order error:', e);
       }
     });
@@ -1589,9 +1682,14 @@
 
       const me = currentNickKey();
 
+      const isAdmin = isAdminUser();
+      const thDeduct = document.getElementById('thDeduct');
+      if(thDeduct) thDeduct.hidden = !isAdmin;
+
       tbody.innerHTML = arr.slice(0, 50).map((r, i) => {
         const isMe = me && r.nick.toLowerCase() === me;
         const maxB = (r.maxBonusRaw === null || r.maxBonusRaw === undefined) ? '' : String(r.maxBonusRaw);
+        const deductBtn = isAdmin ? `<button class="btn btn-deduct rounded-xl px-3 py-1.5 text-xs font-semibold" data-deduct="${escapeAttr(r.nick)}">Вычесть</button>` : '';
         return `
           <tr class="border-t border-white/10 ${isMe ? 'bg-white/10' : ''}" data-nick="${escapeHtml(r.nick.toLowerCase())}">
             <td class="py-2 pr-3 text-white/60">${i+1}</td>
@@ -1601,9 +1699,18 @@
             <td class="py-2 pr-3 text-right">${fmtCoinsInt(r.chatPts)}</td>
             <td class="py-2 pr-3 text-right">${fmtCoinsInt(r.watchPts)}</td>
             <td class="py-2 pr-3 text-right text-white/80">${escapeHtml(maxB)}</td>
+            <td class="py-2 pr-3 text-right" ${isAdmin ? '' : 'hidden'}>${deductBtn}</td>
           </tr>
         `;
       }).join('');
+
+      // wire deduct buttons
+      if(isAdmin){
+        tbody.querySelectorAll('.btn-deduct').forEach(btn => btn.addEventListener('click', ()=>{
+          const targetNick = btn.getAttribute('data-deduct') || '';
+          openDeductFlow(targetNick);
+        }));
+      }
 
       status.textContent = `Показаны топ-50 (найдено строк: ${arr.length}).`;
       table.hidden = false;
