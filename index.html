@@ -450,6 +450,13 @@
           <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
             <div class="min-w-0">
               <div id="topStatus" class="text-sm text-white/80">Открой модалку — таблица загрузится автоматически.</div>
+              <div id="myTopBalance" class="mt-2 text-sm text-white/85 hidden">
+                <span class="text-white/70">Ваш баланс:</span>
+                <span class="font-extrabold" id="myTopBalanceValue">—</span> 🪙
+                <span class="text-white/60">•</span>
+                <span class="text-white/70">Начислено за всё время:</span>
+                <span class="font-extrabold" id="myTopEarnedValue">—</span> 🪙
+              </div>
             </div>
             <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
               <input id="topSearch" type="text" class="w-full sm:w-64 rounded-2xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none focus:border-white/40 text-sm" placeholder="Поиск по нику…" />
@@ -1023,13 +1030,16 @@
       if(!needle) return { found:false, reason:'empty' };
       const rows = await fetchBalances();
       const nickKeys = ['Никнейм','никнейм','Nick','nick','Ник','ник'];
+      // ВАЖНО: сначала пытаемся взять «Баланс» (доступно к трате), и только потом «Итоговые баллы» (начислено)
+      const balanceKeys = ['Баланс','баланс','Balance','balance'];
       const pointsKeys = ['Итоговые баллы','итоговые баллы','Баллы','баллы','Points','points'];
       for(const r of rows){
         const nickVal = nickKeys.map(k=>r[k]).find(v=>v!==undefined);
         const rowNick = normNick(nickVal);
         if(!rowNick) continue;
         if(rowNick === needle){
-          const ptsVal = pointsKeys.map(k=>r[k]).find(v=>v!==undefined);
+          const balVal = balanceKeys.map(k=>r[k]).find(v=>v!==undefined);
+          const ptsVal = (balVal !== undefined) ? balVal : (pointsKeys.map(k=>r[k]).find(v=>v!==undefined));
           const pts = parsePoints(ptsVal);
           return { found:true, nick: nickVal ?? nick, points: ptsVal, pointsNum: pts };
         }
@@ -1641,11 +1651,13 @@
       return (rows || []).map(r => {
         const nick = String(pickField(r, ['Никнейм','Ник','nick','Nick','name','Name']) ?? '').trim();
         const clips = toNum(pickField(r, ['Всего клипов','Клипы','Клипов','clips','Clips']));
-        const points = toNum(pickField(r, ['Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total']));
+        // points = доступный баланс (если Apps Script отдаёт Баланс), иначе fallback на Итоговые баллы
+        const points = toNum(pickField(r, ['Баланс','баланс','Balance','balance','Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total']));
+        const earned = toNum(pickField(r, ['Начислено','Начислено всего','Earned','earned','totalEarned','earned_total','Всего начислено','Итоговые баллы (начислено)']));
         const chatPts = toNum(pickField(r, ['Баллы чата','Чат','chat','chatPts','Chat points']));
         const watchPts = toNum(pickField(r, ['Баллы онлайна','Онлайн','online','watch','watchPts','Watch points']));
         const maxBonus = pickField(r, ['Макс. бонус (%)','Макс. бонус','Бонус','bonus','Bonus','maxBonus']);
-        return { nick, points, clips, chatPts, watchPts, maxBonusRaw: maxBonus };
+        return { nick, points, earned, clips, chatPts, watchPts, maxBonusRaw: maxBonus, raw: r };
       }).filter(x => x.nick);
     }
 
@@ -1677,10 +1689,32 @@
       if(!arr.length){
         table.hidden = true;
         status.textContent = topState.rows.length ? 'Ничего не найдено по фильтру.' : 'Данных пока нет.';
+        // скрываем личный баланс, если таблица пустая
+        $('#myTopBalance')?.classList.add('hidden');
         return;
       }
 
       const me = currentNickKey();
+
+      // личный баланс (показываем только тому, кто смотрит)
+      try{
+        const box = $('#myTopBalance');
+        const bEl = $('#myTopBalanceValue');
+        const eEl = $('#myTopEarnedValue');
+        if(me){
+          const row = arr.find(x => x.nick.toLowerCase() === me);
+          if(row){
+            if(bEl) bEl.textContent = fmtCoinsInt(row.points);
+            // earned: если Apps Script не отдаёт отдельное поле — покажем как минимум "—"
+            if(eEl) eEl.textContent = (Number.isFinite(Number(row.earned)) && Number(row.earned) > 0) ? fmtCoinsInt(row.earned) : '—';
+            box?.classList.remove('hidden');
+          }else{
+            box?.classList.add('hidden');
+          }
+        }else{
+          box?.classList.add('hidden');
+        }
+      }catch(e){}
 
       const isAdmin = isAdminUser();
       const thDeduct = document.getElementById('thDeduct');
