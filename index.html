@@ -1648,13 +1648,13 @@
       return (rows || []).map(r => {
         const nick = String(pickField(r, ['Никнейм','Ник','nick','Nick','name','Name']) ?? '').trim();
         const clips = toNum(pickField(r, ['Всего клипов','Клипы','Клипов','clips','Clips']));
-        // points = отображаемый "Баланс" в топе: по просьбе берем из "Итоговые баллы"
-        // (то, что у вас сейчас считается основной колонкой баланса в таблице)
-        const points = toNum(pickField(r, ['Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total','Баланс','баланс','Balance','balance']));
+        // points = отображаемый "Баланс" в топе: по просьбе берём из "Итоговые баллы".
+        // ВАЖНО: не используем "Баланс" колонку, чтобы соответствовать твоим требованиям.
+        const points = toNum(pickField(r, ['Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total']));
         const chatPts = toNum(pickField(r, ['Баллы чата','Чат','chat','chatPts','Chat points']));
         const watchPts = toNum(pickField(r, ['Баллы онлайна','Онлайн','online','watch','watchPts','Watch points']));
         const maxBonus = pickField(r, ['Макс. бонус (%)','Макс. бонус','Бонус','bonus','Bonus','maxBonus']);
-        return { nick, points, earned, clips, chatPts, watchPts, maxBonusRaw: maxBonus, raw: r };
+        return { nick, points, clips, chatPts, watchPts, maxBonusRaw: maxBonus, raw: r };
       }).filter(x => x.nick);
     }
 
