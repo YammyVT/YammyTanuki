@@ -702,6 +702,28 @@
     </div>
   </div>
 
+  <!-- TOKEN MODAL -->
+  <div id="tokenModal" class="fixed inset-0 z-[60] hidden">
+    <div class="absolute inset-0 bg-black/55 backdrop-blur-sm"></div>
+    <div class="relative z-10 flex items-center justify-center min-h-screen px-4">
+      <div class="glass glow rounded-3xl p-6 sm:p-8 max-w-sm w-full border border-white/25" style="animation: slideUp .3s cubic-bezier(.34,1.4,.64,1) both">
+        <div class="text-center mb-5">
+          <div class="text-3xl mb-2">🔑</div>
+          <h3 class="text-lg font-extrabold text-white">Введи админ-токен</h3>
+          <p class="mt-1 text-xs text-white/60">Совпадает с <code class="bg-black/30 px-1.5 py-0.5 rounded text-purple-300">ADMIN_TOKEN</code> в твоём скрипте</p>
+        </div>
+        <input id="tokenInput" type="password" placeholder="Твой секретный токен…"
+          class="w-full rounded-2xl bg-black/25 border border-white/25 px-4 py-3 text-white placeholder-white/40 outline-none focus:border-white/50 text-sm" />
+        <p id="tokenError" class="mt-2 text-xs text-rose-300 hidden">Неверный токен, попробуй ещё раз</p>
+        <div class="mt-4 flex gap-3">
+          <button id="tokenConfirm" class="btn rounded-2xl px-5 py-3 text-sm font-semibold text-white grow">Подтвердить</button>
+          <button id="tokenCancel" class="btn rounded-2xl px-4 py-3 text-sm font-semibold text-white/70">Отмена</button>
+        </div>
+        <p class="mt-3 text-xs text-white/45 text-center">Токен сохранится в браузере — вводить повторно не нужно</p>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==================== UTILS ====================
     try{
@@ -906,7 +928,8 @@
       const login=String(a?.login||'').trim();
       let token=getWishAdminToken();
       if(!token){
-        token=prompt('Введи админ-токен (хранится только на этом устройстве):');
+        // Запрашиваем токен через красивое модальное окно (не prompt)
+        token = await askAdminToken();
         if(!token) throw new Error('Токен не введён');
         setWishAdminToken(token);
       }
@@ -919,15 +942,64 @@
       if(!res.ok) throw new Error(data.error||`HTTP ${res.status}`);
       if(data.ok===false){
         if(String(data.error||'').includes('bad_admin_token')||String(data.error||'').includes('токен')){
-          localStorage.removeItem(LS_WISH_ADMIN_TOKEN);
-          throw new Error('Неверный токен. Попробуй ещё раз.');
+          handleBadToken();
+          throw new Error('Неверный токен — введи снова');
         }
         throw new Error(data.error||'ok=false');
       }
       return data;
     }
 
-    // ==================== WISHLIST STATE & RENDER ====================
+    // Модальное окно для ввода токена (вместо prompt)
+    function askAdminToken(){
+      return new Promise((resolve)=>{
+        const modal=$('#tokenModal');
+        const input=$('#tokenInput');
+        const errEl=$('#tokenError');
+        const confirmBtn=$('#tokenConfirm');
+        const cancelBtn=$('#tokenCancel');
+        if(!modal||!input) { resolve(''); return; }
+
+        // Сброс
+        input.value='';
+        errEl?.classList.add('hidden');
+        modal.classList.remove('hidden');
+        document.body.style.overflow='hidden';
+        setTimeout(()=>input.focus(),80);
+
+        function cleanup(val){
+          modal.classList.add('hidden');
+          document.body.style.overflow='';
+          confirmBtn.removeEventListener('click',onConfirm);
+          cancelBtn.removeEventListener('click',onCancel);
+          input.removeEventListener('keydown',onKey);
+          resolve(val||'');
+        }
+        function onConfirm(){
+          const val=String(input.value||'').trim();
+          if(!val){ errEl?.classList.remove('hidden'); input.focus(); return; }
+          cleanup(val);
+        }
+        function onCancel(){ cleanup(''); }
+        function onKey(e){ if(e.key==='Enter') onConfirm(); if(e.key==='Escape') onCancel(); }
+
+        confirmBtn.addEventListener('click',onConfirm);
+        cancelBtn.addEventListener('click',onCancel);
+        input.addEventListener('keydown',onKey);
+      });
+    }
+
+    // Показать ошибку неверного токена и сбросить сохранённый
+    function handleBadToken(){
+      localStorage.removeItem(LS_WISH_ADMIN_TOKEN);
+      const modal=$('#tokenModal');
+      const errEl=$('#tokenError');
+      if(modal&&!modal.classList.contains('hidden')){
+        errEl?.classList.remove('hidden');
+      }
+    }
+
+
     const wishState = { items:[], loaded:false };
 
     async function loadWishlist(){
