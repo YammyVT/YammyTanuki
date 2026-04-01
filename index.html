@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Магазинчик Ями</title>
-  <meta name="description" content="Магазинчик Ями — заказывай контент за баллы или рубли."/>
+  <meta name="description" content="Магазинчик Ями - заказывай контент за баллы или рубли."/>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <style>
     :root{
@@ -123,12 +123,12 @@
           <h1 class="mt-4 font-extrabold tracking-tight leading-tight">Привет! Ты в магазинчике Ями 🍵</h1>
           <div class="mt-4 welcome-banner rounded-2xl px-5 py-4 max-w-2xl">
             <p class="text-base sm:text-lg text-white/90 leading-relaxed">
-              Копи баллы просто будучи собой: пиши в чат, делай клипы, ставь отметки — и обменивай на что-то приятное.
+              Копи баллы просто будучи собой: пиши в чат, делай клипы, ставь отметки - и обменивай на что-то приятное.
               Хочешь без ожидания? Заказ за деньги по QR-коду пропускает тебя вперёд очереди 😏
             </p>
             <div class="mt-3 priority-banner rounded-xl px-4 py-2.5 flex items-center gap-2">
               <span>⚠️</span>
-              <p class="text-sm font-semibold text-rose-200">Заказ за деньги — вне очереди. Баллы — по порядку.</p>
+              <p class="text-sm font-semibold text-rose-200">Заказ за деньги - вне очереди. Баллы - по порядку.</p>
             </div>
           </div>
           <div class="mt-6 flex flex-wrap gap-3">
@@ -141,7 +141,7 @@
           <div class="glass rounded-3xl p-5 sm:p-6 border border-white/20">
             <div class="text-sm text-white/80">Подсказка</div>
             <div class="mt-1 text-base font-bold">Нажми «Выбрать» на товаре</div>
-            <div class="mt-2 text-xs text-white/75">Откроется окно — выберешь баллы или рубли, напишешь детали и отправишь.</div>
+            <div class="mt-2 text-xs text-white/75">Откроется окно - выберешь баллы или рубли, напишешь детали и отправишь.</div>
           </div>
         </div>
       </div>
@@ -161,10 +161,10 @@
           <div class="mt-3 space-y-2 text-white/85 text-sm sm:text-base leading-relaxed">
             <p class="font-semibold">За что начисляются баллы:</p>
             <div class="rounded-2xl bg-black/12 border border-white/12 p-4 space-y-2">
-              <p>🎬 <b>Клипы</b> — +50 🪙 за каждый клип</p>
-              <p>💬 <b>Сообщения в чате</b> — +50 🪙 за каждые 100 сообщений</p>
-              <p>🕐 <b>Онлайн на стриме</b> — +5 🪙 за каждые 10 минут</p>
-              <p>🔖 <b>Отметки</b> — начисляются отдельно</p>
+              <p>🎬 <b>Клипы</b> - +50 🪙 за каждый клип</p>
+              <p>💬 <b>Сообщения в чате</b> - +50 🪙 за каждые 100 сообщений</p>
+              <p>🕐 <b>Онлайн на стриме</b> - +5 🪙 за каждые 10 минут</p>
+              <p>🔖 <b>Отметки</b> - начисляются отдельно</p>
             </div>
             <p class="mt-2 font-semibold">Бонус за клипы (+3% за каждый следующий):</p>
             <div class="rounded-2xl bg-black/12 border border-white/12 p-4">
@@ -173,8 +173,8 @@
                 <li>3 клипа = 159 🪙</li><li>4 клипа = 218 🪙</li>
               </ul>
             </div>
-            <p>⚠️ <b>Важно:</b> клип не о чём — баллы не начисляются!</p>
-            <p class="text-white/60 text-xs">Сначала войди через Twitch — баланс подтянется автоматически ✨</p>
+            <p>⚠️ <b>Важно:</b> клип не о чём - баллы не начисляются!</p>
+            <p class="text-white/60 text-xs">Сначала войди через Twitch - баланс подтянется автоматически ✨</p>
           </div>
           <div class="mt-4 flex flex-wrap items-center gap-3">
             <button id="openCalc" class="btn rounded-2xl px-4 py-2.5 text-sm font-semibold">🧮 Калькулятор клипов</button>
@@ -195,14 +195,14 @@
             <div class="mt-4 space-y-3">
               <div class="rounded-2xl bg-black/12 border border-white/12 p-4">
                 <div class="text-xs text-white/70">Ваш ник:</div>
-                <div id="nickLine" class="mt-1 text-base font-extrabold">—</div>
+                <div id="nickLine" class="mt-1 text-base font-extrabold">-</div>
               </div>
               <div class="rounded-2xl bg-black/12 border border-white/12 p-4">
                 <div class="flex items-center justify-between">
                   <div class="text-xs text-white/70">Баланс:</div>
                   <button id="refreshBalance" class="btn rounded-lg px-2 py-1 text-xs font-semibold">🔄</button>
                 </div>
-                <div id="balanceResult" class="mt-1 text-base font-extrabold">—</div>
+                <div id="balanceResult" class="mt-1 text-base font-extrabold">-</div>
                 <p id="balanceHint" class="mt-2 text-xs text-white/70">Данные из Google Таблицы.</p>
               </div>
               <label class="inline-flex items-center gap-2 text-xs text-white/75 select-none">
@@ -262,7 +262,7 @@
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h2 class="font-extrabold">🛍️ Товары</h2>
-          <p class="mt-2 text-white/80">Нажми «Выбрать» — откроется окно с деталями и способом оплаты.</p>
+          <p class="mt-2 text-white/80">Нажми «Выбрать» - откроется окно с деталями и способом оплаты.</p>
         </div>
       </div>
       <div id="goodsGrid" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -297,8 +297,8 @@
       </div>
       <div class="mt-4 rounded-2xl bg-black/12 border border-white/12 p-4">
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3">
-          <div><div id="topStatus" class="text-sm text-white/80">Открой модалку — загрузится автоматически.</div>
-          <div id="myTopBalance" class="mt-2 text-sm text-white/85 hidden"><span class="text-white/70">Ваш баланс:</span> <span class="font-extrabold" id="myTopBalanceValue">—</span> 🪙</div></div>
+          <div><div id="topStatus" class="text-sm text-white/80">Открой модалку - загрузится автоматически.</div>
+          <div id="myTopBalance" class="mt-2 text-sm text-white/85 hidden"><span class="text-white/70">Ваш баланс:</span> <span class="font-extrabold" id="myTopBalanceValue">-</span> 🪙</div></div>
           <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
             <input id="topSearch" type="text" class="w-full sm:w-64 rounded-2xl bg-black/20 border border-white/20 px-4 py-2 text-white placeholder-white/50 outline-none text-sm" placeholder="Поиск по нику…"/>
             <select id="topSort" class="rounded-2xl bg-black/20 border border-white/20 px-4 py-2 text-white outline-none text-sm">
@@ -344,7 +344,7 @@
       <div class="flex items-start justify-between gap-3 mb-5">
         <div>
           <div id="choiceBadge" class="text-xs text-white/55 uppercase tracking-wider font-semibold mb-1">Товар</div>
-          <div id="choiceTitle" class="text-xl font-extrabold text-white leading-snug">—</div>
+          <div id="choiceTitle" class="text-xl font-extrabold text-white leading-snug">-</div>
           <div id="choiceNote" class="mt-1.5 text-xs text-white/60 leading-relaxed"></div>
         </div>
         <button id="closeChoice" class="btn rounded-xl px-3 py-2 text-sm font-semibold flex-shrink-0">✕</button>
@@ -367,17 +367,17 @@
           </div>
           <div class="rounded-2xl bg-black/18 border border-white/12 p-3 text-center">
             <div class="text-xs text-white/60">Цена за штуку</div>
-            <div id="memePricePerUnit" class="text-lg font-extrabold text-yellow-300">— ₽</div>
+            <div id="memePricePerUnit" class="text-lg font-extrabold text-yellow-300">- ₽</div>
           </div>
         </div>
         <div class="mt-3 grid grid-cols-2 gap-3">
           <div class="rounded-2xl bg-white/8 border border-white/15 p-3 text-center">
             <div class="text-xs text-white/60">🪙 За баллы</div>
-            <div id="memePointsPrice" class="text-lg font-extrabold">— 🪙</div>
+            <div id="memePointsPrice" class="text-lg font-extrabold">- 🪙</div>
           </div>
           <div class="rounded-2xl bg-yellow-400/10 border border-yellow-300/25 p-3 text-center">
             <div class="text-xs text-white/60">💰 За рубли</div>
-            <div id="memeRubPrice" class="text-lg font-extrabold text-yellow-300">— ₽</div>
+            <div id="memeRubPrice" class="text-lg font-extrabold text-yellow-300">- ₽</div>
           </div>
         </div>
       </div>
@@ -388,11 +388,11 @@
         <div class="grid grid-cols-1 gap-3">
           <button id="choiceBtnPoints" class="btn rounded-2xl px-5 py-4 text-left flex items-center justify-between gap-3">
             <div><div class="text-sm font-extrabold">🪙 За баллы канала</div><div class="text-xs text-white/60 mt-0.5">Очередь по порядку</div></div>
-            <div id="choicePointsLabel" class="text-base font-extrabold shrink-0">—</div>
+            <div id="choicePointsLabel" class="text-base font-extrabold shrink-0">-</div>
           </button>
           <button id="choiceBtnMoney" class="btn-gold rounded-2xl px-5 py-4 text-left flex items-center justify-between gap-3">
-            <div><div class="text-sm font-extrabold">💰 За деньги</div><div class="text-xs mt-0.5" style="color:rgba(246,231,166,.65);">Вне очереди — приоритет!</div></div>
-            <div id="choiceMoneyLabel" class="text-base font-extrabold shrink-0">—</div>
+            <div><div class="text-sm font-extrabold">💰 За деньги</div><div class="text-xs mt-0.5" style="color:rgba(246,231,166,.65);">Вне очереди - приоритет!</div></div>
+            <div id="choiceMoneyLabel" class="text-base font-extrabold shrink-0">-</div>
           </button>
         </div>
       </div>
@@ -404,7 +404,7 @@
       </div>
 
       <div class="priority-banner rounded-xl px-4 py-2.5 flex items-center gap-2 mb-5">
-        <span>⚡</span><p class="text-xs font-semibold text-rose-200">Деньги — вне очереди. Баллы — по порядку.</p>
+        <span>⚡</span><p class="text-xs font-semibold text-rose-200">Деньги - вне очереди. Баллы - по порядку.</p>
       </div>
 
       <!-- Action button -->
@@ -439,26 +439,26 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <div class="text-xs font-semibold text-yellow-300/80 uppercase tracking-wider">Оплата деньгами 💰</div>
-          <div id="payTitle" class="mt-1 text-xl font-extrabold text-white">—</div>
+          <div id="payTitle" class="mt-1 text-xl font-extrabold text-white">-</div>
         </div>
         <button id="closePayModal" class="btn rounded-xl px-3 py-2 text-sm font-semibold flex-shrink-0">✕</button>
       </div>
       <div class="mt-5 rounded-2xl bg-white/6 border border-white/12 p-4 space-y-3">
         <div class="flex items-center justify-between">
           <span class="text-sm text-white/70">Стоимость:</span>
-          <span id="payPrice" class="text-2xl font-extrabold text-yellow-300">—</span>
+          <span id="payPrice" class="text-2xl font-extrabold text-yellow-300">-</span>
         </div>
         <div class="border-t border-white/10 pt-3">
           <div class="text-xs text-white/55 mb-1">Что включено:</div>
-          <div id="payDesc" class="text-sm text-white/85 leading-relaxed">—</div>
+          <div id="payDesc" class="text-sm text-white/85 leading-relaxed">-</div>
         </div>
         <div id="payCommentBlock" class="border-t border-white/10 pt-3 hidden">
           <div class="text-xs text-white/55 mb-1">Детали заказа:</div>
-          <div id="payCommentText" class="text-sm text-white/80 italic">—</div>
+          <div id="payCommentText" class="text-sm text-white/80 italic">-</div>
         </div>
       </div>
       <div class="mt-3 priority-banner rounded-xl px-4 py-2.5 flex items-center gap-2">
-        <span>⚡</span><p class="text-xs font-semibold text-rose-200">Оплата деньгами — обрабатывается первой.</p>
+        <span>⚡</span><p class="text-xs font-semibold text-rose-200">Оплата деньгами - обрабатывается первой.</p>
       </div>
       <div class="mt-5">
         <div class="text-sm text-white/70 text-center mb-3">Отсканируй QR-код для оплаты</div>
@@ -471,12 +471,12 @@
             onerror="this.outerHTML='<div class=\'qr-placeholder shimmer\'><span class=\'text-4xl\'>📱</span><span class=\'text-xs text-white/45 text-center px-4\'>Не удалось загрузить QR</span></div>'"
           />
         </div>
-        <div class="mt-3 text-center text-xs text-white/45">После оплаты нажми кнопку ниже — Ями получит уведомление</div>
+        <div class="mt-3 text-center text-xs text-white/45">После оплаты нажми кнопку ниже - Ями получит уведомление</div>
       </div>
 
       <!-- Paid button states -->
       <div id="payFormArea">
-        <button id="payConfirmBtn" class="btn-gold mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">✅ Оплатил — отправить уведомление</button>
+        <button id="payConfirmBtn" class="btn-gold mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">✅ Оплатил - отправить уведомление</button>
       </div>
       <div id="payProcessing" class="hidden text-center py-4">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-white/20 border-t-white/90"></div>
@@ -559,9 +559,9 @@ async function twitchUser(token){ const r=await withTimeout(fetch('https://api.t
 
 function handleImplicit(){ const h=String(location.hash||''); if(!h||!h.includes('access_token=')) return null; const p=new URLSearchParams(h.replace(/^#/,'')); const t=p.get('access_token'); if(!t) return null; try{ history.replaceState({},document.title,location.pathname+location.search); }catch(e){} return t; }
 
-function setNickUI(dn){ const s=$('#nickStatus'),nl=$('#nickLine'); if(nl) nl.textContent=dn||'—'; if(s) s.textContent=dn?'Вы вошли через Twitch.':'Войди через Twitch чтобы увидеть баланс.'; $('#twitchLoginBtn')?.classList.toggle('hidden',!!dn); $('#twitchLogoutBtn')?.classList.toggle('hidden',!dn); }
+function setNickUI(dn){ const s=$('#nickStatus'),nl=$('#nickLine'); if(nl) nl.textContent=dn||'-'; if(s) s.textContent=dn?'Вы вошли через Twitch.':'Войди через Twitch чтобы увидеть баланс.'; $('#twitchLoginBtn')?.classList.toggle('hidden',!!dn); $('#twitchLogoutBtn')?.classList.toggle('hidden',!dn); }
 
-async function refreshBalance(){ const out=$('#balanceResult'),hint=$('#balanceHint'),nl=$('#nickLine'); const login=getKnownNick(); const dn=getKnownDisplayName(); if(!login){ if(nl) nl.textContent='—'; if(out) out.textContent='—'; if(hint) hint.textContent='Войди через Twitch чтобы увидеть баланс.'; return; } if(nl) nl.textContent=dn; if(out) out.textContent='Загружаю…'; try{ const r=await findBalanceByNick(login); if(r.found){ const pts=Number.isFinite(r.pointsNum)?Math.round(r.pointsNum):0; setKnownBalance(pts); if(out) out.textContent=`${dn} — ${pts} 🪙`; if(hint) hint.textContent='Если не совпадает — подожди обновления таблицы.'; }else{ setKnownBalance(0); if(out) out.textContent=`${dn} — 0 🪙 😢`; if(hint) hint.textContent='У вас 0 баллов 😢'; } }catch(e){ if(out) out.textContent='Ошибка загрузки.'; } finally{ try{ renderGoods(); }catch(err){} } }
+async function refreshBalance(){ const out=$('#balanceResult'),hint=$('#balanceHint'),nl=$('#nickLine'); const login=getKnownNick(); const dn=getKnownDisplayName(); if(!login){ if(nl) nl.textContent='-'; if(out) out.textContent='-'; if(hint) hint.textContent='Войди через Twitch чтобы увидеть баланс.'; return; } if(nl) nl.textContent=dn; if(out) out.textContent='Загружаю…'; try{ const r=await findBalanceByNick(login); if(r.found){ const pts=Number.isFinite(r.pointsNum)?Math.round(r.pointsNum):0; setKnownBalance(pts); if(out) out.textContent=`${dn} - ${pts} 🪙`; if(hint) hint.textContent='Если не совпадает - подожди обновления таблицы.'; }else{ setKnownBalance(0); if(out) out.textContent=`${dn} - 0 🪙 😢`; if(hint) hint.textContent='У вас 0 баллов 😢'; } }catch(e){ if(out) out.textContent='Ошибка загрузки.'; } finally{ try{ renderGoods(); }catch(err){} } }
 
 async function handleOAuth(){ const token=handleImplicit(); if(token){ try{ const u=await twitchUser(token); if(!u?.login) throw new Error('No login'); setAuth({login:u.login,display_name:u.display_name,access_token:token,obtained_at:Date.now()}); setNickUI(u.display_name); await refreshBalance(); }catch(e){ clearAuth(); setNickUI(''); const h=$('#balanceHint'); if(h) h.textContent='Не удалось войти: '+String(e?.message||e); } } }
 
@@ -604,20 +604,20 @@ function memePerUnit(n)    { return (memePriceRub(n)/n).toFixed(2); }
 // ===================== PRODUCTS =====================
 const PRODUCTS=[
   {
-    id:'meme', title:'🥨 Закуски — Мемы', badge:'юмор', cardClass:'card-meme',
-    note:'Чем больше берёшь — тем дешевле каждый мем. Ползунок от 20 до 1000 штук.',
+    id:'meme', title:'🥨 Закуски - Мемы', badge:'юмор', cardClass:'card-meme',
+    note:'Чем больше берёшь - тем дешевле каждый мем. Ползунок от 20 до 1000 штук.',
     hasMoney:true, hasMemeSlider:true,
-    options:[{label:'Мемы (выбери кол-во ниже)', price:200, moneyPrice:125, moneyDesc:'Мемы по твоей теме — чем больше берёшь, тем выгоднее за штуку.'}]
+    options:[{label:'Мемы (выбери кол-во ниже)', price:200, moneyPrice:125, moneyDesc:'Мемы по твоей теме - чем больше берёшь, тем выгоднее за штуку.'}]
   },
   {
     id:'cinema', title:'🍿 Кино и Аниме', badge:'2 часа', cardClass:'card-cinema',
-    note:'Оплата только за 2 часа. Для полного сезона — договариваемся отдельно.',
+    note:'Оплата только за 2 часа. Для полного сезона - договариваемся отдельно.',
     hasMoney:true, hasCategories:true,
     categories:['🎌 Аниме','🎬 Фильм','📺 Сериал','🎥 Мультфильм','📡 Телешоу'],
-    options:[{label:'2 часа на стриме', price:5000, moneyPrice:500, moneyDesc:'2 часа просмотра выбранного контента в прямом эфире. Оплата только за 2 часа — для полного сезона договариваемся отдельно.'}]
+    options:[{label:'2 часа на стриме', price:5000, moneyPrice:500, moneyDesc:'2 часа просмотра выбранного контента в прямом эфире. Оплата только за 2 часа - для полного сезона договариваемся отдельно.'}]
   },
   {
-    id:'adult', title:'🌶️ На десерт — 18+', badge:'18+', cardClass:'card-adult',
+    id:'adult', title:'🌶️ На десерт - 18+', badge:'18+', cardClass:'card-adult',
     note:'Хентай аниме или Порно-игры на Boosty. На твой/мой выбор.',
     hasMoney:true, hasCategories:true,
     categories:['🎌 Хентай аниме','🎮 Порно-игры (Boosty)'],
@@ -628,25 +628,25 @@ const PRODUCTS=[
   },
   {
     id:'game', title:'🎮 Геймерская зона', badge:'1 стрим', cardClass:'card-game',
-    note:'1 стрим. Если зайдёт — продолжим, нет — нет. MMO только бесплатные. Подарил игру = 0 рублей / 0 баллов, но тоже 1 стрим.',
+    note:'1 стрим. Если зайдёт - продолжим, нет - нет. MMO только бесплатные. Подарил игру = 0 рублей / 0 баллов, но тоже 1 стрим.',
     hasMoney:true, hasCategories:true,
     categories:['🕹️ Обычная игра','🔥 Соулс / без выбора сложности'],
     options:[
-      {label:'Обычная игра', price:5000, moneyPrice:2000, moneyDesc:'Ями играет в твою игру 1 стрим. Если игра зайдёт — продолжим.'},
-      {label:'Соулс / без выбора сложности', price:8000, moneyPrice:5000, moneyDesc:'Игры без выбора сложности (Dark Souls и подобные) — 1 стрим.'}
+      {label:'Обычная игра', price:5000, moneyPrice:2000, moneyDesc:'Ями играет в твою игру 1 стрим. Если игра зайдёт - продолжим.'},
+      {label:'Соулс / без выбора сложности', price:8000, moneyPrice:5000, moneyDesc:'Игры без выбора сложности (Dark Souls и подобные) - 1 стрим.'}
     ]
   },
   {
     id:'tarot', title:'🔮 Гадание на Таро', badge:'10 карт', cardClass:'card-tarot',
-    note:'Полный расклад на 10 карт. Отношения, карьера, будущее — любой вопрос. В прямом эфире ✨',
+    note:'Полный расклад на 10 карт. Отношения, карьера, будущее - любой вопрос. В прямом эфире ✨',
     hasMoney:true, tarotQuestion:true,
     options:[{label:'10 карт Таро', price:15000, moneyPrice:250, moneyDesc:'Полный расклад на 10 карт Таро по твоему вопросу. Ями раскладывает и разбирает каждую карту в прямом эфире.'}]
   },
   {
     id:'ultimate', title:'👑 Ультимативный заказ', badge:'12 часов', cardClass:'card-ultimate',
-    note:'12-часовой стрим: игры, аниме, фильмы — по твоему сценарию.',
+    note:'12-часовой стрим: игры, аниме, фильмы - по твоему сценарию.',
     hasMoney:true,
-    options:[{label:'12-часовой марафон-стрим', price:50000, moneyPrice:10000, moneyDesc:'Марафон 12 часов — игры, аниме, фильмы по твоему сценарию.'}]
+    options:[{label:'12-часовой марафон-стрим', price:50000, moneyPrice:10000, moneyDesc:'Марафон 12 часов - игры, аниме, фильмы по твоему сценарию.'}]
   },
   {
     id:'art', title:'🖌️ Рисунки', badge:'арт', cardClass:'card-art',
@@ -656,7 +656,7 @@ const PRODUCTS=[
   },
   {
     id:'custom', title:'🎁 Свой вариант', badge:'предложение', cardClass:'card-custom',
-    note:'Главное — интересно и по правилам ✨',
+    note:'Главное - интересно и по правилам ✨',
     hasMoney:false,
     options:[{label:'Индивидуальный заказ', price:null, moneyPrice:null}]
   }
@@ -690,7 +690,7 @@ function renderGoods(){
       ul.innerHTML=`
         <li class="flex items-center justify-between gap-2"><span>20 мемов</span><div class="flex gap-1.5 items-center"><span class="font-bold">200 🪙</span><span class="text-xs px-2 py-0.5 rounded-full bg-yellow-400/15 border border-yellow-300/30 text-yellow-200">/ 125 ₽</span></div></li>
         <li class="flex items-center justify-between gap-2"><span>1.000 мемов</span><div class="flex gap-1.5 items-center"><span class="font-bold">${fmtNum(memePricePoints(1000))} 🪙</span><span class="text-xs px-2 py-0.5 rounded-full bg-yellow-400/15 border border-yellow-300/30 text-yellow-200">/ ${fmtNum(memePriceRub(1000))} ₽</span></div></li>
-        <li class="text-xs text-white/55">Чем больше — тем дешевле за штуку 📉</li>`;
+        <li class="text-xs text-white/55">Чем больше - тем дешевле за штуку 📉</li>`;
     } else if(prod.hasCategories){
       ul.innerHTML=prod.categories.map(c=>`<li class="text-white/80">• ${c}</li>`).join('');
       if(prod.options.length>1){
@@ -706,7 +706,7 @@ function renderGoods(){
         const o=prod.options[0];
         const li=document.createElement('li');
         li.className='flex items-center justify-between gap-2 font-semibold mt-1';
-        li.innerHTML=`<span>${o.label}</span><div class="flex gap-1.5 items-center flex-wrap justify-end"><span class="font-bold">${o.price?fmtNum(o.price)+' 🪙':'—'}</span>`
+        li.innerHTML=`<span>${o.label}</span><div class="flex gap-1.5 items-center flex-wrap justify-end"><span class="font-bold">${o.price?fmtNum(o.price)+' 🪙':'-'}</span>`
           + (o.moneyPrice?`<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-400/15 border border-yellow-300/30 text-yellow-200">/ ${fmtNum(o.moneyPrice)} ₽</span>`:'')
           + `</div>`;
         ul.appendChild(li);
@@ -714,7 +714,7 @@ function renderGoods(){
     } else {
       prod.options.forEach(o=>{
         const li=document.createElement('li'); li.className='flex items-center justify-between gap-2';
-        li.innerHTML=`<span>${o.label}</span><div class="flex gap-1.5 items-center flex-wrap justify-end"><span class="font-bold">${o.price?fmtNum(o.price)+' 🪙':'—'}</span>`
+        li.innerHTML=`<span>${o.label}</span><div class="flex gap-1.5 items-center flex-wrap justify-end"><span class="font-bold">${o.price?fmtNum(o.price)+' 🪙':'-'}</span>`
           + (o.moneyPrice?`<span class="text-xs px-2 py-0.5 rounded-full bg-yellow-400/15 border border-yellow-300/30 text-yellow-200">/ ${fmtNum(o.moneyPrice)} ₽</span>`:'')
           + `</div>`;
         ul.appendChild(li);
@@ -823,7 +823,7 @@ function updateChoicePrices(){
   const prod=choiceState.prod; if(!prod) return;
   let opt=prod.options[0];
 
-  // Для 18+ и Игр — выбираем опцию по категории
+  // Для 18+ и Игр - выбираем опцию по категории
   if(prod.id==='adult' && choiceState.category){
     if(choiceState.category.includes('Порно')) opt=prod.options[1]||opt;
     else opt=prod.options[0];
@@ -844,15 +844,15 @@ function updateChoicePrices(){
   }
 
   // Баллы
-  $('#choicePointsLabel').textContent=pointsPrice?fmtNum(pointsPrice)+' 🪙':'—';
+  $('#choicePointsLabel').textContent=pointsPrice?fmtNum(pointsPrice)+' 🪙':'-';
 
-  // Деньги — всегда показываем если есть
+  // Деньги - всегда показываем если есть
   if(moneyPrice && moneyPrice!=='скоро'){
     $('#choiceMoneyLabel').textContent=fmtNum(moneyPrice)+' ₽';
     $('#choiceBtnMoney').disabled=false;
     $('#choiceBtnMoney').classList.remove('opacity-45','cursor-not-allowed');
   } else {
-    $('#choiceMoneyLabel').textContent=moneyPrice==='скоро'?'скоро':'—';
+    $('#choiceMoneyLabel').textContent=moneyPrice==='скоро'?'скоро':'-';
     $('#choiceBtnMoney').disabled=true;
     $('#choiceBtnMoney').classList.add('opacity-45','cursor-not-allowed');
   }
@@ -900,16 +900,16 @@ async function sendChoiceOrder(){
 
   const comment=($('#choiceComment').value||'').trim();
   const catStr=choiceState.category?` [${choiceState.category}]`:'';
-  const memeStr=prod.hasMemeSlider?` — ${choiceState.memeCount} мемов`:'';
+  const memeStr=prod.hasMemeSlider?` - ${choiceState.memeCount} мемов`:'';
   const opt=choiceState.opt||prod.options[0];
   const itemLabel=opt.label+memeStr+catStr;
-  const item=`${prod.title} — ${itemLabel}`;
+  const item=`${prod.title} - ${itemLabel}`;
 
   const pointsPrice=choiceState.resolvedPointsPrice||opt.price||0;
   const moneyPrice=choiceState.resolvedMoneyPrice||opt.moneyPrice||0;
 
   if(choiceState.payMode==='money'){
-    // Open QR modal — pass all data
+    // Open QR modal - pass all data
     closeChoice();
     openPayModal({
       title:item,
@@ -981,7 +981,7 @@ async function sendMoneyOrder(){
       nick:displayNick||loginNick, login:loginNick, display_name:displayNick||loginNick,
       item:'💰💰💰 ОПЛАТА ДЕНЬГАМИ 💰💰💰\n' + title,
       comment:`━━━━━━━━━━━━━━━\n💵 Сумма: ${price} ₽\n📦 Заказ: ${title}${comment?'\n📝 Детали: '+comment:''}\n━━━━━━━━━━━━━━━\n✅ Клиент подтвердил оплату`,
-      price:moneyPriceNum||0,
+      price:0,       // баллы НЕ списываются - оплата деньгами
       payType:'money',
       requestId:makeReqId()
     });
