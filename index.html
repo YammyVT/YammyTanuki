@@ -541,7 +541,7 @@ function getKnownDisplayName(){ const a=getAuth(); return String(a?.display_name
 function normNick(s){ return String(s??'').trim().toLowerCase(); }
 
 // ===================== API =====================
-const API='https://script.google.com/macros/s/AKfycbxv93RskaQaMSQ4t41bpKLhUfx1RQHiwPl-tdYicJ12lvDJ7ZCZhSCAwR2PjSYqZDo/exec';
+const API='https://script.google.com/macros/s/AKfycbxGEaHc30vFWcymK6XaJkC7mHpWKv2U9fsV-_yfgogeNdpyjCX4J3RLGoiwo8XXc2XPcQ/exec';
 function makeReqId(){ try{ const a=new Uint8Array(10); crypto.getRandomValues(a); return Date.now()+'_'+Array.from(a).map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ return Date.now()+'_'+Math.random().toString(16).slice(2); } }
 
 async function postOrder({nick,login,display_name,item,comment,price,payType,requestId}){
