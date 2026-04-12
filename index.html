@@ -339,10 +339,10 @@
 </div>
 
 <!-- ============ CHOICE MODAL (основное окно заказа) ============ -->
-<div id="choiceModal" class="fixed inset-0 z-50 hidden">
+<div id="choiceModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
   <div id="choiceOverlay" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-  <div class="relative flex items-center justify-center min-h-screen px-4 py-6">
-    <div id="choiceInner" class="deep-modal w-full max-w-lg rounded-3xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
+  <div class="relative flex items-start justify-center min-h-screen px-4 py-6">
+    <div id="choiceInner" class="deep-modal w-full max-w-lg rounded-3xl p-6 sm:p-8 my-6">
 
       <!-- Header -->
       <div class="flex items-start justify-between gap-3 mb-5">
@@ -354,7 +354,7 @@
         <button id="closeChoice" class="btn rounded-xl px-3 py-2 text-sm font-semibold flex-shrink-0">✕</button>
       </div>
 
-      <!-- Step 1: Category picker (shows when product has categories) -->
+      <!-- Step 1: Category picker -->
       <div id="stepCategory" class="hidden mb-5">
         <div class="text-sm font-semibold text-white/85 mb-3">Выбери категорию:</div>
         <div id="categoryPills" class="flex flex-wrap gap-2"></div>
@@ -411,10 +411,8 @@
         <span>⚡</span><p class="text-xs font-semibold text-rose-200">Деньги - вне очереди. Баллы - по порядку.</p>
       </div>
 
-      <!-- Action button -->
       <button id="choiceSendBtn" class="btn rounded-2xl px-4 py-3 text-sm font-semibold w-full">Заказать за баллы</button>
 
-      <!-- States -->
       <div id="choiceProcessing" class="hidden text-center py-6">
         <div class="inline-block animate-spin rounded-full h-10 w-10 border-4 border-white/20 border-t-white/90"></div>
         <div class="mt-3 text-base font-bold">⏳ Отправляем заказ...</div>
@@ -435,11 +433,11 @@
   </div>
 </div>
 
-<!-- ============ PAY MODAL (QR) ============ -->
-<div id="payModal" class="fixed inset-0 z-[60] hidden">
+<!-- ============ PAY MODAL (QR) — ИСПРАВЛЕНО: скролл на мобильных ============ -->
+<div id="payModal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
   <div id="payOverlay" class="absolute inset-0 bg-black/65 backdrop-blur-sm"></div>
-  <div class="relative flex items-start justify-center min-h-screen px-4 py-6 overflow-y-auto">
-    <div class="deep-modal w-full max-w-md rounded-3xl p-6 sm:p-8 my-auto" style="border-color:rgba(231,191,43,.35);">
+  <div class="relative flex items-start justify-center min-h-screen px-4 py-6">
+    <div class="deep-modal w-full max-w-md rounded-3xl p-6 sm:p-8 my-6" style="border-color:rgba(231,191,43,.35);">
       <div class="flex items-start justify-between gap-3">
         <div>
           <div class="text-xs font-semibold text-yellow-300/80 uppercase tracking-wider">Оплата деньгами 💰</div>
@@ -492,7 +490,6 @@
         <div class="mt-3 text-center text-xs text-white/45">После оплаты нажми кнопку ниже - Ями получит уведомление</div>
       </div>
 
-      <!-- Paid button states -->
       <div id="payFormArea">
         <button id="payConfirmBtn" class="btn-gold mt-4 rounded-2xl px-4 py-3 text-sm font-semibold w-full">✅ Оплатил - отправить уведомление</button>
       </div>
@@ -604,16 +601,13 @@ function initCalc(){
   updateCalc();
 }
 
-// ===================== NUMBER FORMATTER (точки-разделители тысяч) =====================
+// ===================== NUMBER FORMATTER =====================
 function fmtNum(n){ return Math.round(Number(n)||0).toLocaleString('ru-RU').replace(/\s/g,'.'); }
 
 // ===================== MEME PRICING =====================
-// Степенная формула: total(n) = A * n^k
-// Рубли:  f(20)=125 ровно, f(1000)=4.000 ровно → цена за штуку убывает от 6,25 до 4,00 ₽
-// Баллы:  f(20)=200 ровно, f(1000)=8.000 ровно → цена за штуку убывает пропорционально
-const _MEME_RUB_K  = Math.log(4000/125)  / Math.log(1000/20); // ~0.886
+const _MEME_RUB_K  = Math.log(4000/125)  / Math.log(1000/20);
 const _MEME_RUB_A  = 125  / Math.pow(20, _MEME_RUB_K);
-const _MEME_PTS_K  = Math.log(8000/200)  / Math.log(1000/20); // ~0.886
+const _MEME_PTS_K  = Math.log(8000/200)  / Math.log(1000/20);
 const _MEME_PTS_A  = 200  / Math.pow(20, _MEME_PTS_K);
 function memePriceRub(n)   { return Math.round(_MEME_RUB_A * Math.pow(n, _MEME_RUB_K)); }
 function memePricePoints(n){ return Math.round(_MEME_PTS_A * Math.pow(n, _MEME_PTS_K)); }
@@ -695,13 +689,9 @@ function renderGoods(){
   for(const prod of PRODUCTS){
     const card=document.createElement('article');
     card.className=`group glass rounded-3xl border border-white/20 transition-all duration-300 hover:-translate-y-1 p-5 flex flex-col gap-0 ${prod.cardClass||''}`;
-
-    // Header
     const head=document.createElement('div');
     head.className='flex items-center justify-between gap-3';
     head.innerHTML=`<h3 class="text-xl font-extrabold leading-snug">${prod.title}</h3><span class="text-xs px-3 py-1 rounded-full bg-white/10 border border-white/15 shrink-0">${prod.badge}</span>`;
-
-    // Options list
     const ul=document.createElement('ul');
     ul.className='mt-3 space-y-1.5 text-white/85 text-sm';
     if(prod.hasMemeSlider){
@@ -738,34 +728,20 @@ function renderGoods(){
         ul.appendChild(li);
       });
     }
-
-    // Afford chip
     const minPrice=(()=>{ const ns=prod.options.map(o=>Number(o.price)).filter(n=>Number.isFinite(n)&&n>0); return ns.length?Math.min(...ns):0; })();
     const chip=computeAffordChip(minPrice);
     const afford=document.createElement('div');
     afford.className=`mt-3 rounded-2xl border px-3 py-2 text-xs ${chip.cls}`;
     afford.textContent=chip.text;
-
-    // Note
     const note=document.createElement('p');
     note.className='mt-2 text-xs text-white/60 leading-relaxed';
     note.textContent=prod.note;
-
-    // Spacer to push button down
     const spacer=document.createElement('div'); spacer.className='flex-1';
-
-    // Button
     const btn=document.createElement('button');
     btn.className='btn mt-4 rounded-2xl px-4 py-2.5 text-sm font-semibold w-full';
     btn.textContent='Выбрать';
     btn.addEventListener('click',()=>openChoice(prod));
-
-    card.appendChild(head);
-    card.appendChild(ul);
-    card.appendChild(afford);
-    card.appendChild(note);
-    card.appendChild(spacer);
-    card.appendChild(btn);
+    card.appendChild(head); card.appendChild(ul); card.appendChild(afford); card.appendChild(note); card.appendChild(spacer); card.appendChild(btn);
     grid.appendChild(card);
   }
 }
@@ -774,110 +750,50 @@ function renderGoods(){
 let choiceState={ prod:null, opt:null, payMode:'points', memeCount:20 };
 
 function openChoice(prod){
-  const modal=$('#choiceModal');
-  if(!modal) return;
+  const modal=$('#choiceModal'); if(!modal) return;
   choiceState={ prod, opt:prod.options[0], payMode:'points', memeCount:20, category:null };
   resetChoiceUI();
-
   $('#choiceTitle').textContent=prod.title;
   $('#choiceBadge').textContent=prod.badge;
   $('#choiceNote').textContent=prod.note;
-
-  // Category step
   const catStep=$('#stepCategory');
   if(prod.hasCategories && prod.categories){
     catStep.classList.remove('hidden');
     const pills=$('#categoryPills'); pills.innerHTML='';
-    prod.categories.forEach((c,i)=>{
+    prod.categories.forEach((c)=>{
       const p=document.createElement('button'); p.className='cat-pill'; p.textContent=c;
-      p.addEventListener('click',()=>{
-        $$('#categoryPills .cat-pill').forEach(x=>x.classList.remove('active'));
-        p.classList.add('active');
-        choiceState.category=c;
-        updateChoicePrices();
-      });
+      p.addEventListener('click',()=>{ $$('#categoryPills .cat-pill').forEach(x=>x.classList.remove('active')); p.classList.add('active'); choiceState.category=c; updateChoicePrices(); });
       pills.appendChild(p);
     });
-    if(prod.options.length>1){
-      // per-category options
-      prod.categories.forEach((c,i)=>{
-        // map category index to option
-      });
-    }
   } else { catStep.classList.add('hidden'); }
-
-  // Meme slider
   const memeStep=$('#stepMeme');
   if(prod.hasMemeSlider){
     memeStep.classList.remove('hidden');
-    const slider=$('#memeSlider');
-    slider.value=20;
-    updateMemeUI(20);
+    const slider=$('#memeSlider'); slider.value=20; updateMemeUI(20);
     slider.oninput=()=>{ const v=Number(slider.value); choiceState.memeCount=v; updateMemeUI(v); updateChoicePrices(); };
   } else { memeStep.classList.add('hidden'); }
-
-  // Tarot question placeholder
-  if(prod.tarotQuestion){ $('#commentLabel').textContent='Твой вопрос для расклада:'; $('#choiceComment').placeholder='Например: Как сложатся отношения с X? Стоит ли менять работу?'; }
+  if(prod.tarotQuestion){ $('#commentLabel').textContent='Твой вопрос для расклада:'; $('#choiceComment').placeholder='Например: Как сложатся отношения с X?'; }
   else if(prod.id==='cinema'){ $('#commentLabel').textContent='Название / ссылка:'; $('#choiceComment').placeholder='Название аниме, фильма, серии...'; }
   else if(prod.id==='game'){ $('#commentLabel').textContent='Название игры:'; $('#choiceComment').placeholder='Какую игру хочешь?'; }
   else { $('#commentLabel').textContent='Комментарий / детали:'; $('#choiceComment').placeholder='Дополнительные детали заказа...'; }
-
-  choiceState.payMode='points';
-  updateChoicePrices();
-  wireChoicePayButtons();
-
-  modal.classList.remove('hidden');
-  document.body.style.overflow='hidden';
+  choiceState.payMode='points'; updateChoicePrices(); wireChoicePayButtons();
+  modal.classList.remove('hidden'); document.body.style.overflow='hidden'; modal.scrollTop=0;
 }
 
-function updateMemeUI(n){
-  $('#memeCount').textContent=n;
-  $('#memePricePerUnit').textContent=memePerUnit(n)+' ₽/шт';
-  $('#memePointsPrice').textContent=fmtNum(memePricePoints(n))+' 🪙';
-  $('#memeRubPrice').textContent=fmtNum(memePriceRub(n))+' ₽';
-}
+function updateMemeUI(n){ $('#memeCount').textContent=n; $('#memePricePerUnit').textContent=memePerUnit(n)+' ₽/шт'; $('#memePointsPrice').textContent=fmtNum(memePricePoints(n))+' 🪙'; $('#memeRubPrice').textContent=fmtNum(memePriceRub(n))+' ₽'; }
 
 function updateChoicePrices(){
   const prod=choiceState.prod; if(!prod) return;
   let opt=prod.options[0];
-
-  // Для 18+ и Игр - выбираем опцию по категории
-  if(prod.id==='adult' && choiceState.category){
-    if(choiceState.category.includes('Порно')) opt=prod.options[1]||opt;
-    else opt=prod.options[0];
-  }
-  if(prod.id==='game' && choiceState.category){
-    if(choiceState.category.includes('Соулс')) opt=prod.options[1]||opt;
-    else opt=prod.options[0];
-  }
+  if(prod.id==='adult'&&choiceState.category){ opt=choiceState.category.includes('Порно')?prod.options[1]||opt:prod.options[0]; }
+  if(prod.id==='game'&&choiceState.category){ opt=choiceState.category.includes('Соулс')?prod.options[1]||opt:prod.options[0]; }
   choiceState.opt=opt;
-
-  let pointsPrice=opt.price;
-  let moneyPrice=opt.moneyPrice;
-
-  if(prod.hasMemeSlider){
-    const n=choiceState.memeCount;
-    pointsPrice=memePricePoints(n);
-    moneyPrice=memePriceRub(n);
-  }
-
-  // Баллы
+  let pointsPrice=opt.price, moneyPrice=opt.moneyPrice;
+  if(prod.hasMemeSlider){ const n=choiceState.memeCount; pointsPrice=memePricePoints(n); moneyPrice=memePriceRub(n); }
   $('#choicePointsLabel').textContent=pointsPrice?fmtNum(pointsPrice)+' 🪙':'-';
-
-  // Деньги - всегда показываем если есть
-  if(moneyPrice && moneyPrice!=='скоро'){
-    $('#choiceMoneyLabel').textContent=fmtNum(moneyPrice)+' ₽';
-    $('#choiceBtnMoney').disabled=false;
-    $('#choiceBtnMoney').classList.remove('opacity-45','cursor-not-allowed');
-  } else {
-    $('#choiceMoneyLabel').textContent=moneyPrice==='скоро'?'скоро':'-';
-    $('#choiceBtnMoney').disabled=true;
-    $('#choiceBtnMoney').classList.add('opacity-45','cursor-not-allowed');
-  }
-
-  choiceState.resolvedPointsPrice=pointsPrice;
-  choiceState.resolvedMoneyPrice=moneyPrice;
-  updateChoiceSendBtn();
+  if(moneyPrice&&moneyPrice!=='скоро'){ $('#choiceMoneyLabel').textContent=fmtNum(moneyPrice)+' ₽'; $('#choiceBtnMoney').disabled=false; $('#choiceBtnMoney').classList.remove('opacity-45','cursor-not-allowed'); }
+  else{ $('#choiceMoneyLabel').textContent=moneyPrice==='скоро'?'скоро':'-'; $('#choiceBtnMoney').disabled=true; $('#choiceBtnMoney').classList.add('opacity-45','cursor-not-allowed'); }
+  choiceState.resolvedPointsPrice=pointsPrice; choiceState.resolvedMoneyPrice=moneyPrice; updateChoiceSendBtn();
 }
 
 function wireChoicePayButtons(){
@@ -888,17 +804,11 @@ function wireChoicePayButtons(){
 
 function updateChoiceSendBtn(){
   const btn=$('#choiceSendBtn'); if(!btn) return;
-  if(choiceState.payMode==='money'){
-    btn.textContent='Заказать за деньги 💰';
-    btn.classList.remove('btn'); btn.classList.add('btn-gold');
-  } else {
-    btn.textContent='Заказать за баллы 🪙';
-    btn.classList.remove('btn-gold'); btn.classList.add('btn');
-  }
+  if(choiceState.payMode==='money'){ btn.textContent='Заказать за деньги 💰'; btn.classList.remove('btn'); btn.classList.add('btn-gold'); }
+  else{ btn.textContent='Заказать за баллы 🪙'; btn.classList.remove('btn-gold'); btn.classList.add('btn'); }
 }
 
 function resetChoiceUI(){
-  $('#choiceFormArea, #choiceSendBtn').forEach?.(el=>el?.classList?.remove('hidden'));
   $('#choiceSendBtn')?.classList.remove('hidden');
   $('#choiceProcessing')?.classList.add('hidden');
   $('#choiceSuccess')?.classList.add('hidden');
@@ -910,102 +820,55 @@ function resetChoiceUI(){
 
 function closeChoice(){ $('#choiceModal')?.classList.add('hidden'); document.body.style.overflow=''; }
 
-// Send order (points or initiate money flow)
 async function sendChoiceOrder(){
   const prod=choiceState.prod; if(!prod) return;
   const nick=getKnownNick(), dn=getKnownDisplayName();
   if(!nick){ alert('Сначала войди через Twitch!'); return; }
-
   const comment=($('#choiceComment').value||'').trim();
   const catStr=choiceState.category?` [${choiceState.category}]`:'';
   const memeStr=prod.hasMemeSlider?` - ${choiceState.memeCount} мемов`:'';
   const opt=choiceState.opt||prod.options[0];
-  const itemLabel=opt.label+memeStr+catStr;
-  const item=`${prod.title} - ${itemLabel}`;
-
+  const item=`${prod.title} - ${opt.label+memeStr+catStr}`;
   const pointsPrice=choiceState.resolvedPointsPrice||opt.price||0;
   const moneyPrice=choiceState.resolvedMoneyPrice||opt.moneyPrice||0;
-
-  if(choiceState.payMode==='money'){
-    // Open QR modal - pass all data
-    closeChoice();
-    openPayModal({
-      title:item,
-      price:moneyPrice+'',
-      desc:opt.moneyDesc||'',
-      comment,
-      nick,
-      dn,
-      moneyPriceNum:Number(moneyPrice)||0
-    });
-    return;
-  }
-
-  // Points order
-  $(['#choiceSendBtn','#choiceComment','#choiceBtnPoints','#choiceBtnMoney'].join(','))?.forEach?.(x=>x?.classList?.add('hidden'));
-  $('#choiceSendBtn')?.classList.add('hidden');
-  $('#choiceComment')?.setAttribute('disabled','');
-  $('#choiceProcessing')?.classList.remove('hidden');
-
+  if(choiceState.payMode==='money'){ closeChoice(); openPayModal({title:item,price:moneyPrice+'',desc:opt.moneyDesc||'',comment,nick,dn,moneyPriceNum:Number(moneyPrice)||0}); return; }
+  $('#choiceSendBtn')?.classList.add('hidden'); $('#choiceComment')?.setAttribute('disabled',''); $('#choiceProcessing')?.classList.remove('hidden');
   try{
-    await postOrder({
-      nick:dn||nick, login:nick, display_name:dn||nick,
-      item, comment,
-      price:Number(pointsPrice)||0,
-      payType:'points',
-      requestId:makeReqId()
-    });
-    $('#choiceProcessing')?.classList.add('hidden');
-    $('#choiceSuccess')?.classList.remove('hidden');
-    await refreshBalance();
+    await postOrder({nick:dn||nick,login:nick,display_name:dn||nick,item,comment,price:Number(pointsPrice)||0,payType:'points',requestId:makeReqId()});
+    $('#choiceProcessing')?.classList.add('hidden'); $('#choiceSuccess')?.classList.remove('hidden'); await refreshBalance();
   }catch(e){
     $('#choiceProcessing')?.classList.add('hidden');
-    const et=$('#choiceErrTitle'), ex=$('#choiceErrText');
-    if(et) et.textContent='Ошибка отправки';
-    if(ex) ex.textContent=String(e?.message||e||'Попробуй ещё раз.');
+    const et=$('#choiceErrTitle'),ex=$('#choiceErrText');
+    if(et) et.textContent='Ошибка отправки'; if(ex) ex.textContent=String(e?.message||e||'Попробуй ещё раз.');
     $('#choiceError')?.classList.remove('hidden');
   }
 }
 
-// ===================== PAY MODAL (QR + "Оплатил") =====================
+// ===================== PAY MODAL =====================
 let payContext={};
 
 function openPayModal({title,price,desc,comment,nick,dn,moneyPriceNum}){
   payContext={title,price,desc,comment,nick,dn,moneyPriceNum};
-  $('#payTitle').textContent=title;
-  $('#payPrice').textContent=price+' ₽';
-  $('#payDesc').textContent=desc||'Подробности уточняй у Ями.';
-  const cb=$('#payCommentBlock'), ct=$('#payCommentText');
-  if(comment){ cb.classList.remove('hidden'); ct.textContent=comment; }
-  else { cb.classList.add('hidden'); }
-  // Reset states
-  $('#payFormArea')?.classList.remove('hidden');
-  $('#payProcessing')?.classList.add('hidden');
-  $('#paySuccess')?.classList.add('hidden');
-  $('#payError')?.classList.add('hidden');
-  $('#payModal').classList.remove('hidden');
-  document.body.style.overflow='hidden';
+  $('#payTitle').textContent=title; $('#payPrice').textContent=price+' ₽'; $('#payDesc').textContent=desc||'Подробности уточняй у Ями.';
+  const cb=$('#payCommentBlock'),ct=$('#payCommentText');
+  if(comment){ cb.classList.remove('hidden'); ct.textContent=comment; } else { cb.classList.add('hidden'); }
+  $('#payFormArea')?.classList.remove('hidden'); $('#payProcessing')?.classList.add('hidden');
+  $('#paySuccess')?.classList.add('hidden'); $('#payError')?.classList.add('hidden'); $('#payClose3')?.classList.remove('hidden');
+  const modal=$('#payModal'); modal.classList.remove('hidden'); document.body.style.overflow='hidden'; modal.scrollTop=0;
 }
 
 function closePayModal(){ $('#payModal')?.classList.add('hidden'); document.body.style.overflow=''; }
 
 async function sendMoneyOrder(){
-  const {title,price,desc,comment,nick,dn,moneyPriceNum}=payContext;
+  const {title,price,desc,comment,nick,dn}=payContext;
   const loginNick=nick||getKnownNick(); const displayNick=dn||getKnownDisplayName();
-  $('#payFormArea')?.classList.add('hidden');
-  $('#payProcessing')?.classList.remove('hidden');
+  $('#payFormArea')?.classList.add('hidden'); $('#payProcessing')?.classList.remove('hidden');
   try{
-    await postOrder({
-      nick:displayNick||loginNick, login:loginNick, display_name:displayNick||loginNick,
-      item:'💰💰💰 ОПЛАТА ДЕНЬГАМИ 💰💰💰\n' + title,
+    await postOrder({nick:displayNick||loginNick,login:loginNick,display_name:displayNick||loginNick,
+      item:'💰💰💰 ОПЛАТА ДЕНЬГАМИ 💰💰💰\n'+title,
       comment:`━━━━━━━━━━━━━━━\n💵 Сумма: ${price} ₽\n📦 Заказ: ${title}${comment?'\n📝 Детали: '+comment:''}\n━━━━━━━━━━━━━━━\n✅ Клиент подтвердил оплату`,
-      price:0,       // баллы НЕ списываются - оплата деньгами
-      payType:'money',
-      requestId:makeReqId()
-    });
-    $('#payProcessing')?.classList.add('hidden');
-    $('#paySuccess')?.classList.remove('hidden');
-    $('#payClose3')?.classList.add('hidden');
+      price:0,payType:'money',requestId:makeReqId()});
+    $('#payProcessing')?.classList.add('hidden'); $('#paySuccess')?.classList.remove('hidden'); $('#payClose3')?.classList.add('hidden');
   }catch(e){
     $('#payProcessing')?.classList.add('hidden');
     const et=$('#payErrText'); if(et) et.textContent=String(e?.message||e||'Ошибка. Попробуй ещё раз.');
@@ -1018,7 +881,6 @@ const ADMINS=['zakslmv','yammytanuki'];
 function isAdmin(){ return ADMINS.includes(String(getAuth()?.login||'').trim().toLowerCase()); }
 function getAdminToken(){ try{ return String(localStorage.getItem(LS.adminToken)||'').trim(); }catch(e){ return ''; } }
 function setAdminToken(t){ try{ localStorage.setItem(LS.adminToken,String(t||'').trim()); }catch(e){} }
-
 async function adminDeduct({targetNick,amount,reason}){
   const a=getAuth(); const body=new URLSearchParams();
   body.set('payload',JSON.stringify({action:'adminDeduct',login:a?.login,adminToken:getAdminToken(),targetNick,amount:Number(amount)||0,reason:String(reason||'')}));
@@ -1028,7 +890,6 @@ async function adminDeduct({targetNick,amount,reason}){
   if(!res.ok||data?.ok===false) throw new Error(data.error||txt||'Error');
   return data;
 }
-
 async function openDeductFlow(targetNick){
   if(!isAdmin()) return;
   let token=getAdminToken();
@@ -1047,9 +908,7 @@ let topInFlight=false;
 function toNum(x){ const n=Number(String(x??'').replace(',','.')); return Number.isFinite(n)?n:0; }
 function pickField(obj,keys){ for(const k of keys){ if(obj&&obj[k]!=null) return obj[k]; } return null; }
 function normTopRows(rows){ return (rows||[]).map(r=>{ const nick=String(pickField(r,['Никнейм','Ник','nick','Nick','name','Name'])??'').trim(); const clips=toNum(pickField(r,['Всего клипов','Клипы','Клипов','clips','Clips'])); const points=toNum(pickField(r,['Итоговые баллы','Баллы','Баллы всего','points','Points','total','Total'])); const chatPts=toNum(pickField(r,['Баллы чата','Чат','chat','chatPts'])); const watchPts=toNum(pickField(r,['Баллы онлайна','Онлайн','online','watch','watchPts'])); const maxBonus=pickField(r,['Макс. бонус (%)','Макс. бонус','Бонус','bonus','maxBonus']); return {nick,points,clips,chatPts,watchPts,maxBonusRaw:maxBonus,raw:r}; }).filter(x=>x.nick); }
-
 function applyTop(){ const q=topState.query.trim().toLowerCase(); const sort=topState.sort; let arr=topState.rows.slice(); if(q) arr=arr.filter(r=>r.nick.toLowerCase().includes(q)); const cmp={points:(a,b)=>b.points-a.points||b.clips-a.clips,clips:(a,b)=>b.clips-a.clips||b.points-a.points,chat:(a,b)=>b.chatPts-a.chatPts||b.points-a.points,online:(a,b)=>b.watchPts-a.watchPts||b.points-a.points}[sort]||((a,b)=>b.points-a.points); arr.sort(cmp); topState.filtered=arr; }
-
 function renderTop(){
   const status=$('#topStatus'),table=$('#topTable'),tbody=$('#topTbody'); if(!status||!table||!tbody) return;
   applyTop(); const arr=topState.filtered;
@@ -1061,7 +920,6 @@ function renderTop(){
   if(admin) tbody.querySelectorAll('.btn-deduct').forEach(b=>b.addEventListener('click',()=>openDeductFlow(b.getAttribute('data-d')||'')));
   status.textContent=`Топ-50 из ${arr.length} строк.`; table.hidden=false;
 }
-
 async function loadTop(){
   const status=$('#topStatus'),table=$('#topTable'),btn=$('#btnLoadTop'),loading=$('#topLoading');
   if(!status||!btn||topInFlight) return;
@@ -1072,8 +930,7 @@ async function loadTop(){
   const ctrl=new AbortController(); const tmr=setTimeout(()=>ctrl.abort(),30000);
   try{
     const url=new URL(API); url.searchParams.set('action','getAllData');
-    const resp=await fetch(url.toString(),{signal:ctrl.signal,cache:'no-store'}); const data=await resp.json().catch(()=>({})
-    );
+    const resp=await fetch(url.toString(),{signal:ctrl.signal,cache:'no-store'}); const data=await resp.json().catch(()=>({}));
     if(!resp.ok||data.ok===false) throw new Error(data.error||`HTTP ${resp.status}`);
     const rows=Array.isArray(data.data)?data.data:[];
     saveTopCache(rows); topState.rows=normTopRows(rows);
@@ -1082,7 +939,6 @@ async function loadTop(){
   }catch(e){ const m=e.name==='AbortError'?'Таймаут.':(e.message||String(e)); if(topState.rows.length){ status.textContent='Не обновлено: '+m; }else{ status.textContent='Ошибка: '+m; table.hidden=true; } }
   finally{ clearTimeout(tmr); topInFlight=false; if(loading) loading.classList.add('hidden'); btn.disabled=false; btn.textContent='Обновить'; }
 }
-
 function openTop(){ $('#topModal')?.classList.remove('hidden'); document.body.style.overflow='hidden'; loadTop(); }
 function closeTop(){ $('#topModal')?.classList.add('hidden'); document.body.style.overflow=''; }
 
@@ -1118,26 +974,22 @@ if(!isMob&&!reduced){
 
 // ===================== INIT =====================
 function initAll(){
-  initCalc();
-  renderGoods();
-  initBalanceUI();
+  initCalc(); renderGoods(); initBalanceUI();
 
-  // Choice modal wiring
   $('#closeChoice')?.addEventListener('click',closeChoice);
   $('#choiceOverlay')?.addEventListener('click',closeChoice);
   $('#choiceSendBtn')?.addEventListener('click',sendChoiceOrder);
   $('#choiceAgain')?.addEventListener('click',()=>{ $('#choiceSuccess')?.classList.add('hidden'); resetChoiceUI(); });
   $('#choiceRetry')?.addEventListener('click',()=>{ $('#choiceError')?.classList.add('hidden'); resetChoiceUI(); });
 
-  // Pay modal wiring
   $('#closePayModal')?.addEventListener('click',closePayModal);
-  $('#payOverlay')?.addEventListener('click',closePayModal);
+  // Overlay click: only close if clicking the overlay itself, not the card
+  $('#payOverlay')?.addEventListener('click',(e)=>{ if(e.target===$('#payOverlay')) closePayModal(); });
   $('#payClose2')?.addEventListener('click',closePayModal);
   $('#payClose3')?.addEventListener('click',closePayModal);
   $('#payConfirmBtn')?.addEventListener('click',sendMoneyOrder);
   $('#payRetry')?.addEventListener('click',()=>{ $('#payError')?.classList.add('hidden'); $('#payFormArea')?.classList.remove('hidden'); $('#payClose3')?.classList.remove('hidden'); });
 
-  // Top modal
   $('#btnOpenTop')?.addEventListener('click',openTop);
   $('#btnOpenTopFooter')?.addEventListener('click',openTop);
   $('#btnLoadTop')?.addEventListener('click',loadTop);
